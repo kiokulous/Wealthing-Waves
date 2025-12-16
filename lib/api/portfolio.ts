@@ -1,0 +1,313 @@
+import type { Transaction, MarketPrice } from '../supabase'
+
+// ================================================
+// TYPES
+// ================================================
+
+export type PortfolioItem = {
+    symbol: string
+    category: string
+    quantity: number
+    invested: number
+    currentValue: number
+    currentPrice: number
+    profitLoss: number
+    profitLossPercent: number
+    lastPrices: number[] // Last 7 prices for sparkline
+}
+
+export type CategoryStats = {
+    category: string
+    invested: number
+    sold: number
+    currentValue: number
+    profitLoss: number
+    profitLossPercent: number
+    weight: number // Percentage of total portfolio
+}
+
+export type PortfolioSummary = {
+    totalInvested: number
+    totalSold: number
+    totalCurrentValue: number
+    totalProfitLoss: number
+    totalProfitLossPercent: number
+    items: PortfolioItem[]
+    categories: CategoryStats[]
+}
+
+// ================================================
+// PORTFOLIO CALCULATION
+// ================================================
+
+/**
+ * Calculate portfolio summary from transactions and market prices
+ */
+export function calculatePortfolio(
+    transactions: Transaction[],
+    marketPrices: MarketPrice[],
+    filterYear?: number
+): PortfolioSummary {
+    // Filter transactions by year if specified
+    let filteredTransactions = transactions
+    if (filterYear) {
+        const startDate = new Date(filterYear, 0, 1)
+        const endDate = new Date(filterYear, 11, 31, 23, 59, 59)
+        filteredTransactions = transactions.filter(t => {
+            const date = new Date(t.date)
+            return date >= startDate && date <= endDate
+        })
+    }
+
+    // Build portfolio map
+    const portfolio = new Map<string, {
+        symbol: string
+        category: string
+        quantity: number
+        invested: number
+    }>()
+
+    // Track totals
+    let totalInvested = 0
+    let totalSold = 0
+
+    // Process transactions
+    filteredTransactions.forEach(txn => {
+        const key = txn.symbol
+
+        if (!portfolio.has(key)) {
+            portfolio.set(key, {
+                symbol: txn.symbol,
+                category: txn.category,
+                quantity: 0,
+                invested: 0,
+            })
+        }
+
+        const item = portfolio.get(key)!
+        const value = Math.abs(txn.total_money)
+
+        if (txn.type === 'Mua') {
+            // Buy transaction
+            item.quantity += txn.quantity
+            item.invested += value
+            totalInvested += value
+        } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
+            // Sell transaction
+            totalSold += value
+
+            if (item.quantity > 0) {
+                const avgCost = item.invested / item.quantity
+                const costBasis = txn.quantity * avgCost
+                item.invested -= costBasis
+                item.quantity -= txn.quantity
+            } else {
+                item.quantity -= txn.quantity
+            }
+        }
+    })
+
+    // Calculate current values
+    const items: PortfolioItem[] = []
+    let totalCurrentValue = 0
+
+    portfolio.forEach(item => {
+        // Get latest price for symbol
+        const symbolPrices = marketPrices
+            .filter(p => p.symbol === item.symbol)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+        const currentPrice = symbolPrices.length > 0 ? symbolPrices[0].price : 0
+        const currentValue = item.quantity * currentPrice
+
+        // Get last 7 prices for sparkline
+        const lastPrices = symbolPrices
+            .slice(0, 7)
+            .reverse()
+            .map(p => p.price)
+
+        // Pad with current price if less than 7
+        while (lastPrices.length < 7) {
+            lastPrices.unshift(currentPrice)
+        }
+
+        const profitLoss = currentValue - item.invested
+        const profitLossPercent = item.invested > 0
+            ? (profitLoss / item.invested) * 100
+            : 0
+
+        if (item.quantity > 0) {
+            totalCurrentValue += currentValue
+        }
+
+        items.push({
+            symbol: item.symbol,
+            category: item.category,
+            quantity: item.quantity,
+            invested: item.invested,
+            currentValue,
+            currentPrice,
+            profitLoss,
+            profitLossPercent,
+            lastPrices,
+        })
+    })
+
+    // Calculate category stats
+    const categoryMap = new Map<string, CategoryStats>()
+
+    items.forEach(item => {
+        if (!categoryMap.has(item.category)) {
+            categoryMap.set(item.category, {
+                category: item.category,
+                invested: 0,
+                sold: 0,
+                currentValue: 0,
+                profitLoss: 0,
+                profitLossPercent: 0,
+                weight: 0,
+            })
+        }
+
+        const cat = categoryMap.get(item.category)!
+        cat.invested += item.invested
+        cat.currentValue += item.currentValue
+    })
+
+    // Calculate category P/L and weights
+    const categories: CategoryStats[] = []
+    categoryMap.forEach(cat => {
+        cat.profitLoss = cat.currentValue - cat.invested
+        cat.profitLossPercent = cat.invested > 0
+            ? (cat.profitLoss / cat.invested) * 100
+            : 0
+        cat.weight = totalCurrentValue > 0
+            ? (cat.currentValue / totalCurrentValue) * 100
+            : 0
+        categories.push(cat)
+    })
+
+    // Sort categories by current value (descending)
+    categories.sort((a, b) => b.currentValue - a.currentValue)
+
+    // Calculate total P/L
+    const totalProfitLoss = totalCurrentValue + totalSold - totalInvested
+    const totalProfitLossPercent = totalInvested > 0
+        ? (totalProfitLoss / totalInvested) * 100
+        : 0
+
+    return {
+        totalInvested,
+        totalSold,
+        totalCurrentValue,
+        totalProfitLoss,
+        totalProfitLossPercent,
+        items: items.sort((a, b) => b.currentValue - a.currentValue),
+        categories,
+    }
+}
+
+/**
+ * Calculate detailed statistics for a specific symbol
+ */
+export function calculateSymbolDetail(
+    symbol: string,
+    transactions: Transaction[],
+    marketPrices: MarketPrice[],
+    filterYear?: number
+) {
+    // Filter transactions for this symbol
+    let symbolTransactions = transactions.filter(t => t.symbol === symbol)
+
+    // Apply year filter if specified
+    if (filterYear) {
+        const startDate = new Date(filterYear, 0, 1)
+        const endDate = new Date(filterYear, 11, 31, 23, 59, 59)
+        symbolTransactions = symbolTransactions.filter(t => {
+            const date = new Date(t.date)
+            return date >= startDate && date <= endDate
+        })
+    }
+
+    // Sort by date ascending for calculation
+    symbolTransactions.sort((a, b) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+
+    // Calculate holdings
+    let quantity = 0
+    let invested = 0
+    let realized = 0
+    let firstBuyDate: Date | null = null
+
+    symbolTransactions.forEach(txn => {
+        const value = Math.abs(txn.total_money)
+
+        if (txn.type === 'Mua') {
+            if (!firstBuyDate) {
+                firstBuyDate = new Date(txn.date)
+            }
+            quantity += txn.quantity
+            invested += value
+        } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
+            if (quantity > 0) {
+                const avgCost = invested / quantity
+                const costBasis = txn.quantity * avgCost
+                realized += value - costBasis
+                invested -= costBasis
+                quantity -= txn.quantity
+            }
+        }
+    })
+
+    // Get market prices for this symbol
+    const symbolPrices = marketPrices
+        .filter(p => p.symbol === symbol)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    const latestPrice = symbolPrices.length > 0 ? symbolPrices[0].price : 0
+    const currentValue = quantity * latestPrice
+
+    // Calculate P/L
+    const unrealizedPL = currentValue - invested
+    const totalPL = unrealizedPL + realized
+    const plPercent = invested > 0
+        ? (totalPL / invested) * 100
+        : 0
+
+    // Calculate holding duration
+    let holdingDays = 0
+    if (quantity > 0 && firstBuyDate) {
+        const now = filterYear
+            ? new Date(filterYear, 11, 31)
+            : new Date()
+        holdingDays = Math.ceil(
+            (now.getTime() - firstBuyDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+    }
+
+    // Get price history for chart (last 30 days or all available)
+    const priceHistory = symbolPrices
+        .slice(0, 30)
+        .reverse()
+        .map(p => ({
+            date: p.date,
+            price: p.price,
+        }))
+
+    return {
+        symbol,
+        quantity,
+        invested,
+        realized,
+        currentValue,
+        latestPrice,
+        unrealizedPL,
+        totalPL,
+        plPercent,
+        holdingDays,
+        firstBuyDate: firstBuyDate?.toISOString() || null,
+        priceHistory,
+        transactions: symbolTransactions.reverse(), // Return newest first for display
+    }
+}

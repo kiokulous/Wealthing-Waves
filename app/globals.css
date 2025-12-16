@@ -2,53 +2,367 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ================================================
+   WEALTHING WAVES - CUSTOM THEME
+   Wuthering Waves Inspired Design
+   ================================================ */
+
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    /* === FOUNDATION COLORS === */
+    --bg-primary: 11 15 26;
+    /* #0B0F1A - Deep space blue-black */
+    --bg-secondary: 20 24 36;
+    /* #141824 - Container bg */
+    --bg-tertiary: 27 32 48;
+    /* #1B2030 - Elevated surface */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* === ACCENTS - CYAN/TEAL (Main Energy) === */
+    --accent-primary: 0 217 255;
+    /* #00D9FF - Bright cyan */
+    --accent-secondary: 0 184 212;
+    /* #00B8D4 - Darker cyan */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* === PURPLE - RESONANCE ENERGY === */
+    --purple-light: 167 139 250;
+    /* #A78BFA */
+    --purple-medium: 139 92 246;
+    /* #8B5CF6 */
+    --purple-dark: 109 40 217;
+    /* #6D28D9 */
 
-    --primary: 243 75% 59%; /* Indigo-600 */
-    --primary-foreground: 210 40% 98%;
+    /* === STATUS COLORS === */
+    --profit-green: 16 185 129;
+    /* #10B981 */
+    --loss-red: 220 38 38;
+    /* #DC2626 */
+    --warning-yellow: 245 158 11;
+    /* #F59E0B */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-
-    --radius: 0.5rem;
+    /* === NEUTRAL === */
+    --text-primary: 248 250 252;
+    /* #F8FAFC */
+    --text-secondary: 148 163 184;
+    /* #94A3B8 */
+    --text-tertiary: 100 116 139;
+    /* #64748B */
+    --border: 148 163 184;
+    /* #94A3B8 with 10% opacity */
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: rgb(var(--bg-primary));
+    color: rgb(var(--text-primary));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Custom Utilities */
-.glass-effect {
-    background: rgba(255, 255, 255, 0.9);
+@layer components {
+
+  /* === WAVE CARD (Base Container) === */
+  .wave-card {
+    background: linear-gradient(to bottom right, rgba(var(--bg-tertiary), 0.8), rgba(var(--bg-secondary), 0.8));
+    border: 1px solid rgba(var(--border), 0.1);
+    border-radius: 1rem;
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .wave-card-hover {
+    background: linear-gradient(to bottom right, rgba(var(--bg-tertiary), 0.8), rgba(var(--bg-secondary), 0.8));
+    border: 1px solid rgba(var(--border), 0.1);
+    border-radius: 1rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .wave-card-hover:hover {
+    border-color: rgb(var(--accent-primary));
+    box-shadow: 0 0 32px rgba(var(--accent-primary), 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* === RESONANCE CORE (Asset Card with Animated Border) === */
+  .resonance-core {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    background: rgb(var(--bg-tertiary));
+    border: 2px solid rgb(var(--accent-primary));
+  }
+
+  .resonance-core::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg,
+        transparent 0deg,
+        rgba(var(--accent-primary), 0.3) 90deg,
+        transparent 180deg);
+    animation: resonance-rotate 4s linear infinite;
+  }
+
+  @keyframes resonance-rotate {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* === ENERGY LEVEL (Hero Numbers) === */
+  .energy-level {
+    font-size: 2.25rem;
+    font-weight: 700;
+    background: linear-gradient(to right, rgb(var(--purple-light)), rgb(var(--accent-primary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(var(--accent-primary), 0.4));
+    letter-spacing: 0.05em;
+  }
+
+  @media (min-width: 768px) {
+    .energy-level {
+      font-size: 3rem;
+    }
+  }
+
+  /* === WAVE CONTAINER (Chart Background) === */
+  .wave-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background: linear-gradient(180deg, rgba(var(--accent-primary), 0.05) 0%, transparent 100%);
+  }
+
+  .wave-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0.25rem;
+    background: linear-gradient(to right, rgb(var(--purple-medium)), rgb(var(--accent-primary)));
+    opacity: 0.6;
+    animation: wave-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes wave-pulse {
+
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  /* === BUTTONS === */
+  .btn-wave {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(to right, rgb(var(--purple-medium)), rgb(var(--accent-primary)));
+    color: white;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .btn-wave::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-wave:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-wave:active {
+    transform: scale(0.95);
+  }
+
+  /* === INPUT FIELDS === */
+  .input-wave {
+    background: rgba(var(--bg-tertiary), 0.5);
+    border: 1px solid rgba(var(--border), 0.1);
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    color: rgb(var(--text-primary));
+    transition: all 0.3s ease;
+  }
+
+  .input-wave:focus {
+    outline: none;
+    border-color: rgb(var(--accent-primary));
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary), 0.3);
+    background: rgba(var(--bg-tertiary), 0.8);
+  }
+
+  .input-wave::placeholder {
+    color: rgb(var(--text-tertiary));
+  }
+
+  /* === PROFIT/LOSS INDICATORS === */
+  .profit-text {
+    color: rgb(var(--profit-green));
+  }
+
+  .loss-text {
+    color: rgb(var(--loss-red));
+  }
+
+  .profit-bg {
+    background-color: rgba(var(--profit-green), 0.1);
+    border-color: rgba(var(--profit-green), 0.2);
+  }
+
+  .loss-bg {
+    background-color: rgba(var(--loss-red), 0.1);
+    border-color: rgba(var(--loss-red), 0.2);
+  }
+
+  /* === WAVE ANIMATION === */
+  @keyframes wave-flow {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .wave-effect {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .wave-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(var(--accent-primary), 0.2),
+        transparent);
+    animation: wave-flow 3s infinite;
+  }
+
+  /* === GLOW PULSE === */
+  @keyframes glow-pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(var(--accent-primary), 0.3);
+    }
+
+    50% {
+      box-shadow: 0 0 40px rgba(var(--accent-primary), 0.6);
+    }
+  }
+
+  .glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  /* === FADE IN UP === */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer utilities {
+
+  /* === TEXT UTILITIES === */
+  .text-wave-primary {
+    color: rgb(var(--text-primary));
+  }
+
+  .text-wave-secondary {
+    color: rgb(var(--text-secondary));
+  }
+
+  .text-wave-tertiary {
+    color: rgb(var(--text-tertiary));
+  }
+
+  /* === BACKGROUND UTILITIES === */
+  .bg-wave-primary {
+    background-color: rgb(var(--bg-primary));
+  }
+
+  .bg-wave-secondary {
+    background-color: rgb(var(--bg-secondary));
+  }
+
+  .bg-wave-tertiary {
+    background-color: rgb(var(--bg-tertiary));
+  }
+
+  /* === BORDER UTILITIES === */
+  .border-wave {
+    border-color: rgba(var(--border), 0.1);
+  }
+
+  /* === SCROLLBAR STYLING === */
+  .scrollbar-wave::-webkit-scrollbar {
+    width: 0.5rem;
+  }
+
+  .scrollbar-wave::-webkit-scrollbar-track {
+    background-color: rgb(var(--bg-secondary));
+  }
+
+  .scrollbar-wave::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--accent-primary), 0.3);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-wave::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--accent-primary), 0.5);
+  }
+
+  /* === HIDE SCROLLBAR === */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
