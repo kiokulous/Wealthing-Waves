@@ -85,7 +85,7 @@ export function calculatePortfolio(
         }
 
         const item = portfolio.get(key)!
-        const value = Math.abs(txn.total_money)
+        const value = txn.total_money // Now always positive after migration
 
         if (txn.type === 'Mua') {
             // Buy transaction
@@ -153,13 +153,16 @@ export function calculatePortfolio(
         })
     })
 
-    // Calculate category stats
+    // Calculate category stats - Match GAS logic
     const categoryMap = new Map<string, CategoryStats>()
 
-    items.forEach(item => {
-        if (!categoryMap.has(item.category)) {
-            categoryMap.set(item.category, {
-                category: item.category,
+    // First pass: Calculate invested and sold per category from transactions
+    filteredTransactions.forEach(txn => {
+        const catKey = txn.category
+
+        if (!categoryMap.has(catKey)) {
+            categoryMap.set(catKey, {
+                category: catKey,
                 invested: 0,
                 sold: 0,
                 currentValue: 0,
@@ -169,15 +172,31 @@ export function calculatePortfolio(
             })
         }
 
-        const cat = categoryMap.get(item.category)!
-        cat.invested += item.invested
-        cat.currentValue += item.currentValue
+        const cat = categoryMap.get(catKey)!
+        const value = txn.total_money
+
+        if (txn.type === 'Mua') {
+            cat.invested += value
+        } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
+            cat.sold += value
+        }
+    })
+
+    // Second pass: Add current values from items
+    items.forEach(item => {
+        if (item.quantity > 0) {
+            const cat = categoryMap.get(item.category)
+            if (cat) {
+                cat.currentValue += item.currentValue
+            }
+        }
     })
 
     // Calculate category P/L and weights
     const categories: CategoryStats[] = []
     categoryMap.forEach(cat => {
-        cat.profitLoss = cat.currentValue - cat.invested
+        // P/L = Current Value + Sold - Invested (Cash Flow method like GAS)
+        cat.profitLoss = cat.currentValue + cat.sold - cat.invested
         cat.profitLossPercent = cat.invested > 0
             ? (cat.profitLoss / cat.invested) * 100
             : 0
@@ -241,7 +260,7 @@ export function calculateSymbolDetail(
     let firstBuyDate: Date | null = null
 
     symbolTransactions.forEach(txn => {
-        const value = Math.abs(txn.total_money)
+        const value = txn.total_money // Now always positive after migration
 
         if (txn.type === 'Mua') {
             if (!firstBuyDate) {
@@ -302,6 +321,7 @@ export function calculateSymbolDetail(
         realized,
         currentValue,
         latestPrice,
+        latestPriceDate: symbolPrices.length > 0 ? symbolPrices[0].date : null,
         unrealizedPL,
         totalPL,
         plPercent,
