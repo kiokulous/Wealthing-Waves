@@ -300,8 +300,9 @@ export function calculateSymbolDetail(
         const now = filterYear
             ? new Date(filterYear, 11, 31)
             : new Date()
+        const start = new Date(firstBuyDate)
         holdingDays = Math.ceil(
-            (now.getTime() - firstBuyDate.getTime()) / (1000 * 60 * 60 * 24)
+            (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
         )
     }
 
@@ -326,7 +327,7 @@ export function calculateSymbolDetail(
         totalPL,
         plPercent,
         holdingDays,
-        firstBuyDate: firstBuyDate?.toISOString() || null,
+        firstBuyDate: (firstBuyDate as Date | null)?.toISOString() || null,
         priceHistory,
         transactions: symbolTransactions.reverse(), // Return newest first for display
     }

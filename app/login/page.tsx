@@ -59,7 +59,7 @@ export default function LoginPage() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent mb-2">
                         Wealthing Waves
                     </h1>
-                    <p className="text-secondary text-sm">Ride the market waves with confidence</p>
+                    <p className="text-secondary text-sm">Làm chủ làn sóng tài chính của bạn</p>
                 </div>
 
                 {/* Login Card */}
@@ -75,8 +75,8 @@ export default function LoginPage() {
 
                     {error && (
                         <div className={`mb-4 p-3 rounded-lg text-sm ${error.includes('thành công')
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
                             }`}>
                             {error}
                         </div>

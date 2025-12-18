@@ -2,257 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ================================================
-   FUND MANAGER PRO - LIGHT THEME
-   Professional Investment Portfolio Tracker
-   ================================================ */
-
 @layer base {
   :root {
-    /* === COLORS === */
-    --color-primary: 99 102 241;
-    /* Indigo-500 */
-    --color-primary-dark: 79 70 229;
-    /* Indigo-600 */
-    --color-secondary: 236 72 153;
-    /* Pink-500 */
+    --background: #f8fafc;
+    --foreground: #0f172a;
 
-    --color-profit: 16 185 129;
-    /* Emerald-500 */
-    --color-loss: 244 63 94;
-    /* Rose-500 */
+    /* Soft UI Colors */
+    --card-bg: #ffffff;
+    --card-border: #f1f5f9;
 
-    --color-bg: 248 250 252;
-    /* Slate-50 */
-    --color-surface: 255 255 255;
-    /* White */
-    --color-border: 226 232 240;
-    /* Slate-200 */
+    --primary: #6366f1;
+    /* Indigo 500 */
+    --primary-gradient-start: #6366f1;
+    --primary-gradient-end: #a855f7;
+    /* Purple 500 */
 
-    --color-text-primary: 15 23 42;
-    /* Slate-900 */
-    --color-text-secondary: 100 116 139;
-    /* Slate-500 */
-    --color-text-tertiary: 148 163 184;
-    /* Slate-400 */
+    --success: #10b981;
+    --error: #f43f5e;
   }
 
   body {
-    background-color: rgb(var(--color-bg));
-    color: rgb(var(--color-text-primary));
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 }
 
 @layer components {
+  /* === KEY COMPONENTS FOR WINDEN SCOUT STYLE === */
 
-  /* === CARD === */
-  .card {
-    background: rgb(var(--color-surface));
-    border: 1px solid rgb(var(--color-border));
-    border-radius: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* 1. Soft Card: Large radius, lighter shadow, very clean */
+  .soft-card {
+    @apply bg-white border border-slate-100 rounded-[2rem] transition-all duration-300;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
   }
 
-  .card-hover {
-    background: rgb(var(--color-surface));
-    border: 1px solid rgb(var(--color-border));
-    border-radius: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-  }
-
-  .card-hover:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  .soft-card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.1);
   }
 
-  /* === NET WORTH GRADIENT CARD === */
-  .net-worth-card {
-    background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-secondary)) 100%);
-    border-radius: 1.5rem;
-    padding: 2rem;
-    color: white;
-    position: relative;
-    overflow: hidden;
+  /* 2. Floating Pill: For stats/headers (like the Cash pills in reference) */
+  .floating-pill {
+    @apply bg-white border border-slate-100 flex items-center gap-3 px-5 py-3 rounded-[1.5rem] transition-all duration-200;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.03);
   }
 
-  .net-worth-card::before {
+  .floating-pill:hover {
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+
+  /* 3. Modern Button: Gradient pill */
+  .btn-modern {
+    @apply px-6 py-3 rounded-full font-bold text-white shadow-lg transition-all duration-200 flex items-center justify-center gap-2;
+    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+  }
+
+  /* SPARKLE BUTTON STYLE */
+  .btn-sparkle {
+    @apply relative overflow-hidden px-6 py-3 rounded-full font-bold text-white shadow-lg transition-all duration-300 flex items-center justify-center gap-2;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    /* Blue to Purple */
+    box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+  }
+
+  /* Sparkle overlay effect - using standard CSS hover instead of group-hover */
+  .btn-sparkle::before {
     content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    filter: blur(40px);
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background-image:
+      radial-gradient(white 1px, transparent 1px),
+      radial-gradient(white 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    animation: sparkleMove 4s linear infinite;
   }
 
-  /* === BIG NUMBER === */
-  .big-number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+  .btn-sparkle:hover::before {
+    @apply opacity-100;
   }
 
-  @media (min-width: 768px) {
-    .big-number {
-      font-size: 3rem;
+  .btn-sparkle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.6);
+  }
+
+  .btn-sparkle:active {
+    transform: scale(0.98);
+  }
+
+  @keyframes sparkleMove {
+    0% {
+      background-position: 0 0, 10px 10px;
+    }
+
+    100% {
+      background-position: 20px 20px, 30px 30px;
     }
   }
 
-  /* === BUTTONS === */
-  .btn-primary {
-    background: linear-gradient(135deg, rgb(var(--color-primary)), rgb(var(--color-primary-dark)));
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  /* FLOATING NAVIGATION */
+  .floating-nav {
+    @apply fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-xl border border-white/50 px-6 py-4 rounded-[2rem] shadow-2xl flex items-center gap-2 z-50;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.15);
   }
 
-  .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(var(--color-primary), 0.3);
+  .nav-item {
+    @apply p-3 rounded-xl text-slate-400 transition-all duration-300 hover:bg-white hover:text-indigo-600 hover:shadow-lg hover:-translate-y-1 relative;
   }
 
-  .btn-primary:active {
-    transform: translateY(0);
+  .nav-item.active {
+    @apply bg-indigo-50 text-indigo-600 shadow-md;
   }
 
-  /* === INPUT === */
-  .input {
-    background: rgb(var(--color-surface));
-    border: 1px solid rgb(var(--color-border));
-    border-radius: 0.75rem;
-    padding: 0.75rem 1rem;
-    color: rgb(var(--color-text-primary));
-    transition: all 0.2s ease;
+  .nav-item.active::after {
+    content: '';
+    @apply absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-600 rounded-full;
   }
 
-  .input:focus {
-    outline: none;
-    border-color: rgb(var(--color-primary));
-    box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.1);
+  /* 4. Glass Effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
   }
 
-  .input::placeholder {
-    color: rgb(var(--color-text-tertiary));
+  /* Utility: Text Gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500;
   }
 
-  /* === PROFIT/LOSS === */
-  .profit-text {
-    color: rgb(var(--color-profit));
+  /* Input Field */
+  .input-modern {
+    @apply w-full px-5 py-4 bg-slate-50 border-none rounded-2xl outline-none text-slate-700 font-medium transition-all;
   }
 
-  .loss-text {
-    color: rgb(var(--color-loss));
-  }
-
-  .profit-bg {
-    background-color: rgba(var(--color-profit), 0.1);
-    color: rgb(var(--color-profit));
-  }
-
-  .loss-bg {
-    background-color: rgba(var(--color-loss), 0.1);
-    color: rgb(var(--color-loss));
-  }
-
-  /* === BADGE === */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .badge-primary {
-    background-color: rgba(var(--color-primary), 0.1);
-    color: rgb(var(--color-primary));
-  }
-
-  /* === CATEGORY ICON === */
-  .category-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-  }
-
-  .category-icon.stock {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-  }
-
-  .category-icon.fund {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  }
-
-  .category-icon.gold {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-  }
-
-  .category-icon.saving {
-    background: linear-gradient(135deg, #10b981, #059669);
-  }
-
-  /* === PROGRESS BAR === */
-  .progress-bar {
-    width: 100%;
-    height: 0.5rem;
-    background-color: rgb(var(--color-border));
-    border-radius: 9999px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    border-radius: 9999px;
-    transition: width 0.5s ease;
-  }
-
-  .progress-fill.profit {
-    background: linear-gradient(90deg, rgb(var(--color-profit)), #34d399);
-  }
-
-  .progress-fill.loss {
-    background: linear-gradient(90deg, rgb(var(--color-loss)), #fb7185);
+  .input-modern:focus {
+    @apply bg-white ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/5;
   }
 }
 
 @layer utilities {
-  .text-primary {
-    color: rgb(var(--color-text-primary));
-  }
-
-  .text-secondary {
-    color: rgb(var(--color-text-secondary));
-  }
-
-  .text-tertiary {
-    color: rgb(var(--color-text-tertiary));
-  }
-
-  .bg-surface {
-    background-color: rgb(var(--color-surface));
-  }
-
-  .border-default {
-    border-color: rgb(var(--color-border));
-  }
-
-  /* Hide scrollbar */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

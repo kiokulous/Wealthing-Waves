@@ -45,7 +45,7 @@ export default function PortfolioDetailPage() {
             setTransactions(txns)
             setMarketPrices(prices)
 
-            const years = [...new Set(txns.filter(t => t.symbol === symbol).map(t => new Date(t.date).getFullYear()))]
+            const years = Array.from(new Set(txns.filter(t => t.symbol === symbol).map(t => new Date(t.date).getFullYear())))
                 .filter(y => !isNaN(y))
                 .sort((a, b) => b - a)
             setAvailableYears(years)
