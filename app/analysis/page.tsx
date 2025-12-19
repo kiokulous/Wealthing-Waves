@@ -1,17 +1,20 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import FloatingNav from '@/components/FloatingNav'
 import { useAuth } from '@/components/providers/AuthProvider'
+import { useRouter } from 'next/navigation'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio, type PortfolioSummary } from '@/lib/api/portfolio'
 import { calculatePeriodPerformance } from '@/lib/api/calculate_period_performance'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, ReferenceLine } from 'recharts'
+import { Filter, PieChart as PieIcon, TrendingUp, BarChart3 } from 'lucide-react'
 
-const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#3b82f6']
+const BENTO_CHART_COLORS = ['#2C56ED', '#E3C9FB', '#C9FBF5', '#DEF8C9', '#F7F7F7']
 
 export default function AnalysisPage() {
     const { user, loading: authLoading } = useAuth()
+    const router = useRouter()
+
     // Raw Data State
     const [allTransactions, setAllTransactions] = useState<any[]>([])
     const [allPrices, setAllPrices] = useState<any[]>([])
@@ -19,7 +22,13 @@ export default function AnalysisPage() {
     // Computed State
     const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null)
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState('Tất cả')
+    const [filter, setFilter] = useState('Toàn bộ')
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/login')
+        }
+    }, [user, authLoading, router])
 
     useEffect(() => {
         if (user) loadData()
@@ -41,7 +50,6 @@ export default function AnalysisPage() {
             ])
             setAllTransactions(txns)
             setAllPrices(prices)
-            // Initial calculation will happen via useEffect
         } catch (err) {
             console.error(err)
         } finally {
@@ -66,7 +74,7 @@ export default function AnalysisPage() {
             case '1 Năm':
                 startDate = new Date(now.setFullYear(now.getFullYear() - 1))
                 break
-            case 'Tất cả':
+            case 'Toàn bộ':
             default:
                 startDate = null
         }
@@ -75,16 +83,22 @@ export default function AnalysisPage() {
         setPortfolio(data)
     }
 
+    const formatValue = (value: number) => {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(value))
+    }
+
     if (authLoading || (loading && !portfolio && allTransactions.length === 0)) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-slate-400">
-                <div className="inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mr-3"></div>
-                Đang tải dữ liệu...
+            <div className="flex items-center justify-center p-20">
+                <div className="text-center">
+                    <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p className="text-slate-500 font-bold text-sm tracking-widest uppercase">Đang tính toán chỉ số...</p>
+                </div>
             </div>
         )
     }
 
-    if (!portfolio) return null
+    if (!portfolio || !user) return null
 
     // Chart Data Preparation
     const allocationData = portfolio.categories.map(cat => ({
@@ -97,135 +111,208 @@ export default function AnalysisPage() {
         pl: cat.profitLoss
     }))
 
-    // Asset Performance Data (Top 5 Assets by Profit %)
     const assetPerformanceData = portfolio.items
         .filter(item => item.currentValue > 0)
         .sort((a, b) => b.profitLossPercent - a.profitLossPercent)
-        .slice(0, 10) // Top 10
+        .slice(0, 10)
         .map(item => ({
             name: item.symbol,
             value: item.profitLossPercent
         }))
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] pb-32 pt-6 px-4">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-2xl font-bold text-slate-800 mb-6">Thống kê & Phân tích</h1>
-
-                {/* Filters (Restored) */}
-                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
-                    {['30 Ngày', '3 Tháng', '6 Tháng', '1 Năm', 'Tất cả'].map((f) => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${filter === f
-                                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                                : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
-                                }`}
-                        >
-                            {f}
-                        </button>
-                    ))}
+        <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+                <div>
+                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-1">
+                        Phân tích <span className="text-blue-600">Nâng cao</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium tracking-tight">Trực quan hóa sự cộng hưởng và các chỉ số hiệu suất danh mục của bạn.</p>
                 </div>
 
+                <div className="flex items-center gap-3">
+                    <div className="flex bg-white border border-slate-200 p-1.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+                        {['30 Ngày', '3 Tháng', '6 Tháng', '1 Năm', 'Toàn bộ'].map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${filter === f
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
                 {/* 1. Allocation Chart */}
-                <div className="soft-card p-6 mb-6">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-1.5 h-6 rounded-full bg-indigo-500"></span>
-                        Phân bổ tài sản
-                    </h3>
-                    <div className="h-64 w-full">
+                <div className="bento-card p-10 group relative">
+                    <div className="flex items-center justify-between mb-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <PieIcon className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900">Phân bổ Danh mục</h3>
+                        </div>
+                    </div>
+
+                    <div className="h-72 w-full relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={allocationData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
+                                    innerRadius={80}
+                                    outerRadius={110}
                                     paddingAngle={5}
                                     dataKey="value"
+                                    stroke="none"
                                 >
                                     {allocationData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={BENTO_CHART_COLORS[index % BENTO_CHART_COLORS.length]} />
                                     ))}
                                 </Pie>
                                 <RechartsTooltip
-                                    formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value)}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' đ'}
+                                    contentStyle={{
+                                        backgroundColor: '#fff',
+                                        borderRadius: '24px',
+                                        border: '1px solid #E5E7EB',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                        color: '#1B1B1B',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        padding: '12px 16px'
+                                    }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tổng thể</p>
+                            <p className="text-2xl font-bold text-slate-900">100%</p>
+                        </div>
                     </div>
-                    {/* Legend */}
-                    <div className="grid grid-cols-2 gap-2 mt-4">
+
+                    <div className="grid grid-cols-2 gap-4 mt-12 pt-8 border-t border-slate-50">
                         {allocationData.map((entry, index) => (
-                            <div key={index} className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                <span className="flex-1 truncate">{entry.name}</span>
-                                <span>{((entry.value / portfolio.totalCurrentValue) * 100).toFixed(1)}%</span>
+                            <div key={index} className="flex items-center gap-3 group/legend">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BENTO_CHART_COLORS[index % BENTO_CHART_COLORS.length] }}></div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{entry.name}</span>
+                                    <span className="text-sm font-bold text-slate-900">{((entry.value / portfolio.totalCurrentValue) * 100).toFixed(0)}%</span>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* 2. Profit/Loss Analysis (By Category) */}
-                <div className="soft-card p-6 mb-6">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-1.5 h-6 rounded-full bg-emerald-500"></span>
-                        Hiệu quả đầu tư (Theo danh mục)
-                    </h3>
-                    <div className="h-64 w-full">
+                <div className="bento-card p-10 group">
+                    <div className="flex items-center gap-3 mb-10">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <BarChart3 className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900">Hiệu suất Danh mục</h3>
+                    </div>
+
+                    <div className="h-72 w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart layout="vertical" data={profitData} margin={{ left: 10 }}>
+                            <BarChart layout="vertical" data={profitData} margin={{ left: 0, right: 30 }}>
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#64748b' }} />
-                                <ReferenceLine x={0} stroke="#cbd5e1" strokeDasharray="3 3" />
-                                <RechartsTooltip
-                                    formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value)}
-                                    cursor={{ fill: '#f1f5f9' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 11, fontWeight: 700, fill: '#64748b' }}
+                                    width={90}
                                 />
-                                <Bar dataKey="pl" radius={[2, 2, 2, 2]} barSize={24}>
+                                <ReferenceLine x={0} stroke="#f1f5f9" />
+                                <RechartsTooltip
+                                    formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' đ'}
+                                    cursor={{ fill: '#f8fafc' }}
+                                    contentStyle={{
+                                        backgroundColor: '#fff',
+                                        borderRadius: '24px',
+                                        border: '1px solid #E5E7EB',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                        color: '#1B1B1B',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        padding: '12px 16px'
+                                    }}
+                                />
+                                <Bar dataKey="pl" radius={[0, 10, 10, 0]} barSize={24}>
                                     {profitData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.pl >= 0 ? '#10b981' : '#f43f5e'} />
+                                        <Cell key={`cell-${index}`} fill={entry.pl >= 0 ? '#10B981' : '#EF4444'} />
                                     ))}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    <p className="text-center text-xs text-slate-400 mt-2 font-medium">Lợi nhuận theo danh mục (VNĐ)</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mt-12">Hiệu suất tương đối giữa các lĩnh vực</p>
                 </div>
+            </div>
 
-                {/* 3. Asset Performance Comparison (All Assets) */}
-                <div className="soft-card p-6">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <span className="w-1.5 h-6 rounded-full bg-indigo-500"></span>
-                        So sánh lợi nhuận (%) các mã
-                    </h3>
-                    <div className="h-80 w-full">
+            {/* 3. Detailed Performance Comparison */}
+            <div className="px-2">
+                <div className="bento-card p-10">
+                    <div className="flex items-center gap-3 mb-12">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center">
+                            <TrendingUp className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold text-slate-900">Xếp hạng Tốc độ Tài sản</h3>
+                            <p className="text-slate-500 text-sm font-medium">Các chỉ dấu có hiệu suất tốt nhất trong giai đoạn đã chọn.</p>
+                        </div>
+                    </div>
+
+                    <div className="h-[450px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart layout="vertical" data={assetPerformanceData} margin={{ left: 20 }}>
+                            <BarChart layout="vertical" data={assetPerformanceData} margin={{ left: 10, right: 40 }}>
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#64748b' }} width={50} />
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 12, fontWeight: 700, fill: '#1e293b' }}
+                                    width={100}
+                                />
+                                <ReferenceLine x={0} stroke="#f1f5f9" />
                                 <RechartsTooltip
                                     formatter={(value: number) => `${value.toFixed(2)}%`}
-                                    cursor={{ fill: '#f1f5f9' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    cursor={{ fill: '#f8fafc' }}
+                                    contentStyle={{
+                                        backgroundColor: '#fff',
+                                        borderRadius: '24px',
+                                        border: '1px solid #E5E7EB',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                        color: '#1B1B1B',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        padding: '12px 16px'
+                                    }}
                                 />
-                                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+                                <Bar dataKey="value" radius={[0, 12, 12, 0]} barSize={20}>
                                     {assetPerformanceData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.value >= 0 ? '#8b5cf6' : '#f43f5e'} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.value >= 0 ? '#2C56ED' : '#EF4444'}
+                                        />
                                     ))}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    <p className="text-center text-xs text-slate-400 mt-2 font-medium">Top mã tăng trưởng mạnh nhất (%)</p>
                 </div>
-
             </div>
-            <FloatingNav />
         </div>
     )
 }

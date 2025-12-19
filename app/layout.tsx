@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import AppLayout from "@/components/AppLayout";
 
-const font = Plus_Jakarta_Sans({
-    subsets: ["latin"],
-    weight: ["400", "500", "600", "700", "800"]
+const font = Be_Vietnam_Pro({
+    subsets: ["latin", "vietnamese"],
+    weight: ["400", "500", "600", "700", "800", "900"]
 });
 
 export const metadata: Metadata = {
-    title: "Wealthing Waves - Portfolio Tracker",
-    description: "Ride the market waves with confidence",
+    title: "Wealthing Waves - Quản lý Danh mục",
+    description: "Theo dõi tài sản và tối ưu hóa lợi nhuận",
 };
 
 export default function RootLayout({
@@ -22,7 +23,9 @@ export default function RootLayout({
         <html lang="vi">
             <body className={font.className}>
                 <AuthProvider>
-                    {children}
+                    <AppLayout>
+                        {children}
+                    </AppLayout>
                 </AuthProvider>
             </body>
         </html>

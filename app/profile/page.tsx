@@ -2,46 +2,86 @@
 
 import React from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
-import FloatingNav from '@/components/FloatingNav'
+import { User, Settings, Shield, LogOut, ChevronRight } from 'lucide-react'
 
 export default function ProfilePage() {
     const { user, signOut } = useAuth()
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] pb-24">
-            <div className="max-w-2xl mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold text-slate-800 mb-6">Tài khoản của tôi</h1>
+        <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
+            {/* Header */}
+            <header className="px-2">
+                <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-1">
+                    Hồ sơ <span className="text-blue-600">Người dùng</span>
+                </h1>
+                <p className="text-slate-500 font-medium tracking-tight">Quản lý nhận dạng và cài đặt đồng bộ hóa của bạn.</p>
+            </header>
 
-                <div className="soft-card p-6 flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+            <div className="max-w-2xl mx-auto space-y-6 px-2">
+                {/* Profile Card */}
+                <div className="bento-card p-10 flex items-center gap-8 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+
+                    <div className="w-24 h-24 rounded-[2rem] bg-blue-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl shadow-blue-500/20 relative z-10 animate-in zoom-in duration-500">
                         {user?.email?.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                        <p className="font-bold text-slate-800 text-lg">User</p>
-                        <p className="text-slate-500 text-sm">{user?.email}</p>
+
+                    <div className="relative z-10">
+                        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">Danh tính Hoạt động</p>
+                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight leading-tight">Wave Operator</h2>
+                        <p className="text-slate-500 font-bold text-sm tracking-tight mt-1">{user?.email}</p>
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <button className="w-full bg-white p-4 rounded-2xl flex items-center justify-between text-slate-700 font-bold hover:bg-slate-50 transition-colors border border-slate-100">
-                        <span>Cài đặt chung</span>
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                {/* Settings Grid / List */}
+                <div className="grid grid-cols-1 gap-4">
+                    <button className="bento-card p-6 flex items-center justify-between group hover:bg-slate-50 transition-all border-slate-100 shadow-none">
+                        <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                                <Settings className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-slate-900 text-sm tracking-tight">Cấu hình Hệ thống</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Điều chỉnh các tham số cộng hưởng</p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                     </button>
-                    <button className="w-full bg-white p-4 rounded-2xl flex items-center justify-between text-slate-700 font-bold hover:bg-slate-50 transition-colors border border-slate-100">
-                        <span>Bảo mật</span>
-                        <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+
+                    <button className="bento-card p-6 flex items-center justify-between group hover:bg-slate-50 transition-all border-slate-100 shadow-none">
+                        <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                                <Shield className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-slate-900 text-sm tracking-tight">Bảo mật & Mã hóa</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Kiểm soát truy cập và kho lưu trữ</p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                     </button>
 
                     <button
                         onClick={() => signOut()}
-                        className="w-full bg-white p-4 rounded-2xl flex items-center justify-between text-rose-500 font-bold hover:bg-rose-50 transition-colors border border-slate-100 mt-6"
+                        className="bento-card p-6 flex items-center justify-between group hover:bg-red-50 transition-all border-slate-100 shadow-none mt-4"
                     >
-                        <span>Đăng xuất</span>
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-400 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
+                                <LogOut className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-red-600 text-sm tracking-tight">Chấm dứt Phiên làm việc</p>
+                                <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest mt-0.5">Đăng xuất khỏi tài khoản</p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-red-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
                     </button>
                 </div>
+
+                <div className="pt-10 text-center">
+                    <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.3em]">Wealthing Waves Identity Protocol v1.0.4</p>
+                </div>
             </div>
-            <FloatingNav />
         </div>
     )
 }
