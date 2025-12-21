@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 
 type AuthContextType = {
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
+    const router = useRouter()
     const supabase = createClient()
 
     useEffect(() => {
@@ -25,16 +27,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null)
             setLoading(false)
+
+            // If we have a hash with access_token (Implicit flow fallback), 
+            // the client handles it, but we should clean the URL
+            if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+                router.replace('/dashboard')
+            }
         })
 
         // Listen for changes on auth state
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             setUser(session?.user ?? null)
             setLoading(false)
+
+            if (event === 'SIGNED_IN' && session) {
+                // Check if we're on the login page or home page and redirect
+                if (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/')) {
+                    router.replace('/dashboard')
+                }
+            }
         })
 
         return () => subscription.unsubscribe()
-    }, [supabase.auth])
+    }, [supabase.auth, router])
 
     const signIn = async (email: string, password: string) => {
         const { error } = await supabase.auth.signInWithPassword({

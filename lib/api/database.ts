@@ -80,7 +80,6 @@ export async function addTransaction(transaction: {
     price: number
     fee?: number
     total_money: number
-    notes?: string
 }): Promise<Transaction> {
     const supabase = createClient()
 
@@ -102,7 +101,6 @@ export async function addTransaction(transaction: {
             price: transaction.price,
             fee: transaction.fee || 0,
             total_money: transaction.total_money,
-            notes: transaction.notes || null,
         })
         .select()
         .single()

@@ -242,7 +242,7 @@ export default function PortfolioDetailPage() {
                                         </div>
                                         <div>
                                             <p className="font-bold text-slate-900 text-lg tracking-tight">{formatDate(t.date)}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.notes || (isBuy ? 'Tăng vị thế' : 'Giảm vị thế')}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{isBuy ? 'Tăng vị thế' : 'Giảm vị thế'}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
