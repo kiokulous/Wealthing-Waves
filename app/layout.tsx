@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import AppLayout from "@/components/AppLayout";
 
 const font = Be_Vietnam_Pro({
@@ -22,11 +23,13 @@ export default function RootLayout({
     return (
         <html lang="vi">
             <body className={font.className}>
-                <AuthProvider>
-                    <AppLayout>
-                        {children}
-                    </AppLayout>
-                </AuthProvider>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <AppLayout>
+                            {children}
+                        </AppLayout>
+                    </AuthProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

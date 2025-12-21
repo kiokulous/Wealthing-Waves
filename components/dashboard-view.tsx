@@ -127,16 +127,16 @@ export function DashboardView() {
     return (
         <div className="space-y-5 pb-24">
             {/* NET WORTH CARD */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#4f46e5] via-[#7c3aed] to-[#db2777] p-6 text-white shadow-xl shadow-indigo-200">
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-sage p-10 text-black shadow-2xl shadow-black/10">
+                <div className="absolute -top-12 -right-12 w-64 h-64 bg-white opacity-20 rounded-full blur-3xl"></div>
                 <div className="relative z-10">
-                    <p className="text-indigo-100 text-xs font-bold uppercase tracking-wider mb-1">Tổng Tài Sản (Assets)</p>
-                    <h2 className="text-3xl font-bold tracking-tight mb-4">{fmt.format(netWorth)}</h2>
-                    <div className="flex items-center gap-2">
-                        <div className="bg-white/20 px-2 py-1 rounded text-xs font-bold">
+                    <p className="text-black/60 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Tổng Tài Sản (Assets)</p>
+                    <h2 className="text-5xl font-black tracking-tighter mb-8">{fmt.format(netWorth)}</h2>
+                    <div className="flex items-center gap-3">
+                        <div className="bg-black/10 backdrop-blur-md px-4 py-2 rounded-2xl text-sm font-bold border border-black/5">
                             {totalPL >= 0 ? '+' : ''}{fmt.format(totalPL)}
                         </div>
-                        <span className="text-xs text-indigo-100 uppercase font-semibold">Lợi nhuận ròng</span>
+                        <span className="text-[10px] text-black/50 uppercase font-bold tracking-widest">Lợi nhuận ròng</span>
                     </div>
                 </div>
             </div>

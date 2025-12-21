@@ -141,29 +141,29 @@ export default function TransactionPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
                 <div>
-                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-1">
-                        Cổng <span className="text-blue-600">Dữ liệu</span>
+                    <h1 className="text-4xl font-bold text-[var(--foreground)] tracking-tight mb-1">
+                        Cổng <span className="text-[var(--primary)]">Dữ liệu</span>
                     </h1>
-                    <p className="text-slate-500 font-medium tracking-tight">Đồng bộ hóa các giao dịch mới nhất và giá thị trường của bạn.</p>
+                    <p className="text-[var(--text-muted)] font-medium tracking-tight">Đồng bộ hóa các giao dịch mới nhất và giá thị trường của bạn.</p>
                 </div>
             </header>
 
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Mode Selector Bento Block */}
-                <div className="flex p-2 bg-white border border-slate-200 rounded-[2rem] shadow-sm relative overflow-hidden group h-16 items-center">
+                <div className="flex p-2 bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm relative overflow-hidden group h-16 items-center transition-colors">
                     <div
-                        className={`absolute top-2 bottom-2 w-[calc(50%-8px)] rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-blue-600 shadow-lg shadow-blue-500/20 ${mode === 'price' ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'}`}
+                        className={`absolute top-2 bottom-2 w-[calc(50%-8px)] rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-slate-900 dark:bg-[var(--primary)] shadow-lg shadow-black/10 ${mode === 'price' ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'}`}
                     ></div>
                     <button
                         onClick={() => setMode('transaction')}
-                        className={`flex-1 flex items-center justify-center gap-2 font-bold text-sm tracking-tight transition-all relative z-10 ${mode === 'transaction' ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 font-bold text-sm tracking-tight transition-all relative z-10 ${mode === 'transaction' ? 'text-white dark:text-[#0D0D0D]' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
                     >
                         <PlusCircle className="w-4 h-4" />
                         Giao dịch
                     </button>
                     <button
                         onClick={() => setMode('price')}
-                        className={`flex-1 flex items-center justify-center gap-2 font-bold text-sm tracking-tight transition-all relative z-10 ${mode === 'price' ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 font-bold text-sm tracking-tight transition-all relative z-10 ${mode === 'price' ? 'text-white dark:text-[#0D0D0D]' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
                     >
                         <Database className="w-4 h-4" />
                         Giá thị trường
@@ -173,14 +173,14 @@ export default function TransactionPage() {
                 {/* Form Bento Card */}
                 <div className="bento-card p-10 shadow-xl shadow-slate-200/50">
                     {error && (
-                        <div className="mb-8 p-4 bg-red-50 text-red-600 text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-3 border border-red-100 animate-in slide-in-from-top-2">
+                        <div className="mb-8 p-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-3 border border-red-100 dark:border-red-500/20 animate-in slide-in-from-top-2">
                             <AlertCircle className="w-5 h-5" />
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="mb-8 p-4 bg-emerald-50 text-emerald-600 text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-3 border border-emerald-100 animate-in slide-in-from-top-2">
+                        <div className="mb-8 p-4 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-3 border border-emerald-100 dark:border-emerald-500/20 animate-in slide-in-from-top-2">
                             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                             {success}
                         </div>
@@ -190,7 +190,7 @@ export default function TransactionPage() {
                         {/* Core Fields */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
                                     <Calendar className="w-3 h-3" />
                                     Chu kỳ Giao dịch
                                 </label>
@@ -204,7 +204,7 @@ export default function TransactionPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
                                     <Tag className="w-3 h-3" />
                                     Mã Tín hiệu
                                 </label>
@@ -221,7 +221,7 @@ export default function TransactionPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                            <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
                                 <Layers className="w-3 h-3" />
                                 Phân loại Tài sản
                             </label>
@@ -230,14 +230,14 @@ export default function TransactionPage() {
                                     name="category"
                                     value={formData.category}
                                     onChange={handleChange}
-                                    className="w-full appearance-none bg-slate-100 border-none rounded-2xl px-5 py-4 text-sm text-slate-900 font-bold focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none cursor-pointer"
+                                    className="w-full appearance-none bg-slate-100 dark:bg-zinc-900 border-none rounded-2xl px-5 py-4 text-sm text-[var(--foreground)] font-bold focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none cursor-pointer"
                                 >
                                     <option value="Chứng chỉ quỹ">Chứng chỉ quỹ</option>
                                     <option value="Cổ phiếu">Cổ phiếu</option>
                                     <option value="Vàng">Vàng</option>
                                     <option value="Tiết kiệm">Tiết kiệm</option>
                                 </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-slate-400 border-l border-slate-200 my-3">
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#A3AED0] border-l border-slate-200 dark:border-white/10 my-3">
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -248,19 +248,19 @@ export default function TransactionPage() {
                         {mode === 'transaction' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lệnh Giao dịch</label>
+                                    <label className="text-[10px] font-bold text-[#A3AED0] uppercase tracking-widest ml-1">Lệnh Giao dịch</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Mua' }))}
-                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Mua' ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-lg shadow-emerald-500/10' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Mua' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 text-[#A3AED0] hover:border-slate-200'}`}
                                         >
                                             Cộng hưởng (Mua)
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Chốt' }))}
-                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Chốt' ? 'bg-red-50 border-red-500 text-red-700 shadow-lg shadow-red-500/10' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Chốt' ? 'bg-red-50 dark:bg-red-500/10 border-red-500 text-red-700 dark:text-red-400 shadow-lg shadow-red-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 text-[#A3AED0] hover:border-slate-200'}`}
                                         >
                                             Phát tán (Bán)
                                         </button>
@@ -309,7 +309,7 @@ export default function TransactionPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tổng năng lượng (VNĐ)</label>
+                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Tổng năng lượng (VNĐ)</label>
                                         <input
                                             type="number"
                                             step="1"
@@ -317,7 +317,7 @@ export default function TransactionPage() {
                                             value={formData.total_money}
                                             onChange={handleChange}
                                             placeholder="0"
-                                            className="w-full bg-blue-50 border-none rounded-2xl px-5 py-4 text-xl font-bold text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none"
+                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl px-5 py-4 text-xl font-bold text-slate-900 dark:text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none"
                                         />
                                     </div>
                                 </div>
@@ -334,9 +334,9 @@ export default function TransactionPage() {
                                     value={formData.price}
                                     onChange={handleChange}
                                     placeholder="Nhập giá thị trường..."
-                                    className="w-full bg-blue-50 border-none rounded-2xl px-5 py-5 text-2xl font-bold text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none"
+                                    className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl px-5 py-5 text-2xl font-bold text-slate-900 dark:text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none"
                                 />
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-3 ml-1">
+                                <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-tight mt-3 ml-1">
                                     Hệ thống sẽ cập nhật chỉ số hiệu quả cho các mã này dựa trên giá trị này.
                                 </p>
                             </div>
@@ -345,10 +345,10 @@ export default function TransactionPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full py-5 rounded-[2rem] font-bold text-sm tracking-widest shadow-xl transition-all mt-6 flex items-center justify-center gap-2 active:scale-[0.98] ${loading ? 'bg-slate-100 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'}`}
+                            className={`w-full py-5 rounded-[2rem] font-bold text-sm tracking-widest shadow-xl transition-all mt-6 flex items-center justify-center gap-2 active:scale-[0.98] ${loading ? 'bg-slate-100 dark:bg-zinc-800 text-[var(--text-muted)]' : 'bg-slate-900 dark:bg-[var(--primary)] text-white dark:text-[#080808] hover:bg-black dark:hover:bg-[var(--primary-hover)] shadow-black/10'}`}
                         >
                             {loading ? (
-                                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-zinc-500 border-t-slate-500 dark:border-t-[var(--primary)] rounded-full animate-spin" />
                             ) : (
                                 <>
                                     {mode === 'transaction' ? 'Phê duyệt Tín hiệu' : 'Đồng bộ Giá trị Thị trường'}

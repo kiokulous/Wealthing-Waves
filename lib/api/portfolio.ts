@@ -11,6 +11,7 @@ export type PortfolioItem = {
     invested: number
     currentValue: number
     currentPrice: number
+    realized: number
     profitLoss: number
     profitLossPercent: number
     lastPrices: number[] // Last 7 prices for sparkline
@@ -65,6 +66,7 @@ export function calculatePortfolio(
         category: string
         quantity: number
         invested: number
+        realized: number
     }>()
 
     // Track totals
@@ -81,6 +83,7 @@ export function calculatePortfolio(
                 category: txn.category,
                 quantity: 0,
                 invested: 0,
+                realized: 0,
             })
         }
 
@@ -99,9 +102,11 @@ export function calculatePortfolio(
             if (item.quantity > 0) {
                 const avgCost = item.invested / item.quantity
                 const costBasis = txn.quantity * avgCost
+                item.realized += value - costBasis
                 item.invested -= costBasis
                 item.quantity -= txn.quantity
             } else {
+                item.realized += value
                 item.quantity -= txn.quantity
             }
         }
@@ -131,10 +136,11 @@ export function calculatePortfolio(
             lastPrices.unshift(currentPrice)
         }
 
-        const profitLoss = currentValue - item.invested
+        const profitLoss = (currentValue - item.invested) + item.realized
+        const totalCapital = item.invested + (item.quantity === 0 ? Math.abs(item.realized) : 0) // Proxy for capital involved if sold out
         const profitLossPercent = item.invested > 0
             ? (profitLoss / item.invested) * 100
-            : 0
+            : (item.realized !== 0 ? 100 : 0) // If sold out, we just show 100% or something indicative
 
         if (item.quantity > 0) {
             totalCurrentValue += currentValue
@@ -147,6 +153,7 @@ export function calculatePortfolio(
             invested: item.invested,
             currentValue,
             currentPrice,
+            realized: item.realized,
             profitLoss,
             profitLossPercent,
             lastPrices,
@@ -258,16 +265,21 @@ export function calculateSymbolDetail(
     let invested = 0
     let realized = 0
     let firstBuyDate: Date | null = null
+    let lastTxnDate: Date | null = null
+    let peakInvested = 0 // Track maximum capital deployed for ROI proxy
 
     symbolTransactions.forEach(txn => {
-        const value = txn.total_money // Now always positive after migration
+        const value = txn.total_money
+        const txnDate = new Date(txn.date)
+        if (!lastTxnDate || txnDate > lastTxnDate) lastTxnDate = txnDate
 
         if (txn.type === 'Mua') {
             if (!firstBuyDate) {
-                firstBuyDate = new Date(txn.date)
+                firstBuyDate = txnDate
             }
             quantity += txn.quantity
             invested += value
+            if (invested > peakInvested) peakInvested = invested
         } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
             if (quantity > 0) {
                 const avgCost = invested / quantity
@@ -290,19 +302,23 @@ export function calculateSymbolDetail(
     // Calculate P/L
     const unrealizedPL = currentValue - invested
     const totalPL = unrealizedPL + realized
-    const plPercent = invested > 0
-        ? (totalPL / invested) * 100
+    const denom = invested > 0 ? invested : peakInvested
+    const plPercent = denom > 0
+        ? (totalPL / denom) * 100
         : 0
 
     // Calculate holding duration
     let holdingDays = 0
-    if (quantity > 0 && firstBuyDate) {
-        const now = filterYear
-            ? new Date(filterYear, 11, 31)
-            : new Date()
-        const start = new Date(firstBuyDate)
+    if (firstBuyDate) {
+        let endDate: Date
+        if (quantity > 0) {
+            endDate = filterYear ? new Date(filterYear, 11, 31) : new Date()
+        } else {
+            endDate = lastTxnDate || new Date()
+        }
+
         holdingDays = Math.ceil(
-            (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+            (endDate.getTime() - firstBuyDate.getTime()) / (1000 * 60 * 60 * 24)
         )
     }
 

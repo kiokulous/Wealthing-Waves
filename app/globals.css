@@ -4,95 +4,78 @@
 
 @layer base {
   :root {
-    /* Bento Light Theme Variables */
-    --background: #F7F7F7;
-    /* Light Off-white */
-    --foreground: #1B1B1B;
-    /* Darkest */
-
+    --background: #F4F7FE;
+    --foreground: #2B3674;
     --card-bg: #FFFFFF;
-    --card-border: #E5E7EB;
-    /* Gray 200 */
-    --card-border-hover: #2C56ED;
+    --card-border: rgba(226, 232, 240, 0.8);
+    --primary: #4318FF;
+    --primary-hover: #3311CC;
+    --success: #05CD99;
+    --error: #EE5D50;
+    --text-muted: #A3AED0;
+    --pill-bg: rgba(255, 255, 255, 0.85);
+    --pill-border: rgba(255, 255, 255, 0.5);
+    --pill-shadow: 0 10px 40px -10px rgba(163, 177, 198, 0.2);
+  }
 
-    --primary: #2C56ED;
-    /* Sharia Blue */
-    --primary-glow: rgba(44, 86, 237, 0.1);
-
-    --success: #10B981;
-    --error: #EF4444;
-
-    /* Bento Accents */
-    --accent-lavender: #E3C9FB;
-    --accent-mint: #C9FBF5;
-    --accent-green: #DEF8C9;
+  .dark {
+    --background: #0A0A0A;
+    /* Deep Charcoal from image */
+    --foreground: #FFFFFF;
+    --card-bg: #141414;
+    /* Slightly elevated charcoal */
+    --card-border: rgba(255, 255, 255, 0.06);
+    --primary: #D1E6CE;
+    /* Exact Sage Green from image */
+    --primary-hover: #C1D4BE;
+    --success: #6EE7B7;
+    --error: #F87171;
+    --text-muted: #A0A0A0;
+    /* High contrast gray for dark mode */
+    --pill-bg: #1A1A1A;
+    --pill-border: rgba(255, 255, 255, 0.08);
+    --pill-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    @apply bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300;
     font-family: 'Be Vietnam Pro', sans-serif;
-    background-image: none;
     -webkit-font-smoothing: antialiased;
   }
 }
 
 @layer components {
-  /* === BENTO COMPONENTS === */
-
-  /* 1. Bento Card: Clean white cards with soft shadows */
   .bento-card {
-    @apply bg-white border border-slate-200 rounded-[2rem] transition-all duration-300 overflow-hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--card-border);
+    color: var(--foreground);
+    @apply rounded-[2rem] transition-all duration-300 overflow-hidden shadow-xl;
   }
 
-  .bento-card:hover {
-    @apply border-blue-500/20;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  .floating-pill {
+    @apply bg-white/80 dark:bg-[var(--pill-bg)] backdrop-blur-xl border border-white/50 dark:border-[var(--pill-border)] rounded-[2rem] transition-all;
+    box-shadow: var(--pill-shadow);
   }
 
-  /* 2. Bento Card Colored Variations */
-  .bento-card-lavender {
-    @apply bento-card border-none;
-    background-color: var(--accent-lavender);
+  .nav-pill-active {
+    @apply bg-slate-900 dark:bg-[var(--primary)] text-white dark:text-[#000000] shadow-lg shadow-black/10 dark:shadow-none font-bold;
   }
 
-  .bento-card-mint {
-    @apply bento-card border-none;
-    background-color: var(--accent-mint);
+  .nav-pill-inactive {
+    @apply text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-[var(--text-muted)] dark:hover:text-[var(--primary)] dark:hover:bg-white/5;
   }
 
-  .bento-card-green {
-    @apply bento-card border-none;
-    background-color: var(--accent-green);
-  }
-
-  .bento-card-blue {
-    @apply bento-card border-none text-white;
-    background-color: var(--primary);
-  }
-
-  /* 3. Buttons */
-  .btn-bento-primary {
-    @apply bg-blue-600 text-white font-bold py-3 px-6 rounded-2xl hover:bg-blue-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2;
-  }
-
-  .btn-bento-secondary {
-    @apply bg-white border border-slate-200 text-slate-900 font-bold py-3 px-6 rounded-2xl hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2;
-  }
-
-  /* 4. Input Styling */
   .input-bento {
-    @apply w-full bg-slate-100 border-none rounded-2xl px-5 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition-all placeholder:text-slate-400;
+    @apply bg-slate-100/50 dark:bg-[#1A1A1A] border border-transparent dark:border-[var(--pill-border)] rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:bg-white dark:focus:bg-[#111] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#555];
+    color: var(--foreground);
+    --tw-ring-color: rgba(0, 0, 0, 0.1);
   }
 
-  /* Side Nav active class */
-  .nav-active {
-    @apply bg-blue-600 text-white shadow-lg shadow-blue-500/20;
+  .dark .input-bento {
+    --tw-ring-color: rgba(205, 226, 205, 0.2);
   }
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -103,19 +86,5 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-300;
-}
-
-/* Hide scrollbar for utility */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  @apply bg-slate-200 dark:bg-zinc-800 rounded-full hover:dark:bg-zinc-700 transition-colors;
 }

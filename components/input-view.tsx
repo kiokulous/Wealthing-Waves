@@ -105,13 +105,13 @@ export function InputView() {
                 ></div>
                 <button
                     onClick={() => setMode('txn')}
-                    className={`relative z-10 flex-1 py-2.5 text-sm font-bold text-center transition-colors ${mode === 'txn' ? 'text-indigo-600' : 'text-slate-400'}`}
+                    className={`relative z-10 flex-1 py-2.5 text-sm font-bold text-center transition-colors ${mode === 'txn' ? 'text-black dark:text-black' : 'text-slate-400'}`}
                 >
                     Giao Dịch
                 </button>
                 <button
                     onClick={() => setMode('price')}
-                    className={`relative z-10 flex-1 py-2.5 text-sm font-bold text-center transition-colors ${mode === 'price' ? 'text-indigo-600' : 'text-slate-400'}`}
+                    className={`relative z-10 flex-1 py-2.5 text-sm font-bold text-center transition-colors ${mode === 'price' ? 'text-black dark:text-black' : 'text-slate-400'}`}
                 >
                     Cập Nhật Giá
                 </button>
@@ -156,31 +156,31 @@ export function InputView() {
                 )}
 
                 <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase ml-1">Mã (Symbol)</label>
-                    <input type="text" name="symbol" placeholder="VD: VNM" required value={formData.symbol} onChange={handleChange} className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-lg font-black uppercase tracking-wider text-slate-800 placeholder:font-normal outline-none focus:border-indigo-500" />
+                    <label className="text-xs font-bold text-slate-400 dark:text-[var(--text-muted)] uppercase ml-1">Mã (Symbol)</label>
+                    <input type="text" name="symbol" placeholder="VD: VNM" required value={formData.symbol} onChange={handleChange} className="input-bento w-full text-lg font-black uppercase tracking-wider placeholder:font-normal" />
                 </div>
 
                 {mode === 'txn' && (
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Số lượng</label>
-                        <input type="number" step="0.01" name="qty" placeholder="0.00" value={formData.qty} onChange={handleChange} required className="w-full bg-white border border-slate-200 rounded-xl p-3.5 font-bold text-slate-700 outline-none focus:border-indigo-500" />
+                        <label className="text-xs font-bold text-slate-400 dark:text-[var(--text-muted)] uppercase ml-1">Số lượng</label>
+                        <input type="number" step="0.01" name="qty" placeholder="0.00" value={formData.qty} onChange={handleChange} required className="input-bento w-full font-bold" />
                     </div>
                 )}
 
                 {mode === 'price' ? (
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Giá Thị Trường (1 Đơn vị)</label>
-                        <input type="number" step="0.01" name="price" placeholder="0" required value={formData.price} onChange={handleChange} className="w-full bg-white border border-slate-200 rounded-xl p-3.5 font-bold text-slate-700 outline-none focus:border-indigo-500" />
+                        <label className="text-xs font-bold text-slate-400 dark:text-[var(--text-muted)] uppercase ml-1">Giá Thị Trường (1 Đơn vị)</label>
+                        <input type="number" step="0.01" name="price" placeholder="0" required value={formData.price} onChange={handleChange} className="input-bento w-full font-bold" />
                     </div>
                 ) : (
                     <>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Tổng Tiền (Gồm Phí)</label>
-                            <input type="number" step="1" name="total_money" placeholder="0" required value={formData.total_money} onChange={handleChange} className="w-full bg-white border border-slate-200 rounded-xl p-3.5 font-bold text-indigo-600 outline-none focus:border-indigo-500" />
+                            <label className="text-xs font-bold text-slate-400 dark:text-[var(--text-muted)] uppercase ml-1">Tổng Tiền (Gồm Phí)</label>
+                            <input type="number" step="1" name="total_money" placeholder="0" required value={formData.total_money} onChange={handleChange} className="input-bento w-full font-bold text-[var(--primary)]" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-400 uppercase ml-1">Phí GD</label>
-                            <input type="number" step="1" name="fee" value={formData.fee} onChange={handleChange} className="w-full bg-white border border-slate-200 rounded-xl p-3.5 font-bold text-slate-500 outline-none focus:border-indigo-500" />
+                            <label className="text-xs font-bold text-slate-400 dark:text-[var(--text-muted)] uppercase ml-1">Phí GD</label>
+                            <input type="number" step="1" name="fee" value={formData.fee} onChange={handleChange} className="input-bento w-full font-bold" />
                         </div>
                     </>
                 )}
@@ -191,7 +191,7 @@ export function InputView() {
                     className={`w-full font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-4 
                     ${success
                             ? 'bg-emerald-500 text-white shadow-emerald-200'
-                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+                            : 'bg-[var(--primary)] text-black shadow-black/10'
                         }
                     ${loading ? 'opacity-70 cursor-not-allowed' : ''}
                 `}

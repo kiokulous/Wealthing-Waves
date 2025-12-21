@@ -25,14 +25,15 @@ export default function FloatingNav() {
     ]
 
     return (
-        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-xl border border-slate-200 px-4 py-3 rounded-[2.5rem] shadow-2xl flex items-center gap-2 z-50">
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-[#141414]/90 backdrop-blur-xl border border-white/50 dark:border-white/5 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 z-50 shadow-black/20 transition-all">
             {navItems.map((item) => {
+                const active = isActive(item.path)
                 if (item.isCenter) {
                     return (
                         <button
                             key={item.path}
                             onClick={() => router.push(item.path)}
-                            className="bg-blue-600 p-4 rounded-full text-white shadow-lg shadow-blue-500/30 mx-1 active:scale-90 transition-transform"
+                            className="bg-[var(--primary)] p-4 rounded-full text-black shadow-lg shadow-black/20 mx-1 active:scale-90 transition-all"
                             title={item.label}
                         >
                             <item.icon className="w-6 h-6" />
@@ -44,13 +45,13 @@ export default function FloatingNav() {
                     <button
                         key={item.path}
                         onClick={() => router.push(item.path)}
-                        className={`p-3 rounded-2xl transition-all duration-200 relative ${isActive(item.path)
-                            ? 'text-blue-600 bg-blue-50'
-                            : 'text-slate-400 hover:text-slate-600'
+                        className={`p-3 rounded-full transition-all duration-300 relative ${active
+                            ? 'text-[var(--primary)] bg-[var(--primary)]/10'
+                            : 'text-[var(--text-muted)] hover:text-[var(--primary)]'
                             }`}
                         title={item.label}
                     >
-                        <item.icon className="w-6 h-6" />
+                        <item.icon className="w-5 h-5" />
                     </button>
                 )
             })}

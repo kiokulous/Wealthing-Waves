@@ -72,8 +72,8 @@ export default function PortfolioDetailPage() {
         return (
             <div className="flex items-center justify-center p-20">
                 <div className="text-center">
-                    <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p className="text-slate-500 font-bold text-sm tracking-widest uppercase">Phân tích sóng tín hiệu...</p>
+                    <div className="inline-block w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p className="text-[#A3AED0] font-bold text-sm tracking-widest uppercase">Phân tích sóng tín hiệu...</p>
                 </div>
             </div>
         )
@@ -90,13 +90,13 @@ export default function PortfolioDetailPage() {
                 <div className="flex items-center gap-6">
                     <button
                         onClick={() => router.back()}
-                        className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-slate-900 transition-all shadow-sm hover:translate-x-[-2px]"
+                        className="p-3 bg-white dark:bg-[#111111] border border-slate-200 dark:border-white/5 rounded-2xl text-[#A3AED0] hover:text-[var(--primary)] transition-all shadow-sm hover:translate-x-[-2px]"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight leading-none mb-1">{symbol}</h1>
-                        <p className="text-slate-500 font-medium tracking-tight uppercase text-xs">Hồ sơ Cộng hưởng Tài sản</p>
+                        <h1 className="text-4xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">{symbol}</h1>
+                        <p className="text-[#A3AED0] font-medium tracking-tight uppercase text-xs">Hồ sơ Cộng hưởng Tài sản</p>
                     </div>
                 </div>
 
@@ -105,14 +105,14 @@ export default function PortfolioDetailPage() {
                         <select
                             value={filterYear}
                             onChange={(e) => setFilterYear(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                            className="w-full appearance-none bg-white border border-slate-200 text-slate-900 rounded-2xl py-3 pl-5 pr-12 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 cursor-pointer transition-all"
+                            className="w-full appearance-none bg-white dark:bg-[#111111] border border-slate-200 dark:border-white/5 text-[#2B3674] dark:text-white rounded-2xl py-3 pl-5 pr-12 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/10 cursor-pointer transition-all"
                         >
                             <option value="all">Toàn bộ lịch sử</option>
                             {availableYears.map(year => (
                                 <option key={year} value={year}>Năm {year}</option>
                             ))}
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400 border-l border-slate-100 my-2">
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#A3AED0] border-l border-slate-100 dark:border-white/10 my-2">
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                             </svg>
@@ -126,12 +126,12 @@ export default function PortfolioDetailPage() {
 
                 {/* Total P/L Card (Hero) */}
                 <div className="md:col-span-4 lg:col-span-4 lg:row-span-2 bento-card p-10 flex flex-col justify-between group overflow-hidden relative">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 transition-transform duration-700" />
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--primary)]/5 rounded-full blur-3xl transition-transform duration-700" />
 
                     <div>
                         <div className="flex items-center justify-between mb-8">
-                            <p className="text-slate-500 font-bold uppercase text-[11px] tracking-widest">Hiệu suất ròng</p>
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Hiệu suất ròng</p>
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isProfit ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' : 'bg-red-50 dark:bg-red-500/10 text-red-600'}`}>
                                 <Activity className="w-5 h-5" />
                             </div>
                         </div>
@@ -159,56 +159,56 @@ export default function PortfolioDetailPage() {
 
                 {/* Holdings & Cost Basis (Medium) */}
                 <div className="md:col-span-4 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bento-card p-8 group hover:bg-slate-50 transition-all">
+                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
                         <div className="flex justify-between items-center mb-6">
-                            <p className="text-slate-500 font-bold uppercase text-[11px] tracking-widest">Vị thế hoạt động</p>
-                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Vị thế hoạt động</p>
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#A3AED0]">
                                 <TrendingUp className="w-4 h-4" />
                             </div>
                         </div>
-                        <h3 className="text-3xl font-bold text-slate-900 tracking-tight leading-none mb-1">
+                        <h3 className="text-3xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
                             {detail.quantity.toLocaleString('vi-VN')}
-                            <span className="text-sm font-bold text-slate-300 ml-2 uppercase tracking-widest">Đơn vị</span>
+                            <span className="text-sm font-bold text-[#A3AED0] ml-2 uppercase tracking-widest">Đơn vị</span>
                         </h3>
-                        <p className="text-slate-400 text-xs font-bold uppercase mt-2">Hiện có trong danh mục</p>
+                        <p className="text-[#A3AED0] text-xs font-bold uppercase mt-2">Hiện có trong danh mục</p>
                     </div>
 
-                    <div className="bento-card p-8 group hover:bg-slate-50 transition-all">
+                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
                         <div className="flex justify-between items-center mb-6">
-                            <p className="text-slate-500 font-bold uppercase text-[11px] tracking-widest">Vốn đầu tư</p>
-                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Vốn đầu tư</p>
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#A3AED0]">
                                 <Calendar className="w-4 h-4" />
                             </div>
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-1">
+                        <h3 className="text-2xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
                             {formatValue(detail.invested)} <span className="text-sm">đ</span>
                         </h3>
-                        <p className="text-slate-400 text-xs font-bold uppercase mt-2">Tổng giá vốn</p>
+                        <p className="text-[#A3AED0] text-xs font-bold uppercase mt-2">Tổng giá vốn</p>
                     </div>
                 </div>
 
                 {/* Timeline Details (Long Horizontal) */}
                 <div className="md:col-span-4 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bento-card p-8 bg-[#C9FBF5] border-none group cursor-default">
+                    <div className="bento-card p-8 bg-[var(--primary)] border-none group cursor-default transition-colors">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/50 flex items-center justify-center text-emerald-700">
+                            <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center text-[#080808]">
                                 <Clock className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-emerald-700/60 font-bold uppercase text-[10px] tracking-widest mb-1">Giai đoạn Cộng hưởng</p>
-                                <p className="text-2xl font-bold text-emerald-900 tracking-tight">{detail.holdingDays} <span className="text-xs uppercase">Ngày</span></p>
+                                <p className="text-[#080808]/50 font-bold uppercase text-[10px] tracking-widest mb-1">Giai đoạn Cộng hưởng</p>
+                                <p className="text-2xl font-bold text-[#080808] tracking-tight">{detail.holdingDays} <span className="text-xs uppercase">Ngày</span></p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bento-card p-8 bg-[#E3C9FB] border-none group cursor-default">
+                    <div className="bento-card p-8 bg-zinc-900 border-none group cursor-default transition-colors">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/50 flex items-center justify-center text-purple-700">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[var(--primary)]">
                                 <Calendar className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-purple-700/60 font-bold uppercase text-[10px] tracking-widest mb-1">Điểm vào Ban đầu</p>
-                                <p className="text-2xl font-bold text-purple-900 tracking-tight">{detail.firstBuyDate ? formatDate(detail.firstBuyDate) : '-'}</p>
+                                <p className="text-[#888888] font-bold uppercase text-[10px] tracking-widest mb-1">Điểm vào Ban đầu</p>
+                                <p className="text-2xl font-bold text-white tracking-tight">{detail.firstBuyDate ? formatDate(detail.firstBuyDate) : '-'}</p>
                             </div>
                         </div>
                     </div>
@@ -218,12 +218,12 @@ export default function PortfolioDetailPage() {
             {/* History Table Bento Block */}
             <div className="px-2">
                 <div className="bento-card overflow-hidden">
-                    <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                    <div className="p-8 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-900">Lịch sử Tín hiệu</h3>
-                            <p className="text-slate-500 text-sm font-medium">Nhật ký chi tiết tất cả các tương tác đã ghi lại cho {symbol}.</p>
+                            <h3 className="text-xl font-bold text-[#2B3674] dark:text-white">Lịch sử Tín hiệu</h3>
+                            <p className="text-[#A3AED0] text-sm font-medium">Nhật ký chi tiết tất cả các tương tác đã ghi lại cho {symbol}.</p>
                         </div>
-                        <div className="p-3 bg-slate-50 rounded-2xl text-slate-400">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-[#A3AED0]">
                             <CheckCircle2 className="w-5 h-5" />
                         </div>
                     </div>
@@ -232,7 +232,7 @@ export default function PortfolioDetailPage() {
                         {detail.transactions.map((t: Transaction) => {
                             const isBuy = t.type === 'Mua'
                             return (
-                                <div key={t.id} className="p-6 md:p-8 flex items-center justify-between hover:bg-slate-50 transition-all group">
+                                <div key={t.id} className="p-6 md:p-8 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-all group">
                                     <div className="flex items-center gap-6">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isBuy
                                             ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
@@ -241,15 +241,15 @@ export default function PortfolioDetailPage() {
                                             {isBuy ? <PlusCircle className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-900 text-lg tracking-tight">{formatDate(t.date)}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{isBuy ? 'Tăng vị thế' : 'Giảm vị thế'}</p>
+                                            <p className="font-bold text-[#2B3674] dark:text-white text-lg tracking-tight">{formatDate(t.date)}</p>
+                                            <p className="text-[10px] text-[#A3AED0] font-bold uppercase tracking-widest">{isBuy ? 'Tăng vị thế' : 'Giảm vị thế'}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className={`font-bold text-lg tracking-tight ${isBuy ? 'text-slate-900' : 'text-red-500'}`}>
+                                        <p className={`font-bold text-lg tracking-tight ${isBuy ? 'text-[#2B3674] dark:text-white' : 'text-red-500'}`}>
                                             {isBuy ? '' : '+'}{formatValue(t.total_money)} đ
                                         </p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                        <p className="text-[10px] text-[#A3AED0] font-bold uppercase tracking-widest mt-1">
                                             {t.quantity} Đơn vị @ {formatValue(t.price)}
                                         </p>
                                     </div>

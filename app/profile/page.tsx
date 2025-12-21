@@ -43,27 +43,29 @@ export default function ProfilePage() {
                             <div className="text-left">
                                 <p className="font-bold text-slate-900 text-sm tracking-tight">Cấu hình Hệ thống</p>
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Điều chỉnh các tham số cộng hưởng</p>
+                                <p className="font-bold text-neutral-900 text-sm tracking-tight">Cấu hình Hệ thống</p>
+                                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-0.5">Điều chỉnh các tham số cộng hưởng</p>
                             </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="w-5 h-5 text-neutral-300 group-hover:text-[var(--primary)] group-hover:translate-x-1 transition-all" />
                     </button>
 
-                    <button className="bento-card p-6 flex items-center justify-between group hover:bg-slate-50 transition-all border-slate-100 shadow-none">
+                    <button className="bento-card p-6 flex items-center justify-between group hover:bg-neutral-50 transition-all border-neutral-100 shadow-none">
                         <div className="flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                            <div className="w-12 h-12 rounded-2xl bg-neutral-50 text-neutral-400 flex items-center justify-center group-hover:bg-[var(--primary-light)] group-hover:text-[var(--primary)] transition-all">
                                 <Shield className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                                <p className="font-bold text-slate-900 text-sm tracking-tight">Bảo mật & Mã hóa</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Kiểm soát truy cập và kho lưu trữ</p>
+                                <p className="font-bold text-neutral-900 text-sm tracking-tight">Bảo mật & Mã hóa</p>
+                                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-0.5">Kiểm soát truy cập và kho lưu trữ</p>
                             </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="w-5 h-5 text-neutral-300 group-hover:text-[var(--primary)] group-hover:translate-x-1 transition-all" />
                     </button>
 
                     <button
                         onClick={() => signOut()}
-                        className="bento-card p-6 flex items-center justify-between group hover:bg-red-50 transition-all border-slate-100 shadow-none mt-4"
+                        className="bento-card p-6 flex items-center justify-between group hover:bg-red-50 transition-all border-neutral-100 shadow-none mt-4"
                     >
                         <div className="flex items-center gap-5">
                             <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-400 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">

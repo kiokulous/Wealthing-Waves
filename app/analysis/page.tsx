@@ -125,21 +125,21 @@ export default function AnalysisPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
                 <div>
-                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-1">
-                        Phân tích <span className="text-blue-600">Nâng cao</span>
+                    <h1 className="text-4xl font-bold text-[#2B3674] dark:text-white tracking-tight mb-1">
+                        Phân tích <span className="text-[var(--primary)]">Nâng cao</span>
                     </h1>
-                    <p className="text-slate-500 font-medium tracking-tight">Trực quan hóa sự cộng hưởng và các chỉ số hiệu suất danh mục của bạn.</p>
+                    <p className="text-[#A3AED0] font-medium tracking-tight">Trực quan hóa sự cộng hưởng và các chỉ số hiệu suất danh mục của bạn.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="flex bg-white border border-slate-200 p-1.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-1.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar transition-colors">
                         {['30 Ngày', '3 Tháng', '6 Tháng', '1 Năm', 'Toàn bộ'].map((f) => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${filter === f
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                                    ? 'bg-[var(--primary)] text-[#080808] shadow-lg shadow-black/20'
+                                    : 'text-[#A3AED0] hover:text-[var(--primary)] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5'
                                     }`}
                             >
                                 {f}
@@ -154,10 +154,10 @@ export default function AnalysisPage() {
                 <div className="bento-card p-10 group relative">
                     <div className="flex items-center justify-between mb-10">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
                                 <PieIcon className="w-5 h-5" />
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900">Phân bổ Danh mục</h3>
+                            <h3 className="text-lg font-bold text-[#2B3674] dark:text-white">Phân bổ Danh mục</h3>
                         </div>
                     </div>
 
@@ -181,21 +181,22 @@ export default function AnalysisPage() {
                                 <RechartsTooltip
                                     formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' đ'}
                                     contentStyle={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: 'var(--card-bg)',
                                         borderRadius: '24px',
-                                        border: '1px solid #E5E7EB',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                        color: '#1B1B1B',
+                                        border: '1px solid var(--pill-border)',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                                        color: 'var(--foreground)',
                                         fontSize: '12px',
                                         fontWeight: 'bold',
                                         padding: '12px 16px'
                                     }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tổng thể</p>
-                            <p className="text-2xl font-bold text-slate-900">100%</p>
+                            <p className="text-[10px] text-[#A3AED0] font-bold uppercase tracking-widest">Tổng thể</p>
+                            <p className="text-2xl font-bold text-[#2B3674] dark:text-white">100%</p>
                         </div>
                     </div>
 
@@ -204,8 +205,8 @@ export default function AnalysisPage() {
                             <div key={index} className="flex items-center gap-3 group/legend">
                                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BENTO_CHART_COLORS[index % BENTO_CHART_COLORS.length] }}></div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{entry.name}</span>
-                                    <span className="text-sm font-bold text-slate-900">{((entry.value / portfolio.totalCurrentValue) * 100).toFixed(0)}%</span>
+                                    <span className="text-[10px] font-bold text-[#A3AED0] uppercase tracking-tight">{entry.name}</span>
+                                    <span className="text-sm font-bold text-[#2B3674] dark:text-white">{((entry.value / portfolio.totalCurrentValue) * 100).toFixed(0)}%</span>
                                 </div>
                             </div>
                         ))}
@@ -215,10 +216,10 @@ export default function AnalysisPage() {
                 {/* 2. Profit/Loss Analysis (By Category) */}
                 <div className="bento-card p-10 group">
                     <div className="flex items-center gap-3 mb-10">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                             <BarChart3 className="w-5 h-5" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900">Hiệu suất Danh mục</h3>
+                        <h3 className="text-lg font-bold text-[#2B3674] dark:text-white">Hiệu suất Danh mục</h3>
                     </div>
 
                     <div className="h-72 w-full mt-4">
@@ -230,23 +231,24 @@ export default function AnalysisPage() {
                                     type="category"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fontSize: 11, fontWeight: 700, fill: '#64748b' }}
+                                    tick={{ fontSize: 11, fontWeight: 700, fill: 'var(--text-muted)' }}
                                     width={90}
                                 />
                                 <ReferenceLine x={0} stroke="#f1f5f9" />
                                 <RechartsTooltip
                                     formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' đ'}
-                                    cursor={{ fill: '#f8fafc' }}
+                                    cursor={{ fill: 'var(--pill-border)' }}
                                     contentStyle={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: 'var(--card-bg)',
                                         borderRadius: '24px',
-                                        border: '1px solid #E5E7EB',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                        color: '#1B1B1B',
+                                        border: '1px solid var(--pill-border)',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                                        color: 'var(--foreground)',
                                         fontSize: '12px',
                                         fontWeight: 'bold',
                                         padding: '12px 16px'
                                     }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
                                 />
                                 <Bar dataKey="pl" radius={[0, 10, 10, 0]} barSize={24}>
                                     {profitData.map((entry, index) => (
@@ -256,7 +258,7 @@ export default function AnalysisPage() {
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mt-12">Hiệu suất tương đối giữa các lĩnh vực</p>
+                    <p className="text-[10px] font-bold text-[#A3AED0] uppercase tracking-widest text-center mt-12">Hiệu suất tương đối giữa các lĩnh vực</p>
                 </div>
             </div>
 
@@ -264,12 +266,12 @@ export default function AnalysisPage() {
             <div className="px-2">
                 <div className="bento-card p-10">
                     <div className="flex items-center gap-3 mb-12">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-white/5 text-[var(--primary)] flex items-center justify-center">
                             <TrendingUp className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold text-slate-900">Xếp hạng Tốc độ Tài sản</h3>
-                            <p className="text-slate-500 text-sm font-medium">Các chỉ dấu có hiệu suất tốt nhất trong giai đoạn đã chọn.</p>
+                            <h3 className="text-2xl font-bold text-[#2B3674] dark:text-white">Xếp hạng Tốc độ Tài sản</h3>
+                            <p className="text-[#A3AED0] text-sm font-medium">Các chỉ dấu có hiệu suất tốt nhất trong giai đoạn đã chọn.</p>
                         </div>
                     </div>
 
@@ -282,29 +284,30 @@ export default function AnalysisPage() {
                                     type="category"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fontSize: 12, fontWeight: 700, fill: '#1e293b' }}
+                                    tick={{ fontSize: 12, fontWeight: 700, fill: 'var(--text-muted)' }}
                                     width={100}
                                 />
                                 <ReferenceLine x={0} stroke="#f1f5f9" />
                                 <RechartsTooltip
                                     formatter={(value: number) => `${value.toFixed(2)}%`}
-                                    cursor={{ fill: '#f8fafc' }}
+                                    cursor={{ fill: 'var(--pill-border)' }}
                                     contentStyle={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: 'var(--card-bg)',
                                         borderRadius: '24px',
-                                        border: '1px solid #E5E7EB',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                        color: '#1B1B1B',
+                                        border: '1px solid var(--pill-border)',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                                        color: 'var(--foreground)',
                                         fontSize: '12px',
                                         fontWeight: 'bold',
                                         padding: '12px 16px'
                                     }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
                                 />
                                 <Bar dataKey="value" radius={[0, 12, 12, 0]} barSize={20}>
                                     {assetPerformanceData.map((entry, index) => (
                                         <Cell
                                             key={`cell-${index}`}
-                                            fill={entry.value >= 0 ? '#2C56ED' : '#EF4444'}
+                                            fill={entry.value >= 0 ? 'var(--primary)' : 'var(--error)'}
                                         />
                                     ))}
                                 </Bar>
