@@ -68,9 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signInWithGoogle = async () => {
-        // Determine the redirect URL based on environment or window origin
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
-            (typeof window !== 'undefined' ? window.location.origin : '');
+        // Prioritize window.location.origin for dynamic redirect URL
+        // This ensures local dev uses localhost and production uses production URL
+        const siteUrl = typeof window !== 'undefined'
+            ? window.location.origin
+            : (process.env.NEXT_PUBLIC_SITE_URL || '');
 
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',

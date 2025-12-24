@@ -6,6 +6,7 @@ type SparklineProps = {
     height?: number
     color?: string
     className?: string
+    strokeWidth?: number
 }
 
 export default function Sparkline({
@@ -13,7 +14,8 @@ export default function Sparkline({
     width = 60,
     height = 24,
     color = 'rgb(99, 102, 241)',
-    className = ''
+    className = '',
+    strokeWidth = 1.5
 }: SparklineProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -44,7 +46,7 @@ export default function Sparkline({
 
         // Draw line
         ctx.strokeStyle = color
-        ctx.lineWidth = 1.5
+        ctx.lineWidth = strokeWidth
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
 
@@ -57,7 +59,7 @@ export default function Sparkline({
 
         ctx.stroke()
 
-    }, [data, width, height, color])
+    }, [data, width, height, color, strokeWidth])
 
     if (data.length < 2) {
         return <div className={className} style={{ width, height }} />

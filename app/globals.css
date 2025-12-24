@@ -8,8 +8,9 @@
     --foreground: #2B3674;
     --card-bg: #FFFFFF;
     --card-border: rgba(226, 232, 240, 0.8);
-    --primary: #4318FF;
-    --primary-hover: #3311CC;
+    --primary: #87A96B;
+    /* Moss Green - comfortable for eyes */
+    --primary-hover: #769B5A;
     --success: #05CD99;
     --error: #EE5D50;
     --text-muted: #A3AED0;
@@ -20,20 +21,20 @@
 
   .dark {
     --background: #0A0A0A;
-    /* Deep Charcoal from image */
+    /* Deep Charcoal - Exact match from reference image */
     --foreground: #FFFFFF;
     --card-bg: #141414;
-    /* Slightly elevated charcoal */
-    --card-border: rgba(255, 255, 255, 0.06);
-    --primary: #D1E6CE;
-    /* Exact Sage Green from image */
-    --primary-hover: #C1D4BE;
+    /* Slightly elevated charcoal for cards */
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #E8B298;
+    /* Soft Peach/Coral - warm and comfortable for dark mode */
+    --primary-hover: #D9A087;
     --success: #6EE7B7;
     --error: #F87171;
-    --text-muted: #A0A0A0;
-    /* High contrast gray for dark mode */
+    --text-muted: #B0B0B0;
+    /* Lighter gray for better contrast in dark mode */
     --pill-bg: #1A1A1A;
-    --pill-border: rgba(255, 255, 255, 0.08);
+    --pill-border: rgba(255, 255, 255, 0.10);
     --pill-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
   }
 
@@ -58,7 +59,7 @@
   }
 
   .nav-pill-active {
-    @apply bg-slate-900 dark:bg-[var(--primary)] text-white dark:text-[#000000] shadow-lg shadow-black/10 dark:shadow-none font-bold;
+    @apply bg-[var(--primary)] text-white dark:text-[#000000] shadow-lg shadow-black/10 dark:shadow-none font-bold;
   }
 
   .nav-pill-inactive {
@@ -66,13 +67,13 @@
   }
 
   .input-bento {
-    @apply bg-slate-100/50 dark:bg-[#1A1A1A] border border-transparent dark:border-[var(--pill-border)] rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:bg-white dark:focus:bg-[#111] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#555];
+    @apply bg-slate-100/50 dark:bg-[#1A1A1A] border border-transparent dark:border-[var(--pill-border)] rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:bg-white dark:focus:bg-[#0F0F0F] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#666666];
     color: var(--foreground);
-    --tw-ring-color: rgba(0, 0, 0, 0.1);
+    --tw-ring-color: rgba(135, 169, 107, 0.2);
   }
 
   .dark .input-bento {
-    --tw-ring-color: rgba(205, 226, 205, 0.2);
+    --tw-ring-color: rgba(232, 178, 152, 0.3);
   }
 }
 

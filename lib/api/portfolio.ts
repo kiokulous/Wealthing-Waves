@@ -268,7 +268,7 @@ export function calculateSymbolDetail(
     let lastTxnDate: Date | null = null
     let peakInvested = 0 // Track maximum capital deployed for ROI proxy
 
-    symbolTransactions.forEach(txn => {
+    for (const txn of symbolTransactions) {
         const value = txn.total_money
         const txnDate = new Date(txn.date)
         if (!lastTxnDate || txnDate > lastTxnDate) lastTxnDate = txnDate
@@ -289,7 +289,7 @@ export function calculateSymbolDetail(
                 quantity -= txn.quantity
             }
         }
-    })
+    }
 
     // Get market prices for this symbol
     const symbolPrices = marketPrices

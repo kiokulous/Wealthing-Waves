@@ -240,27 +240,61 @@ export async function addMarketPrice(marketPrice: {
         throw new Error('User not authenticated')
     }
 
-    // Try to upsert (insert or update if exists)
-    const { data, error } = await supabase
-        .from('market_prices')
-        .upsert({
-            user_id: user.id,
-            date: marketPrice.date,
-            category: marketPrice.category,
-            symbol: marketPrice.symbol.toUpperCase(),
-            price: marketPrice.price,
-        }, {
-            onConflict: 'user_id,symbol,date'
-        })
-        .select()
-        .single()
+    const symbolUpper = marketPrice.symbol.toUpperCase()
 
-    if (error) {
-        console.error('Error adding market price:', error)
-        throw new Error(error.message)
+    // Check if a price already exists for this user, symbol, and date
+    const { data: existing, error: fetchError } = await supabase
+        .from('market_prices')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('symbol', symbolUpper)
+        .eq('date', marketPrice.date)
+        .maybeSingle()
+
+    if (fetchError) {
+        console.error('Error checking existing market price:', fetchError)
+        throw new Error(fetchError.message)
     }
 
-    return data
+    if (existing) {
+        // Update existing record
+        const { data, error } = await supabase
+            .from('market_prices')
+            .update({
+                category: marketPrice.category,
+                price: marketPrice.price,
+            })
+            .eq('id', existing.id)
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error updating market price:', error)
+            throw new Error(error.message)
+        }
+
+        return data
+    } else {
+        // Insert new record
+        const { data, error } = await supabase
+            .from('market_prices')
+            .insert({
+                user_id: user.id,
+                date: marketPrice.date,
+                category: marketPrice.category,
+                symbol: symbolUpper,
+                price: marketPrice.price,
+            })
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Error adding market price:', error)
+            throw new Error(error.message)
+        }
+
+        return data
+    }
 }
 
 /**

@@ -25,7 +25,7 @@ export default function FloatingNav() {
     ]
 
     return (
-        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-[#141414]/90 backdrop-blur-xl border border-white/50 dark:border-white/5 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 z-50 shadow-black/20 transition-all">
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/50 dark:border-white/10 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 z-50 shadow-black/20 transition-all">
             {navItems.map((item) => {
                 const active = isActive(item.path)
                 if (item.isCenter) {
@@ -33,7 +33,7 @@ export default function FloatingNav() {
                         <button
                             key={item.path}
                             onClick={() => router.push(item.path)}
-                            className="bg-[var(--primary)] p-4 rounded-full text-black shadow-lg shadow-black/20 mx-1 active:scale-90 transition-all"
+                            className="bg-[var(--primary)] p-4 rounded-full text-white dark:text-black shadow-lg shadow-black/20 mx-1 active:scale-90 transition-all"
                             title={item.label}
                         >
                             <item.icon className="w-6 h-6" />

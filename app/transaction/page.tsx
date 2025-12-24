@@ -150,23 +150,23 @@ export default function TransactionPage() {
 
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Mode Selector Bento Block */}
-                <div className="flex p-2 bg-white dark:bg-[#141414] border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm relative overflow-hidden group h-16 items-center transition-colors">
+                <div className="flex p-2 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-[2rem] shadow-sm relative overflow-hidden group h-16 items-center transition-colors">
                     <div
-                        className={`absolute top-2 bottom-2 w-[calc(50%-8px)] rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-slate-900 dark:bg-[var(--primary)] shadow-lg shadow-black/10 ${mode === 'price' ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'}`}
+                        className={`absolute top-2 bottom-2 left-2 w-[calc(50%-12px)] rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-slate-900 dark:bg-[var(--primary)] shadow-lg shadow-black/10 ${mode === 'price' ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'}`}
                     ></div>
                     <button
                         onClick={() => setMode('transaction')}
-                        className={`flex-1 flex items-center justify-center gap-2 font-bold text-sm tracking-tight transition-all relative z-10 ${mode === 'transaction' ? 'text-white dark:text-[#0D0D0D]' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 font-bold text-[11px] sm:text-sm tracking-tight transition-all relative z-10 px-1.5 ${mode === 'transaction' ? 'text-white' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
                     >
-                        <PlusCircle className="w-4 h-4" />
-                        Giao dịch
+                        <PlusCircle className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">Giao dịch</span>
                     </button>
                     <button
                         onClick={() => setMode('price')}
-                        className={`flex-1 flex items-center justify-center gap-2 font-bold text-sm tracking-tight transition-all relative z-10 ${mode === 'price' ? 'text-white dark:text-[#0D0D0D]' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 font-bold text-[11px] sm:text-sm tracking-tight transition-all relative z-10 px-1.5 ${mode === 'price' ? 'text-white' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
                     >
-                        <Database className="w-4 h-4" />
-                        Giá thị trường
+                        <Database className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">Thị trường</span>
                     </button>
                 </div>
 
@@ -188,7 +188,7 @@ export default function TransactionPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Core Fields */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-6">
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
                                     <Calendar className="w-3 h-3" />
@@ -200,7 +200,7 @@ export default function TransactionPage() {
                                     required
                                     value={formData.date}
                                     onChange={handleChange}
-                                    className="input-bento"
+                                    className="input-bento w-full"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -215,7 +215,7 @@ export default function TransactionPage() {
                                     value={formData.symbol}
                                     onChange={handleChange}
                                     placeholder="VNM, TCBS..."
-                                    className="input-bento placeholder:uppercase"
+                                    className="input-bento placeholder:uppercase w-full"
                                 />
                             </div>
                         </div>
@@ -230,7 +230,7 @@ export default function TransactionPage() {
                                     name="category"
                                     value={formData.category}
                                     onChange={handleChange}
-                                    className="w-full appearance-none bg-slate-100 dark:bg-zinc-900 border-none rounded-2xl px-5 py-4 text-sm text-[var(--foreground)] font-bold focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none cursor-pointer"
+                                    className="w-full appearance-none bg-slate-100 dark:bg-[#1A1A1A] border-none rounded-2xl px-5 py-4 text-sm text-[var(--foreground)] font-bold focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-[#0F0F0F] transition-all outline-none cursor-pointer"
                                 >
                                     <option value="Chứng chỉ quỹ">Chứng chỉ quỹ</option>
                                     <option value="Cổ phiếu">Cổ phiếu</option>
@@ -248,19 +248,19 @@ export default function TransactionPage() {
                         {mode === 'transaction' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-[#A3AED0] uppercase tracking-widest ml-1">Lệnh Giao dịch</label>
+                                    <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Lệnh Giao dịch</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Mua' }))}
-                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Mua' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 text-[#A3AED0] hover:border-slate-200'}`}
+                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Mua' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-white/10 text-[var(--text-muted)] hover:border-slate-200 dark:hover:border-white/20'}`}
                                         >
                                             Cộng hưởng (Mua)
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Chốt' }))}
-                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Chốt' ? 'bg-red-50 dark:bg-red-500/10 border-red-500 text-red-700 dark:text-red-400 shadow-lg shadow-red-500/10' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5 text-[#A3AED0] hover:border-slate-200'}`}
+                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Chốt' ? 'bg-red-50 dark:bg-red-500/10 border-red-500 text-red-700 dark:text-red-400 shadow-lg shadow-red-500/10' : 'bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-white/10 text-[var(--text-muted)] hover:border-slate-200 dark:hover:border-white/20'}`}
                                         >
                                             Phát tán (Bán)
                                         </button>
@@ -269,7 +269,7 @@ export default function TransactionPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Số lượng</label>
+                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Số lượng</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -277,11 +277,11 @@ export default function TransactionPage() {
                                             value={formData.qty}
                                             onChange={handleChange}
                                             placeholder="0.00"
-                                            className="input-bento"
+                                            className="input-bento w-full"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá cơ sở</label>
+                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Giá cơ sở</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -289,7 +289,7 @@ export default function TransactionPage() {
                                             value={formData.price}
                                             onChange={handleChange}
                                             placeholder="0"
-                                            className="input-bento bg-slate-50 text-slate-500"
+                                            className="input-bento w-full bg-slate-50 dark:bg-[#0F0F0F] text-slate-500 dark:text-[var(--text-muted)]"
                                             readOnly={true}
                                         />
                                     </div>
@@ -297,7 +297,7 @@ export default function TransactionPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Phí & Thuế</label>
+                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Phí & Thuế</label>
                                         <input
                                             type="number"
                                             step="1"
@@ -305,7 +305,7 @@ export default function TransactionPage() {
                                             value={formData.fee}
                                             onChange={handleChange}
                                             placeholder="0"
-                                            className="input-bento"
+                                            className="input-bento w-full"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -326,7 +326,7 @@ export default function TransactionPage() {
 
                         {mode === 'price' && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Giá trị thị trường hiện tại</label>
+                                <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Giá trị thị trường hiện tại</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -345,7 +345,7 @@ export default function TransactionPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full py-5 rounded-[2rem] font-bold text-sm tracking-widest shadow-xl transition-all mt-6 flex items-center justify-center gap-2 active:scale-[0.98] ${loading ? 'bg-slate-100 dark:bg-zinc-800 text-[var(--text-muted)]' : 'bg-slate-900 dark:bg-[var(--primary)] text-white dark:text-[#080808] hover:bg-black dark:hover:bg-[var(--primary-hover)] shadow-black/10'}`}
+                            className={`w-full py-5 rounded-[2rem] font-bold text-sm tracking-widest shadow-xl transition-all mt-6 flex items-center justify-center gap-2 active:scale-[0.98] ${loading ? 'bg-slate-100 dark:bg-zinc-800 text-[var(--text-muted)]' : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] shadow-black/10'}`}
                         >
                             {loading ? (
                                 <div className="w-5 h-5 border-2 border-slate-300 dark:border-zinc-500 border-t-slate-500 dark:border-t-[var(--primary)] rounded-full animate-spin" />

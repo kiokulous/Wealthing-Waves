@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
-import { LogIn, UserPlus, ArrowRight } from 'lucide-react'
+import { LogIn, UserPlus, ArrowRight, Sun, Moon } from 'lucide-react'
+import { useTheme } from '@/components/providers/ThemeProvider'
 
 export default function LoginPage() {
     const [isSignUp, setIsSignUp] = useState(false)
@@ -12,8 +13,18 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
-    const { signIn, signUp, signInWithGoogle } = useAuth()
+    const { signIn, signUp, signInWithGoogle, user } = useAuth()
     const router = useRouter()
+    const { theme, toggleTheme } = useTheme()
+
+    // Hide all layout components on login page
+    useEffect(() => {
+        // Add a class to body to indicate we're on login page
+        document.body.classList.add('login-page')
+        return () => {
+            document.body.classList.remove('login-page')
+        }
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -48,11 +59,29 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--background)] transition-colors duration-300">
+        <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--background)] transition-colors duration-300 relative">
+            {/* Theme Switcher - Top Right */}
+            <div className="fixed top-6 right-6 bg-white/80 dark:bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/50 dark:border-white/10 p-1 rounded-full shadow-lg flex gap-1 z-50 transition-colors">
+                <button
+                    onClick={() => theme === 'dark' && toggleTheme()}
+                    className={`p-2 rounded-full transition-all ${theme === 'light' ? 'bg-[var(--primary)] text-white shadow-md' : 'text-slate-400 hover:text-slate-600 dark:text-[#888888] dark:hover:text-[var(--primary)]'}`}
+                    aria-label="Light mode"
+                >
+                    <Sun className="w-3.5 h-3.5" />
+                </button>
+                <button
+                    onClick={() => theme === 'light' && toggleTheme()}
+                    className={`p-2 rounded-full transition-all ${theme === 'dark' ? 'bg-[var(--primary)] text-[#000000] shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                    aria-label="Dark mode"
+                >
+                    <Moon className="w-3.5 h-3.5" />
+                </button>
+            </div>
+
             <div className="w-full max-w-md">
                 {/* Branding Block */}
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-[2.5rem] bg-[var(--primary)] text-black shadow-2xl shadow-black/10 dark:shadow-none mb-6 animate-in zoom-in duration-500">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-[2.5rem] bg-[var(--primary)] text-white dark:text-black shadow-2xl shadow-black/10 dark:shadow-none mb-6 animate-in zoom-in duration-500">
                         <span className="text-3xl font-bold tracking-tighter">W</span>
                     </div>
                     <h1 className="text-3xl font-bold text-[var(--foreground)] tracking-tight mb-2">
@@ -115,7 +144,7 @@ export default function LoginPage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-[var(--primary)] text-black font-bold py-4 rounded-2xl shadow-lg shadow-black/10 dark:shadow-none hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
+                            className="w-full bg-[var(--primary)] text-white dark:text-black font-bold py-4 rounded-2xl shadow-lg shadow-black/10 dark:shadow-none hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
                             disabled={loading}
                         >
                             {loading ? (

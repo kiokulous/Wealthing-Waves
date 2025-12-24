@@ -25,13 +25,13 @@ export default function TopNav() {
             <div className="w-1/4" />
 
             {/* Center: Main Navigation pill */}
-            <nav className="flex items-center gap-1 bg-white/80 dark:bg-[#111111]/90 backdrop-blur-xl border border-white/50 dark:border-white/5 p-1.5 rounded-full shadow-sm pointer-events-auto transition-colors">
+            <nav className="flex items-center gap-1 bg-white/80 dark:bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/50 dark:border-white/10 p-1.5 rounded-full shadow-sm pointer-events-auto transition-colors">
                 {navLinks.map((link) => (
                     <button
                         key={link.path}
                         onClick={() => router.push(link.path)}
                         className={`px-6 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${isActive(link.path)
-                            ? 'bg-[var(--primary)] text-black shadow-md'
+                            ? 'bg-[var(--primary)] text-white dark:text-[#000000] shadow-md'
                             : 'text-[var(--text-muted)] hover:text-[var(--primary)]'
                             }`}
                     >
@@ -42,8 +42,8 @@ export default function TopNav() {
 
             {/* Right: Profile pill */}
             <div className="w-1/4 flex justify-end">
-                <div className="flex items-center gap-3 bg-white/80 dark:bg-[#111111]/90 backdrop-blur-xl border border-white/50 dark:border-white/5 pl-2 pr-4 py-2 rounded-full shadow-sm cursor-pointer group pointer-events-auto transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-black flex items-center justify-center text-[var(--primary)] font-bold overflow-hidden shadow-inner">
+                <div className="flex items-center gap-3 bg-white/80 dark:bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/50 dark:border-white/10 pl-2 pr-4 py-2 rounded-full shadow-sm cursor-pointer group pointer-events-auto transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#0F0F0F] flex items-center justify-center text-[var(--primary)] font-bold overflow-hidden shadow-inner">
                         {user?.email?.[0].toUpperCase()}
                     </div>
                     <div className="hidden lg:block text-left">
