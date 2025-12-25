@@ -67,6 +67,7 @@ export function calculatePortfolio(
         quantity: number
         invested: number
         realized: number
+        totalAccumulatedInvested: number
     }>()
 
     // Track totals
@@ -84,6 +85,7 @@ export function calculatePortfolio(
                 quantity: 0,
                 invested: 0,
                 realized: 0,
+                totalAccumulatedInvested: 0
             })
         }
 
@@ -94,6 +96,7 @@ export function calculatePortfolio(
             // Buy transaction
             item.quantity += txn.quantity
             item.invested += value
+            item.totalAccumulatedInvested += value
             totalInvested += value
         } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
             // Sell transaction
@@ -106,6 +109,7 @@ export function calculatePortfolio(
                 item.invested -= costBasis
                 item.quantity -= txn.quantity
             } else {
+                // Should not happen ideally if data is consistent, but handle it
                 item.realized += value
                 item.quantity -= txn.quantity
             }
@@ -137,10 +141,14 @@ export function calculatePortfolio(
         }
 
         const profitLoss = (currentValue - item.invested) + item.realized
-        const totalCapital = item.invested + (item.quantity === 0 ? Math.abs(item.realized) : 0) // Proxy for capital involved if sold out
-        const profitLossPercent = item.invested > 0
-            ? (profitLoss / item.invested) * 100
-            : (item.realized !== 0 ? 100 : 0) // If sold out, we just show 100% or something indicative
+
+        let profitLossPercent = 0
+        if (item.invested > 1000) { // Small threshold to avoid div by almost zero
+            profitLossPercent = (profitLoss / item.invested) * 100
+        } else if (item.totalAccumulatedInvested > 0) {
+            // If closed (invested ~ 0), calculate ROI based on total capital ever deployed
+            profitLossPercent = (profitLoss / item.totalAccumulatedInvested) * 100
+        }
 
         if (item.quantity > 0) {
             totalCurrentValue += currentValue
