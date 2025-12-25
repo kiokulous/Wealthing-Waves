@@ -11,9 +11,13 @@ import type { Transaction, MarketPrice } from '../supabase'
 export async function getAllTransactions(): Promise<Transaction[]> {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
         .from('transactions')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false })
 
     if (error) {
@@ -30,9 +34,13 @@ export async function getAllTransactions(): Promise<Transaction[]> {
 export async function getTransactionsBySymbol(symbol: string): Promise<Transaction[]> {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
         .from('transactions')
         .select('*')
+        .eq('user_id', user.id)
         .eq('symbol', symbol)
         .order('date', { ascending: false })
 
@@ -50,12 +58,16 @@ export async function getTransactionsBySymbol(symbol: string): Promise<Transacti
 export async function getTransactionsByYear(year: number): Promise<Transaction[]> {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const startDate = `${year}-01-01`
     const endDate = `${year}-12-31`
 
     const { data, error } = await supabase
         .from('transactions')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: false })
@@ -164,9 +176,13 @@ export async function deleteTransaction(id: string): Promise<void> {
 export async function getAllMarketPrices(): Promise<MarketPrice[]> {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
         .from('market_prices')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false })
 
     if (error) {
@@ -183,9 +199,13 @@ export async function getAllMarketPrices(): Promise<MarketPrice[]> {
 export async function getMarketPricesBySymbol(symbol: string): Promise<MarketPrice[]> {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
         .from('market_prices')
         .select('*')
+        .eq('user_id', user.id)
         .eq('symbol', symbol)
         .order('date', { ascending: false })
 
@@ -203,9 +223,13 @@ export async function getMarketPricesBySymbol(symbol: string): Promise<MarketPri
 export async function getLatestPrice(symbol: string): Promise<number | null> {
     const supabase = createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
     const { data, error } = await supabase
         .from('market_prices')
         .select('price')
+        .eq('user_id', user.id)
         .eq('symbol', symbol)
         .order('date', { ascending: false })
         .limit(1)
