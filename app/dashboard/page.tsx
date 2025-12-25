@@ -11,6 +11,9 @@ import CategoryIcon from '@/components/CategoryIcon'
 import type { Transaction, MarketPrice } from '@/lib/supabase'
 import type { PortfolioSummary } from '@/lib/api/portfolio'
 import { PlusCircle, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import TotalBalanceChart from '@/components/TotalBalanceChart'
+import ProfitCorrelationChart from '@/components/ProfitCorrelationChart'
+import { calculatePortfolioHistory } from '@/lib/api/portfolio'
 
 const CATEGORY_CONFIG: Record<string, { color: string; bg: string; darkBg: string; iconColor: string; darkIconColor: string }> = {
     'Cổ phiếu': {
@@ -55,6 +58,7 @@ export default function DashboardPage() {
     const [error, setError] = useState('')
     const [filterYear, setFilterYear] = useState<number | 'all'>('all')
     const [availableYears, setAvailableYears] = useState<number[]>([])
+    const [chartData, setChartData] = useState<{ date: string; value: number }[]>([])
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -69,9 +73,7 @@ export default function DashboardPage() {
     }, [user])
 
     useEffect(() => {
-        if (transactions.length > 0 && marketPrices.length > 0) {
-            calculateAndSetPortfolio()
-        }
+        calculateAndSetPortfolio()
     }, [transactions, marketPrices, filterYear])
 
     const loadData = async () => {
@@ -104,6 +106,10 @@ export default function DashboardPage() {
         const year = filterYear === 'all' ? undefined : filterYear
         const portfolioData = calculatePortfolio(transactions, marketPrices, year)
         setPortfolio(portfolioData)
+
+        // Calculate history for chart (always last 12 months for the main card)
+        const history = calculatePortfolioHistory(transactions, marketPrices, 12)
+        setChartData(history)
     }
 
     const handleItemClick = (symbol: string) => {
@@ -189,10 +195,10 @@ export default function DashboardPage() {
                 <div className="md:col-span-4 lg:col-span-4 lg:row-span-2 bento-card p-10 flex flex-col justify-between group overflow-hidden relative">
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#4318FF]/5 dark:bg-[var(--primary)]/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
 
-                    <div>
+                    <div className="relative z-10 pointer-events-none">
                         <div className="flex items-center justify-between mb-8">
                             <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Tổng số dư</p>
-                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center pointer-events-auto">
                                 <Wallet className="w-5 h-5" />
                             </div>
                         </div>
@@ -206,36 +212,41 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Decorative Sparkline removed */}
+                    <TotalBalanceChart data={chartData} />
                 </div>
 
                 {/* Net Profit Overview Card (Medium) */}
                 <div className="md:col-span-4 lg:col-span-5 bento-card p-8 group">
-                    <div className="flex flex-col h-full">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col h-full justify-between">
+                        <div className="flex justify-between items-center mb-2">
                             <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Tổng quan Lợi nhuận</p>
                             <div className="flex gap-2">
                                 <span className="px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-full text-[10px] font-bold text-[#A3AED0]">Hàng tháng</span>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-8">
-                            <div>
-                                <p className="text-slate-400 font-bold text-[10px] uppercase mb-1">Đã đầu tư</p>
-                                <p className="text-xl font-bold text-[var(--foreground)] tracking-tight">{formatValue(portfolio.totalInvested)} đ</p>
+                        <div className="flex items-end justify-between gap-4 flex-1">
+                            {/* Left Side: Stats */}
+                            <div className="flex flex-col gap-6 mb-2">
+                                <div>
+                                    <p className="text-slate-400 font-bold text-[10px] uppercase mb-1">Đã đầu tư</p>
+                                    <p className="text-3xl font-bold text-[var(--foreground)] tracking-tight">{formatValue(portfolio.totalInvested)} đ</p>
+                                </div>
+                                <div>
+                                    <p className="text-[#A3AED0] font-bold text-[10px] uppercase mb-1">Lợi nhuận ròng</p>
+                                    <p className={`text-3xl font-bold tracking-tight ${isProfit ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        {isProfit ? '+' : ''}{formatValue(portfolio.totalProfitLoss)} đ
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-[#A3AED0] font-bold text-[10px] uppercase mb-1">Lợi nhuận ròng</p>
-                                <p className={`text-xl font-bold tracking-tight ${isProfit ? 'text-emerald-500' : 'text-red-500'}`}>
-                                    {isProfit ? '+' : ''}{formatValue(portfolio.totalProfitLoss)} đ
-                                </p>
-                            </div>
-                        </div>
 
-                        <div className="mt-auto pt-6 flex gap-1 items-end">
-                            {[40, 60, 45, 55, 70, 40, 85].map((h, i) => (
-                                <div key={i} className="flex-1 bg-slate-100 dark:bg-zinc-800 rounded-lg group-hover:bg-[var(--primary)] transition-colors" style={{ height: `${h}%` }} />
-                            ))}
+                            {/* Right Side: Chart */}
+                            <div className="w-1/3 h-40 pb-2">
+                                <ProfitCorrelationChart
+                                    invested={portfolio.totalInvested}
+                                    profit={portfolio.totalProfitLoss}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

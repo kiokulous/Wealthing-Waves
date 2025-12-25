@@ -348,3 +348,69 @@ export function calculateSymbolDetail(
         transactions: symbolTransactions.reverse(), // Return newest first for display
     }
 }
+
+/**
+ * Calculate portfolio history for the chart
+ */
+export function calculatePortfolioHistory(
+    transactions: Transaction[],
+    marketPrices: MarketPrice[],
+    months: number = 12
+): { date: string; value: number }[] {
+    const today = new Date()
+    const history: { date: string; value: number }[] = []
+
+    // Adjust today to end of day to be safe with comparisons
+    today.setHours(23, 59, 59, 999)
+
+    for (let i = months - 1; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - i + 1, 0) // End of month
+        // If the calculated date is in the future relative to "today" (e.g. current month end), use 'today'
+        const checkDate = date > today ? today : date
+        const checkDateStr = checkDate.toISOString().split('T')[0]
+
+        // Calculate portfolio state at this date
+        // 1. Filter transactions up to this date
+        const relevantTxns = transactions.filter(t => new Date(t.date) <= checkDate)
+
+        // 2. Calculate holdings
+        const holdings = new Map<string, number>() // symbol -> quantity
+        relevantTxns.forEach(txn => {
+            const currentQty = holdings.get(txn.symbol) || 0
+            if (txn.type === 'Mua') {
+                holdings.set(txn.symbol, currentQty + txn.quantity)
+            } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
+                holdings.set(txn.symbol, Math.max(0, currentQty - txn.quantity))
+            }
+        })
+
+        // 3. Calculate value
+        let totalValue = 0
+        holdings.forEach((qty, symbol) => {
+            if (qty > 0) {
+                // Find latest price for this symbol UP TO checkDate
+                const priceObj = marketPrices
+                    .filter(p => p.symbol === symbol && new Date(p.date) <= checkDate)
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+
+                const price = priceObj ? priceObj.price : 0
+
+                // If no price found by this date, try to find the earliest price EVER (fallback) 
+                // or just 0 (strict). Let's use 0 to be strict, or maybe the price at purchase?
+                // For better visuals, if no price exists yet at that date but we bought it, 
+                // it implies we bought it at some price. But `marketPrices` should ideally cover it.
+                // Fallback: If we have the transaction, use the transaction price as a proxy? 
+                // That might be complex. Let's stick to marketPrices.
+
+                totalValue += qty * price
+            }
+        })
+
+        history.push({
+            date: checkDate.toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' }),
+            value: totalValue
+        })
+    }
+
+    return history
+}
