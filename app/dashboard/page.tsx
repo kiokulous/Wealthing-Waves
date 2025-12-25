@@ -348,11 +348,21 @@ export default function DashboardPage() {
                     </div>
 
                     {portfolio.items.length === 0 && (
-                        <div className="p-20 text-center">
-                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Wallet className="w-8 h-8 text-[#A3AED0]" />
+                        <div className="p-12 md:p-20 text-center flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500">
+                            <div className="w-20 h-20 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full flex items-center justify-center mb-6">
+                                <PlusCircle className="w-10 h-10" />
                             </div>
-                            <p className="text-[#A3AED0] font-bold uppercase text-xs tracking-widest">Chưa phát hiện tín hiệu nào.</p>
+                            <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Chưa có dữ liệu giao dịch</h3>
+                            <p className="text-[var(--text-muted)] font-medium max-w-xs mx-auto mb-8">
+                                Hệ thống chưa ghi nhận tín hiệu nào từ tài khoản của bạn. Hãy bắt đầu hành trình ngay bây giờ.
+                            </p>
+                            <button
+                                onClick={() => router.push('/transaction')}
+                                className="px-8 py-3 bg-[var(--primary)] text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                            >
+                                <PlusCircle className="w-5 h-5" />
+                                Thêm Giao dịch Đầu tiên
+                            </button>
                         </div>
                     )}
                 </div>

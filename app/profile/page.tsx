@@ -1,11 +1,19 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { User, Settings, Shield, LogOut, ChevronRight } from 'lucide-react'
 
 export default function ProfilePage() {
-    const { user, signOut } = useAuth()
+    const router = useRouter()
+    const { user, loading, signOut } = useAuth()
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login')
+        }
+    }, [user, loading, router])
 
     return (
         <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
