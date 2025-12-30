@@ -44,11 +44,11 @@ export default function TopNav() {
             <div className="w-1/4 flex justify-end">
                 <div className="flex items-center gap-3 bg-white/80 dark:bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/50 dark:border-white/10 pl-2 pr-4 py-2 rounded-full shadow-sm cursor-pointer group pointer-events-auto transition-colors">
                     <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-[#0F0F0F] flex items-center justify-center text-[var(--primary)] font-bold overflow-hidden shadow-inner">
-                        {user?.email?.[0].toUpperCase()}
+                        {(user?.user_metadata?.full_name || user?.email)?.[0].toUpperCase()}
                     </div>
                     <div className="hidden lg:block text-left">
                         <p className="text-[10px] font-bold text-[var(--foreground)] leading-none">
-                            {user?.email?.split('@')[0]}
+                            {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
                         </p>
                         <p className="text-[9px] text-[var(--text-muted)] font-medium leading-none mt-0.5">
                             {user?.email}

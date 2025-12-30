@@ -162,7 +162,7 @@ export default function DashboardPage() {
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
                 <div>
                     <h1 className="text-3xl font-bold text-[var(--foreground)] tracking-tight mb-1">
-                        {greeting}, <span className="text-[var(--primary)]">{user.email?.split('@')[0]}</span>!
+                        {greeting}, <span className="text-[var(--primary)]">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>!
                     </h1>
                     <p className="text-[var(--text-muted)] font-medium tracking-tight">Dưới đây là tổng quan tài chính của bạn hôm nay.</p>
                 </div>

@@ -189,28 +189,28 @@ export default function PortfolioDetailPage() {
 
                 {/* Timeline Details (Long Horizontal) */}
                 <div className="md:col-span-4 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bento-card p-8 bg-[var(--primary)] border-none group cursor-default transition-colors">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center text-[#080808]">
-                                <Clock className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <p className="text-[#080808]/50 font-bold uppercase text-[10px] tracking-widest mb-1">Giai đoạn Cộng hưởng</p>
-                                <p className="text-2xl font-bold text-[#080808] tracking-tight">{detail.holdingDays} <span className="text-xs uppercase">Ngày</span></p>
+                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                        <div className="flex justify-between items-center mb-6">
+                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Giai đoạn Cộng hưởng</p>
+                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
+                                <Clock className="w-5 h-5" />
                             </div>
                         </div>
+                        <h3 className="text-3xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
+                            {detail.holdingDays} <span className="text-sm font-bold text-[#A3AED0] ml-2 uppercase tracking-widest">Ngày</span>
+                        </h3>
                     </div>
 
-                    <div className="bento-card p-8 bg-zinc-900 border-none group cursor-default transition-colors">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[var(--primary)]">
-                                <Calendar className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <p className="text-[#888888] font-bold uppercase text-[10px] tracking-widest mb-1">Điểm vào Ban đầu</p>
-                                <p className="text-2xl font-bold text-white tracking-tight">{detail.firstBuyDate ? formatDate(detail.firstBuyDate) : '-'}</p>
+                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                        <div className="flex justify-between items-center mb-6">
+                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Điểm vào Ban đầu</p>
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[#A3AED0] dark:text-white">
+                                <Calendar className="w-5 h-5" />
                             </div>
                         </div>
+                        <h3 className="text-3xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
+                            {detail.firstBuyDate ? formatDate(detail.firstBuyDate) : '-'}
+                        </h3>
                     </div>
                 </div>
             </div>
