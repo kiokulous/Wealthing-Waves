@@ -17,6 +17,10 @@ export default function MarketPriceHistory() {
     const [searchSymbol, setSearchSymbol] = useState('')
     const [filterCategory, setFilterCategory] = useState<string>('all')
 
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 20
+
     // Modal states
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; price: MarketPrice | null }>({
         open: false,
@@ -64,6 +68,7 @@ export default function MarketPriceHistory() {
         }
 
         setFilteredPrices(filtered)
+        setCurrentPage(1) // Reset to first page when filters change
     }, [searchSymbol, filterCategory, prices])
 
     // Handle delete
@@ -102,6 +107,12 @@ export default function MarketPriceHistory() {
     // Get unique categories
     const categories = ['all', ...Array.from(new Set(prices.map(p => p.category)))]
 
+    // Pagination logic
+    const totalPages = Math.ceil(filteredPrices.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedPrices = filteredPrices.slice(startIndex, endIndex)
+
     if (loading) {
         return (
             <div className="bento-card p-8">
@@ -121,7 +132,7 @@ export default function MarketPriceHistory() {
                         Lịch sử Đồng bộ Giá
                     </h2>
                     <p className="text-sm text-[var(--text-muted)] font-medium">
-                        Tổng {filteredPrices.length} bản ghi
+                        Tổng {filteredPrices.length} bản ghi • Trang {currentPage}/{totalPages}
                     </p>
                 </div>
 
@@ -181,7 +192,7 @@ export default function MarketPriceHistory() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredPrices.map((price) => (
+                                {paginatedPrices.map((price) => (
                                     <tr
                                         key={price.id}
                                         className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
@@ -224,6 +235,59 @@ export default function MarketPriceHistory() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* Pagination Controls */}
+                {filteredPrices.length > itemsPerPage && (
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-white/10">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 rounded-xl text-sm font-bold text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            ← Trang trước
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(page => {
+                                    // Show first page, last page, current page, and pages around current
+                                    return page === 1 ||
+                                        page === totalPages ||
+                                        Math.abs(page - currentPage) <= 1
+                                })
+                                .map((page, idx, arr) => {
+                                    // Add ellipsis if there's a gap
+                                    const prevPage = arr[idx - 1]
+                                    const showEllipsis = prevPage && page - prevPage > 1
+
+                                    return (
+                                        <React.Fragment key={page}>
+                                            {showEllipsis && (
+                                                <span className="text-[var(--text-muted)] px-2">...</span>
+                                            )}
+                                            <button
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${currentPage === page
+                                                        ? 'bg-[var(--primary)] text-white dark:text-black'
+                                                        : 'text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5'
+                                                    }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        </React.Fragment>
+                                    )
+                                })}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 rounded-xl text-sm font-bold text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Trang sau →
+                        </button>
                     </div>
                 )}
             </div>

@@ -17,6 +17,10 @@ export default function TransactionHistory() {
     const [searchSymbol, setSearchSymbol] = useState('')
     const [filterType, setFilterType] = useState<'all' | 'Mua' | 'Chốt'>('all')
 
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 20
+
     // Modal states
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; transaction: Transaction | null }>({
         open: false,
@@ -64,6 +68,7 @@ export default function TransactionHistory() {
         }
 
         setFilteredTransactions(filtered)
+        setCurrentPage(1) // Reset to first page when filters change
     }, [searchSymbol, filterType, transactions])
 
     // Handle delete
@@ -99,6 +104,12 @@ export default function TransactionHistory() {
         return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
     }
 
+    // Pagination logic
+    const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex)
+
     if (loading) {
         return (
             <div className="bento-card p-8">
@@ -118,7 +129,7 @@ export default function TransactionHistory() {
                         Lịch sử Giao dịch
                     </h2>
                     <p className="text-sm text-[var(--text-muted)] font-medium">
-                        Tổng {filteredTransactions.length} giao dịch
+                        Tổng {filteredTransactions.length} giao dịch • Trang {currentPage}/{totalPages}
                     </p>
                 </div>
 
@@ -141,8 +152,8 @@ export default function TransactionHistory() {
                         <button
                             onClick={() => setFilterType('all')}
                             className={`px-4 py-3 rounded-2xl text-xs font-bold transition-all ${filterType === 'all'
-                                    ? 'bg-[var(--primary)] text-white dark:text-black'
-                                    : 'bg-slate-100 dark:bg-[#0F0F0F] text-[var(--text-muted)] hover:text-[var(--foreground)]'
+                                ? 'bg-[var(--primary)] text-white dark:text-black'
+                                : 'bg-slate-100 dark:bg-[#0F0F0F] text-[var(--text-muted)] hover:text-[var(--foreground)]'
                                 }`}
                         >
                             Tất cả
@@ -150,8 +161,8 @@ export default function TransactionHistory() {
                         <button
                             onClick={() => setFilterType('Mua')}
                             className={`px-4 py-3 rounded-2xl text-xs font-bold transition-all ${filterType === 'Mua'
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-slate-100 dark:bg-[#0F0F0F] text-[var(--text-muted)] hover:text-emerald-500'
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-slate-100 dark:bg-[#0F0F0F] text-[var(--text-muted)] hover:text-emerald-500'
                                 }`}
                         >
                             Mua
@@ -159,8 +170,8 @@ export default function TransactionHistory() {
                         <button
                             onClick={() => setFilterType('Chốt')}
                             className={`px-4 py-3 rounded-2xl text-xs font-bold transition-all ${filterType === 'Chốt'
-                                    ? 'bg-red-500 text-white'
-                                    : 'bg-slate-100 dark:bg-[#0F0F0F] text-[var(--text-muted)] hover:text-red-500'
+                                ? 'bg-red-500 text-white'
+                                : 'bg-slate-100 dark:bg-[#0F0F0F] text-[var(--text-muted)] hover:text-red-500'
                                 }`}
                         >
                             Chốt
@@ -200,7 +211,7 @@ export default function TransactionHistory() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTransactions.map((transaction) => (
+                                {paginatedTransactions.map((transaction) => (
                                     <tr
                                         key={transaction.id}
                                         className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
@@ -263,6 +274,59 @@ export default function TransactionHistory() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* Pagination Controls */}
+                {filteredTransactions.length > itemsPerPage && (
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-white/10">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 rounded-xl text-sm font-bold text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            ← Trang trước
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(page => {
+                                    // Show first page, last page, current page, and pages around current
+                                    return page === 1 ||
+                                        page === totalPages ||
+                                        Math.abs(page - currentPage) <= 1
+                                })
+                                .map((page, idx, arr) => {
+                                    // Add ellipsis if there's a gap
+                                    const prevPage = arr[idx - 1]
+                                    const showEllipsis = prevPage && page - prevPage > 1
+
+                                    return (
+                                        <React.Fragment key={page}>
+                                            {showEllipsis && (
+                                                <span className="text-[var(--text-muted)] px-2">...</span>
+                                            )}
+                                            <button
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${currentPage === page
+                                                        ? 'bg-[var(--primary)] text-white dark:text-black'
+                                                        : 'text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5'
+                                                    }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        </React.Fragment>
+                                    )
+                                })}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 rounded-xl text-sm font-bold text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Trang sau →
+                        </button>
                     </div>
                 )}
             </div>
