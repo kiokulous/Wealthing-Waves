@@ -18,9 +18,9 @@ export default function FloatingNav() {
 
     const navItems = [
         { label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/dashboard' },
-        { label: 'Thống kê', icon: BarChart3, path: '/analysis' },
-        { label: 'Thêm', icon: Plus, path: '/transaction', isCenter: true },
         { label: 'Tài sản', icon: Wallet, path: '/assets' },
+        { label: 'Thêm', icon: Plus, path: '/transaction', isCenter: true },
+        { label: 'Thống kê', icon: BarChart3, path: '/analysis' },
         { label: 'Tôi', icon: User, path: '/profile' },
     ]
 

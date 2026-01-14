@@ -12,8 +12,8 @@ export default function TopNav() {
 
     const navLinks = [
         { label: 'Bảng điều khiển', path: '/dashboard' },
-        { label: 'Giao dịch', path: '/transaction' },
         { label: 'Tài sản', path: '/assets' },
+        { label: 'Giao dịch', path: '/transaction' },
         { label: 'Phân tích', path: '/analysis' },
     ]
 

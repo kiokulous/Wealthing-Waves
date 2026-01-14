@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { addTransaction, addMarketPrice } from '@/lib/api/database'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { PlusCircle, Database, Calendar, Tag, Layers, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
+import TransactionHistory from '@/components/TransactionHistory'
+import MarketPriceHistory from '@/components/MarketPriceHistory'
 
 type Mode = 'transaction' | 'price'
 
@@ -137,7 +139,7 @@ export default function TransactionPage() {
     if (authLoading) return null
 
     return (
-        <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
+        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
                 <div>
@@ -148,7 +150,8 @@ export default function TransactionPage() {
                 </div>
             </header>
 
-            <div className="max-w-2xl mx-auto space-y-6">
+            {/* Add Form Section */}
+            <div className="space-y-6">
                 {/* Mode Selector Bento Block */}
                 <div className="flex p-2 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-[2rem] shadow-sm relative overflow-hidden group h-16 items-center transition-colors">
                     <div
@@ -187,8 +190,8 @@ export default function TransactionPage() {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-8">
-                        {/* Core Fields */}
-                        <div className="space-y-6">
+                        {/* Core Fields - Grid Layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
                                     <Calendar className="w-3 h-3" />
@@ -218,38 +221,39 @@ export default function TransactionPage() {
                                     className="input-bento placeholder:uppercase w-full"
                                 />
                             </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
-                                <Layers className="w-3 h-3" />
-                                Phân loại Tài sản
-                            </label>
-                            <div className="relative">
-                                <select
-                                    name="category"
-                                    value={formData.category}
-                                    onChange={handleChange}
-                                    className="w-full appearance-none bg-slate-100 dark:bg-[#1A1A1A] border-none rounded-2xl px-5 py-4 text-sm text-[var(--foreground)] font-bold focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-[#0F0F0F] transition-all outline-none cursor-pointer"
-                                >
-                                    <option value="Chứng chỉ quỹ">Chứng chỉ quỹ</option>
-                                    <option value="Cổ phiếu">Cổ phiếu</option>
-                                    <option value="Vàng">Vàng</option>
-                                    <option value="Tiết kiệm">Tiết kiệm</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#A3AED0] border-l border-slate-200 dark:border-white/10 my-3">
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
+                                    <Layers className="w-3 h-3" />
+                                    Phân loại Tài sản
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleChange}
+                                        className="w-full appearance-none bg-slate-100 dark:bg-[#1A1A1A] border-none rounded-2xl px-5 py-3 text-sm text-[var(--foreground)] font-bold focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-[#0F0F0F] transition-all outline-none cursor-pointer"
+                                    >
+                                        <option value="Chứng chỉ quỹ">Chứng chỉ quỹ</option>
+                                        <option value="Cổ phiếu">Cổ phiếu</option>
+                                        <option value="Vàng">Vàng</option>
+                                        <option value="Tiết kiệm">Tiết kiệm</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#A3AED0] border-l border-slate-200 dark:border-white/10 my-3">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+
+
                         {mode === 'transaction' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Lệnh Giao dịch</label>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Mua' }))}
@@ -267,7 +271,7 @@ export default function TransactionPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Số lượng</label>
                                         <input
@@ -293,9 +297,6 @@ export default function TransactionPage() {
                                             readOnly={true}
                                         />
                                     </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Phí & Thuế</label>
                                         <input
@@ -317,7 +318,7 @@ export default function TransactionPage() {
                                             value={formData.total_money}
                                             onChange={handleChange}
                                             placeholder="0"
-                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl px-5 py-4 text-xl font-bold text-slate-900 dark:text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none"
+                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl px-5 py-3 text-sm font-bold text-slate-900 dark:text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none"
                                         />
                                     </div>
                                 </div>
@@ -358,6 +359,12 @@ export default function TransactionPage() {
                         </button>
                     </form>
                 </div>
+            </div>
+
+            {/* History Section */}
+            <div className="space-y-6">
+                {mode === 'transaction' && <TransactionHistory key={success} />}
+                {mode === 'price' && <MarketPriceHistory key={success} />}
             </div>
         </div>
     )
