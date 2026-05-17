@@ -86,7 +86,7 @@ export default function AssetsPage() {
     })
 
     // Summary stats
-    const totalValue    = portfolio?.totalValue    ?? 0
+    const totalValue    = portfolio?.totalCurrentValue ?? 0
     const totalInvested = portfolio?.totalInvested ?? 0
     const totalPnL      = portfolio?.totalProfitLoss ?? 0
     const totalPct      = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0
