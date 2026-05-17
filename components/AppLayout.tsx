@@ -4,37 +4,51 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import FloatingNav from './FloatingNav'
 import TopNav from './TopNav'
+import AppSidebar from './AppSidebar'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
     const isLoginPage = pathname === '/login'
 
-    return (
-        <div className="min-h-screen" style={{ background: 'var(--bg-grad)', color: 'var(--t-1)' }}>
+    if (isLoginPage) {
+        return (
+            <div style={{ background: 'var(--bg-grad)', color: 'var(--t-1)', minHeight: '100vh' }}>
+                {children}
+            </div>
+        )
+    }
 
-            {/* Desktop: sticky top nav bar */}
-            {!isLoginPage && (
+    return (
+        <div
+            style={{
+                display: 'grid',
+                gridTemplateColumns: '240px 1fr',
+                minHeight: '100vh',
+                background: 'var(--bg-grad)',
+                color: 'var(--t-1)',
+            }}
+        >
+            {/* Desktop sidebar */}
+            <div className="hidden md:block">
+                <AppSidebar />
+            </div>
+
+            {/* Main content column */}
+            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {/* Sticky topbar */}
                 <div className="hidden md:block">
                     <TopNav />
                 </div>
-            )}
 
-            {/* Page content */}
-            <main
-                className={`animate-fade-up ${
-                    !isLoginPage
-                        ? 'p-4 md:px-7 md:pb-16 max-w-[1400px] mx-auto'
-                        : ''
-                }`}
-            >
-                {children}
-            </main>
+                {/* Page content */}
+                <main className="animate-fade-up p-4 md:p-7 md:pb-16">
+                    {children}
+                </main>
+            </div>
 
-            {/* Mobile spacer */}
-            {!isLoginPage && <div className="h-28 md:hidden" />}
-
-            {/* Mobile floating bottom nav */}
-            {!isLoginPage && <FloatingNav />}
+            {/* Mobile spacer + bottom nav */}
+            <div className="h-28 md:hidden" />
+            <FloatingNav />
         </div>
     )
 }

@@ -4,50 +4,47 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
-import { calculatePortfolio, type PortfolioSummary } from '@/lib/api/portfolio'
 import { calculatePeriodPerformance } from '@/lib/api/calculate_period_performance'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, ReferenceLine } from 'recharts'
-import { Filter, PieChart as PieIcon, TrendingUp, BarChart3 } from 'lucide-react'
+import type { PortfolioSummary } from '@/lib/api/portfolio'
 
-const BENTO_CHART_COLORS = ['#2C56ED', '#E3C9FB', '#C9FBF5', '#DEF8C9', '#F7F7F7']
+const FILTERS = ['30 Ngày', '3 Tháng', '6 Tháng', '1 Năm', 'Toàn bộ']
+
+const CAT_COLORS = [
+    '#00c896', '#5b6bff', '#f59e0b', '#e879f9', '#38bdf8', '#f87171',
+]
+
+function formatVND(v: number) {
+    if (Math.abs(v) >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1) + ' tỷ'
+    if (Math.abs(v) >= 1_000_000)     return (v / 1_000_000).toFixed(1) + ' tr'
+    return new Intl.NumberFormat('vi-VN').format(Math.round(v))
+}
 
 export default function AnalysisPage() {
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
 
-    // Raw Data State
     const [allTransactions, setAllTransactions] = useState<any[]>([])
-    const [allPrices, setAllPrices] = useState<any[]>([])
-
-    // Computed State
-    const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState('Toàn bộ')
+    const [allPrices, setAllPrices]             = useState<any[]>([])
+    const [portfolio, setPortfolio]             = useState<PortfolioSummary | null>(null)
+    const [loading, setLoading]                 = useState(true)
+    const [filter, setFilter]                   = useState('Toàn bộ')
 
     useEffect(() => {
-        if (!authLoading && !user) {
-            router.push('/login')
-        }
+        if (!authLoading && !user) router.push('/login')
     }, [user, authLoading, router])
 
     useEffect(() => {
         if (user) loadData()
     }, [user])
 
-    // Re-calculate when filter changes
     useEffect(() => {
-        if (allTransactions.length > 0 && allPrices.length > 0) {
-            recalculatePortfolio()
-        }
+        if (allTransactions.length > 0 && allPrices.length > 0) recalc()
     }, [filter, allTransactions, allPrices])
 
     const loadData = async () => {
         try {
             setLoading(true)
-            const [txns, prices] = await Promise.all([
-                getAllTransactions(),
-                getAllMarketPrices()
-            ])
+            const [txns, prices] = await Promise.all([getAllTransactions(), getAllMarketPrices()])
             setAllTransactions(txns)
             setAllPrices(prices)
         } catch (err) {
@@ -57,42 +54,29 @@ export default function AnalysisPage() {
         }
     }
 
-    const recalculatePortfolio = () => {
+    const recalc = () => {
         const now = new Date()
         let startDate: Date | null = null
-
         switch (filter) {
-            case '30 Ngày':
-                startDate = new Date(now.setDate(now.getDate() - 30))
-                break
-            case '3 Tháng':
-                startDate = new Date(now.setMonth(now.getMonth() - 3))
-                break
-            case '6 Tháng':
-                startDate = new Date(now.setMonth(now.getMonth() - 6))
-                break
-            case '1 Năm':
-                startDate = new Date(now.setFullYear(now.getFullYear() - 1))
-                break
-            case 'Toàn bộ':
-            default:
-                startDate = null
+            case '30 Ngày': startDate = new Date(new Date().setDate(now.getDate() - 30));     break
+            case '3 Tháng': startDate = new Date(new Date().setMonth(now.getMonth() - 3));    break
+            case '6 Tháng': startDate = new Date(new Date().setMonth(now.getMonth() - 6));    break
+            case '1 Năm':   startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break
+            default:        startDate = null
         }
-
-        const data = calculatePeriodPerformance(allTransactions, allPrices, startDate)
-        setPortfolio(data)
+        setPortfolio(calculatePeriodPerformance(allTransactions, allPrices, startDate))
     }
 
-    const formatValue = (value: number) => {
-        return new Intl.NumberFormat('vi-VN').format(Math.round(value))
-    }
-
-    if (authLoading || (loading && !portfolio && allTransactions.length === 0)) {
+    if (authLoading || (loading && !portfolio)) {
         return (
-            <div className="flex items-center justify-center p-20">
-                <div className="text-center">
-                    <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p className="text-slate-500 font-bold text-sm tracking-widest uppercase">Đang tính toán chỉ số...</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        width: 40, height: 40, borderRadius: '50%', margin: '0 auto 12px',
+                        border: '3px solid var(--accent)', borderTopColor: 'transparent',
+                        animation: 'spin 0.8s linear infinite',
+                    }} />
+                    <p style={{ color: 'var(--t-3)', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Đang tính toán...</p>
                 </div>
             </div>
         )
@@ -100,222 +84,227 @@ export default function AnalysisPage() {
 
     if (!portfolio || !user) return null
 
-    // Chart Data Preparation
-    const allocationData = portfolio.categories.map(cat => ({
-        name: cat.category,
-        value: cat.currentValue
-    })).filter(d => d.value > 0)
+    // --- Derived data ---
+    const total = portfolio.totalCurrentValue || 1
 
-    const profitData = portfolio.categories.map(cat => ({
-        name: cat.category,
-        pl: cat.profitLoss
-    }))
+    const allocationData = portfolio.categories
+        .filter(c => c.currentValue > 0)
+        .map(c => ({ name: c.category, value: c.currentValue, pct: (c.currentValue / total) * 100 }))
 
-    const assetPerformanceData = portfolio.items
-        .filter(item => item.currentValue > 0)
+    const profitData = portfolio.categories
+        .filter(c => Math.abs(c.profitLoss) > 0)
+        .sort((a, b) => b.profitLoss - a.profitLoss)
+
+    const profitMax = Math.max(...profitData.map(c => Math.abs(c.profitLoss)), 1)
+
+    const rankingData = portfolio.items
+        .filter(i => i.currentValue > 0)
         .sort((a, b) => b.profitLossPercent - a.profitLossPercent)
         .slice(0, 10)
-        .map(item => ({
-            name: item.symbol,
-            value: item.profitLossPercent
-        }))
+
+    const rankMax = Math.max(...rankingData.map(i => Math.abs(i.profitLossPercent)), 1)
+
+    // Donut SVG params
+    const R = 72, CX = 88, CY = 88, STROKE = 20
+    const circum = 2 * Math.PI * R
+    let offset = 0
+    const arcs = allocationData.map((d, i) => {
+        const dash = (d.pct / 100) * circum
+        const arc  = { ...d, dash, offset, color: CAT_COLORS[i % CAT_COLORS.length] }
+        offset += dash + 3
+        return arc
+    })
 
     return (
-        <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             {/* Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
                 <div>
-                    <h1 className="text-4xl font-bold text-[#2B3674] dark:text-white tracking-tight mb-1">
-                        Phân tích <span className="text-[var(--primary)]">Nâng cao</span>
+                    <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t-1)', margin: 0 }}>
+                        Phân tích <span style={{ color: 'var(--accent)' }}>Nâng cao</span>
                     </h1>
-                    <p className="text-[#A3AED0] font-medium tracking-tight">Trực quan hóa sự cộng hưởng và các chỉ số hiệu suất danh mục của bạn.</p>
+                    <p style={{ color: 'var(--t-3)', fontSize: 13, marginTop: 4 }}>
+                        Trực quan hóa cộng hưởng và hiệu suất danh mục của bạn.
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-1.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar transition-colors">
-                        {['30 Ngày', '3 Tháng', '6 Tháng', '1 Năm', 'Toàn bộ'].map((f) => (
-                            <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${filter === f
-                                    ? 'bg-[var(--primary)] text-[#080808] shadow-lg shadow-black/20'
-                                    : 'text-[#A3AED0] hover:text-[var(--primary)] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5'
-                                    }`}
-                            >
-                                {f}
-                            </button>
+                {/* Segmented filter */}
+                <div className="segmented" style={{ display: 'flex' }}>
+                    {FILTERS.map(f => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            style={{
+                                padding: '6px 14px', fontSize: 12.5, fontWeight: 600,
+                                borderRadius: 8, border: 'none', cursor: 'pointer',
+                                transition: 'all .15s',
+                                background: filter === f ? 'var(--accent)' : 'transparent',
+                                color: filter === f ? '#062018' : 'var(--t-2)',
+                            }}
+                        >
+                            {f}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Two-column cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+
+                {/* Card 1 — Allocation Donut */}
+                <div className="ww-card" style={{ padding: 24 }}>
+                    <div className="label-cap" style={{ marginBottom: 20 }}>Phân bổ Danh mục</div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                        {/* Donut */}
+                        <div style={{ flexShrink: 0 }}>
+                            <svg width={176} height={176} viewBox="0 0 176 176">
+                                <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={STROKE} />
+                                {arcs.map((arc, i) => (
+                                    <circle
+                                        key={i}
+                                        cx={CX} cy={CY} r={R}
+                                        fill="none"
+                                        stroke={arc.color}
+                                        strokeWidth={STROKE}
+                                        strokeDasharray={`${arc.dash} ${circum}`}
+                                        strokeDashoffset={-arc.offset}
+                                        strokeLinecap="butt"
+                                        transform={`rotate(-90 ${CX} ${CY})`}
+                                    />
+                                ))}
+                                <text x={CX} y={CY - 6} textAnchor="middle" style={{ fill: 'var(--t-3)', fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>TỔNG</text>
+                                <text x={CX} y={CY + 14} textAnchor="middle" style={{ fill: 'var(--t-1)', fontSize: 18, fontWeight: 700 }}>100%</text>
+                            </svg>
+                        </div>
+
+                        {/* Legend bars */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            {allocationData.map((d, i) => (
+                                <div key={d.name}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                        <span style={{ fontSize: 12, color: 'var(--t-2)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: CAT_COLORS[i % CAT_COLORS.length], display: 'inline-block' }} />
+                                            {d.name}
+                                        </span>
+                                        <span style={{ fontSize: 12, color: 'var(--t-1)', fontWeight: 700 }}>{d.pct.toFixed(0)}%</span>
+                                    </div>
+                                    <div style={{ height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${d.pct}%`, borderRadius: 999, background: CAT_COLORS[i % CAT_COLORS.length] }} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 2 — Category P&L bars */}
+                <div className="ww-card" style={{ padding: 24 }}>
+                    <div className="label-cap" style={{ marginBottom: 20 }}>Hiệu suất Danh mục</div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        {profitData.map((cat, i) => {
+                            const isPos = cat.profitLoss >= 0
+                            const barW  = (Math.abs(cat.profitLoss) / profitMax) * 100
+                            return (
+                                <div key={cat.category} className="bar-row">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                                        <span style={{ fontSize: 12.5, color: 'var(--t-2)', fontWeight: 500 }}>{cat.category}</span>
+                                        <span className={isPos ? 'delta-pos' : 'delta-neg'}>
+                                            {isPos ? '+' : ''}{formatVND(cat.profitLoss)} đ
+                                        </span>
+                                    </div>
+                                    <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                                        <div style={{
+                                            height: '100%', width: `${barW}%`, borderRadius: 999,
+                                            background: isPos ? 'var(--accent)' : 'var(--neg)',
+                                            transition: 'width .4s ease',
+                                        }} />
+                                    </div>
+                                </div>
+                            )
+                        })}
+
+                        {profitData.length === 0 && (
+                            <p style={{ color: 'var(--t-3)', fontSize: 13, textAlign: 'center', paddingTop: 32 }}>Chưa có dữ liệu hiệu suất</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Ranking table */}
+            <div className="ww-card" style={{ padding: 24 }}>
+                <div style={{ marginBottom: 20 }}>
+                    <div className="label-cap">Xếp hạng Tốc độ Tài sản</div>
+                    <p style={{ color: 'var(--t-3)', fontSize: 12.5, marginTop: 4 }}>
+                        Top tài sản có hiệu suất tốt nhất trong giai đoạn đã chọn.
+                    </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {/* Table header */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '24px 1fr 160px 100px', gap: 12, padding: '0 8px 10px', borderBottom: '1px solid var(--line)' }}>
+                        {['#', 'Mã tài sản', 'Tốc độ tăng trưởng', 'P&L'].map(h => (
+                            <span key={h} style={{ fontSize: 11, color: 'var(--t-3)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</span>
                         ))}
                     </div>
-                </div>
-            </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
-                {/* 1. Allocation Chart */}
-                <div className="bento-card p-10 group relative">
-                    <div className="flex items-center justify-between mb-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
-                                <PieIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-lg font-bold text-[#2B3674] dark:text-white">Phân bổ Danh mục</h3>
-                        </div>
-                    </div>
+                    {rankingData.map((item, idx) => {
+                        const isPos = item.profitLossPercent >= 0
+                        const barW  = (Math.abs(item.profitLossPercent) / rankMax) * 100
+                        return (
+                            <div
+                                key={item.symbol}
+                                style={{
+                                    display: 'grid', gridTemplateColumns: '24px 1fr 160px 100px',
+                                    gap: 12, padding: '12px 8px', borderRadius: 10,
+                                    transition: 'background .15s',
+                                    cursor: 'default',
+                                }}
+                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
+                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                            >
+                                {/* Rank */}
+                                <span style={{ fontSize: 12, color: 'var(--t-3)', fontWeight: 700, alignSelf: 'center' }}>{idx + 1}</span>
 
-                    <div className="h-72 w-full relative">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={allocationData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={80}
-                                    outerRadius={110}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {allocationData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={BENTO_CHART_COLORS[index % BENTO_CHART_COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <RechartsTooltip
-                                    formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' đ'}
-                                    contentStyle={{
-                                        backgroundColor: 'var(--card-bg)',
-                                        borderRadius: '24px',
-                                        border: '1px solid var(--pill-border)',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                                        color: 'var(--foreground)',
-                                        fontSize: '12px',
-                                        fontWeight: 'bold',
-                                        padding: '12px 16px'
-                                    }}
-                                    itemStyle={{ color: 'var(--foreground)' }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <p className="text-[10px] text-[#A3AED0] font-bold uppercase tracking-widest">Tổng thể</p>
-                            <p className="text-2xl font-bold text-[#2B3674] dark:text-white">100%</p>
-                        </div>
-                    </div>
+                                {/* Symbol + name */}
+                                <div style={{ alignSelf: 'center' }}>
+                                    <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-1)' }}>{item.symbol}</div>
+                                    <div style={{ fontSize: 11.5, color: 'var(--t-3)', marginTop: 1 }}>{item.category}</div>
+                                </div>
 
-                    <div className="grid grid-cols-2 gap-4 mt-12 pt-8 border-t border-slate-50">
-                        {allocationData.map((entry, index) => (
-                            <div key={index} className="flex items-center gap-3 group/legend">
-                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: BENTO_CHART_COLORS[index % BENTO_CHART_COLORS.length] }}></div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-[#A3AED0] uppercase tracking-tight">{entry.name}</span>
-                                    <span className="text-sm font-bold text-[#2B3674] dark:text-white">{((entry.value / portfolio.totalCurrentValue) * 100).toFixed(0)}%</span>
+                                {/* Progress bar + pct */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ flex: 1, height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                                        <div style={{
+                                            height: '100%', width: `${barW}%`, borderRadius: 999,
+                                            background: isPos ? 'var(--accent)' : 'var(--neg)',
+                                        }} />
+                                    </div>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: isPos ? 'var(--accent)' : 'var(--neg)', minWidth: 44, textAlign: 'right' }}>
+                                        {isPos ? '+' : ''}{item.profitLossPercent.toFixed(1)}%
+                                    </span>
+                                </div>
+
+                                {/* P&L value */}
+                                <div style={{ textAlign: 'right', alignSelf: 'center' }}>
+                                    <span className={isPos ? 'delta-pos' : 'delta-neg'}>
+                                        {isPos ? '+' : ''}{formatVND(item.profitLoss)} đ
+                                    </span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        )
+                    })}
 
-                {/* 2. Profit/Loss Analysis (By Category) */}
-                <div className="bento-card p-10 group">
-                    <div className="flex items-center gap-3 mb-10">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                            <BarChart3 className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-lg font-bold text-[#2B3674] dark:text-white">Hiệu suất Danh mục</h3>
-                    </div>
-
-                    <div className="h-72 w-full mt-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart layout="vertical" data={profitData} margin={{ left: 0, right: 30 }}>
-                                <XAxis type="number" hide />
-                                <YAxis
-                                    dataKey="name"
-                                    type="category"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 11, fontWeight: 700, fill: 'var(--text-muted)' }}
-                                    width={90}
-                                />
-                                <ReferenceLine x={0} stroke="#f1f5f9" />
-                                <RechartsTooltip
-                                    formatter={(value: number) => new Intl.NumberFormat('vi-VN').format(value) + ' đ'}
-                                    cursor={{ fill: 'var(--pill-border)' }}
-                                    contentStyle={{
-                                        backgroundColor: 'var(--card-bg)',
-                                        borderRadius: '24px',
-                                        border: '1px solid var(--pill-border)',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                                        color: 'var(--foreground)',
-                                        fontSize: '12px',
-                                        fontWeight: 'bold',
-                                        padding: '12px 16px'
-                                    }}
-                                    itemStyle={{ color: 'var(--foreground)' }}
-                                />
-                                <Bar dataKey="pl" radius={[0, 10, 10, 0]} barSize={24}>
-                                    {profitData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.pl >= 0 ? '#10B981' : '#EF4444'} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <p className="text-[10px] font-bold text-[#A3AED0] uppercase tracking-widest text-center mt-12">Hiệu suất tương đối giữa các lĩnh vực</p>
+                    {rankingData.length === 0 && (
+                        <p style={{ color: 'var(--t-3)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>Chưa có dữ liệu tài sản</p>
+                    )}
                 </div>
             </div>
 
-            {/* 3. Detailed Performance Comparison */}
-            <div className="px-2">
-                <div className="bento-card p-10">
-                    <div className="flex items-center gap-3 mb-12">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-white/5 text-[var(--primary)] flex items-center justify-center">
-                            <TrendingUp className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold text-[#2B3674] dark:text-white">Xếp hạng Tốc độ Tài sản</h3>
-                            <p className="text-[#A3AED0] text-sm font-medium">Các chỉ dấu có hiệu suất tốt nhất trong giai đoạn đã chọn.</p>
-                        </div>
-                    </div>
-
-                    <div className="h-[450px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart layout="vertical" data={assetPerformanceData} margin={{ left: 10, right: 40 }}>
-                                <XAxis type="number" hide />
-                                <YAxis
-                                    dataKey="name"
-                                    type="category"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 12, fontWeight: 700, fill: 'var(--text-muted)' }}
-                                    width={100}
-                                />
-                                <ReferenceLine x={0} stroke="#f1f5f9" />
-                                <RechartsTooltip
-                                    formatter={(value: number) => `${value.toFixed(2)}%`}
-                                    cursor={{ fill: 'var(--pill-border)' }}
-                                    contentStyle={{
-                                        backgroundColor: 'var(--card-bg)',
-                                        borderRadius: '24px',
-                                        border: '1px solid var(--pill-border)',
-                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
-                                        color: 'var(--foreground)',
-                                        fontSize: '12px',
-                                        fontWeight: 'bold',
-                                        padding: '12px 16px'
-                                    }}
-                                    itemStyle={{ color: 'var(--foreground)' }}
-                                />
-                                <Bar dataKey="value" radius={[0, 12, 12, 0]} barSize={20}>
-                                    {assetPerformanceData.map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={entry.value >= 0 ? 'var(--primary)' : 'var(--error)'}
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg) } }
+            `}</style>
         </div>
     )
 }
