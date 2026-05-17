@@ -274,7 +274,7 @@ export default function AssetsPage() {
                                 {/* P&L row */}
                                 <div className="row between">
                                     <div style={{ fontSize: 12.5, color: 'var(--t-3)' }}>
-                                        Vốn: <span style={{ color: 'var(--t-2)', fontWeight: 600 }}>{fmt(item.totalInvested)} đ</span>
+                                        Vốn: <span style={{ color: 'var(--t-2)', fontWeight: 600 }}>{fmt(item.invested)} đ</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: isProfit ? 'var(--accent)' : 'var(--neg)' }}>
                                         {isProfit ? <IconUp /> : <IconDown />}
