@@ -158,7 +158,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="animate-fade-up" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
+        <div className="animate-fade-up" style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 60 }}>
 
             {/* Page header */}
             <div className="mb-6 pt-2">
