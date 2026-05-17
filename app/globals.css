@@ -2,90 +2,337 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   DESIGN TOKENS — Wealthing Waves Premium Dark v2
+   Based on prototype design system. Single dark theme.
+   ============================================================ */
 @layer base {
   :root {
-    --background: #F4F7FE;
-    --foreground: #2B3674;
-    --card-bg: #FFFFFF;
-    --card-border: rgba(226, 232, 240, 0.8);
-    --primary: #87A96B;
-    /* Moss Green - comfortable for eyes */
-    --primary-hover: #769B5A;
-    --success: #05CD99;
-    --error: #EE5D50;
-    --text-muted: #A3AED0;
-    --pill-bg: rgba(255, 255, 255, 0.85);
-    --pill-border: rgba(255, 255, 255, 0.5);
-    --pill-shadow: 0 10px 40px -10px rgba(163, 177, 198, 0.2);
+    /* --- Backgrounds --- */
+    --bg:        #0b0d12;
+    --bg-grad:   radial-gradient(1200px 600px at 80% -10%, rgba(0,200,150,0.08), transparent 60%),
+                 radial-gradient(900px 500px at -10% 30%, rgba(96,165,250,0.05), transparent 60%),
+                 #0b0d12;
+
+    /* --- Surfaces (layered depth) --- */
+    --surface-1: #13161f;
+    --surface-2: #181c27;
+    --surface-3: #1f2433;
+    --hover:     #232a3a;
+
+    /* --- Borders --- */
+    --line:      rgba(255,255,255,0.06);
+    --line-2:    rgba(255,255,255,0.10);
+
+    /* --- Typography --- */
+    --t-1: #f2f4f8;
+    --t-2: #a4abbd;
+    --t-3: #6c7388;
+    --t-4: #4a516a;
+
+    /* --- Accent: Teal/Mint --- */
+    --accent:    #00c896;
+    --accent-2:  #14e0a8;
+    --accent-d:  #0a7d5e;
+    --accent-12: rgba(0,200,150,0.12);
+    --accent-18: rgba(0,200,150,0.18);
+    --accent-30: rgba(0,200,150,0.30);
+
+    /* --- Status --- */
+    --neg:       #ff5a6e;
+    --neg-12:    rgba(255,90,110,0.12);
+    --warn:      #ffb547;
+    --info:      #6ea8ff;
+    --info-12:   rgba(110,168,255,0.12);
+
+    /* --- Radius scale --- */
+    --r-xs: 8px;
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+
+    /* --- Shadows --- */
+    --sh-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -32px rgba(0,0,0,0.6);
+    --sh-pop:  0 8px 30px -8px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+
+    /* --- Backward-compat aliases (used by existing components) --- */
+    --background:    var(--bg);
+    --foreground:    var(--t-1);
+    --card-bg:       var(--surface-1);
+    --card-border:   var(--line);
+    --glass:         rgba(255,255,255,0.04);
+    --glass-border:  var(--line);
+    --glass-hover:   var(--hover);
+    --primary:       var(--accent);
+    --primary-hover: var(--accent-2);
+    --accent-dim:    var(--accent-12);
+    --accent-glow:   var(--accent-30);
+    --profit:        var(--accent);
+    --profit-dim:    var(--accent-12);
+    --loss:          var(--neg);
+    --loss-dim:      var(--neg-12);
+    --text-1:        var(--t-1);
+    --text-2:        var(--t-2);
+    --text-3:        var(--t-3);
+    --text-muted:    var(--t-2);
+    --blue:          var(--info);
+    --blue-dim:      var(--info-12);
+    --gold:          var(--warn);
+    --gold-dim:      rgba(255,181,71,0.12);
+    --rose:          var(--neg);
+    --rose-dim:      var(--neg-12);
+    --violet:        #a78bfa;
+    --violet-dim:    rgba(167,139,250,0.12);
+    --success:       var(--accent);
+    --error:         var(--neg);
+    --pill-bg:       var(--surface-1);
+    --pill-border:   var(--line);
+    --pill-shadow:   0 10px 40px -10px rgba(0,0,0,0.7);
+    --bg-2:          var(--surface-1);
+    --bg-3:          var(--surface-2);
   }
 
-  .dark {
-    --background: #0A0A0A;
-    /* Deep Charcoal - Exact match from reference image */
-    --foreground: #FFFFFF;
-    --card-bg: #141414;
-    /* Slightly elevated charcoal for cards */
-    --card-border: rgba(255, 255, 255, 0.08);
-    --primary: #E8B298;
-    /* Soft Peach/Coral - warm and comfortable for dark mode */
-    --primary-hover: #D9A087;
-    --success: #6EE7B7;
-    --error: #F87171;
-    --text-muted: #B0B0B0;
-    /* Lighter gray for better contrast in dark mode */
-    --pill-bg: #1A1A1A;
-    --pill-border: rgba(255, 255, 255, 0.10);
-    --pill-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
-  }
+  html { color-scheme: dark; }
 
   body {
-    @apply bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300;
-    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg-grad);
+    color: var(--t-1);
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
   }
+
+  ::selection { background: var(--accent-30); color: var(--t-1); }
 }
 
+/* ============================================================
+   SHARED COMPONENT CLASSES
+   ============================================================ */
 @layer components {
+
+  /* --- Base card (replaces bento-card, maintains compat) --- */
+  .ww-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), transparent), var(--surface-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--sh-card);
+  }
+  .ww-card:hover { border-color: var(--line-2); }
+
+  /* Bento-card alias (backward compat) */
   .bento-card {
-    background-color: var(--card-bg) !important;
-    border: 1px solid var(--card-border);
-    color: var(--foreground);
-    @apply rounded-[2rem] transition-all duration-300 overflow-hidden shadow-xl;
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), transparent), var(--surface-1) !important;
+    border: 1px solid var(--line);
+    color: var(--t-1);
+    @apply rounded-[1.125rem] transition-all duration-300 overflow-hidden;
+    box-shadow: var(--sh-card);
+  }
+  .bento-card:hover { border-color: var(--line-2); }
+
+  /* --- Hero gradient card --- */
+  .hero-card {
+    background: linear-gradient(135deg, rgba(0,200,150,0.08) 0%, rgba(96,165,250,0.06) 60%, transparent 100%);
+    border: 1px solid var(--accent-18);
+    @apply rounded-[1.125rem] relative overflow-hidden;
   }
 
+  /* --- Floating nav pill (layout compat) --- */
   .floating-pill {
-    @apply bg-white/80 dark:bg-[var(--pill-bg)] backdrop-blur-xl border border-white/50 dark:border-[var(--pill-border)] rounded-[2rem] transition-all;
+    @apply backdrop-blur-xl rounded-[2rem] transition-all;
+    background: rgba(11,13,18,0.88);
+    border: 1px solid var(--line);
     box-shadow: var(--pill-shadow);
   }
 
+  /* --- Nav pill states --- */
   .nav-pill-active {
-    @apply bg-[var(--primary)] text-white dark:text-[#000000] shadow-lg shadow-black/10 dark:shadow-none font-bold;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: #062018 !important;
+    box-shadow: 0 4px 16px -6px var(--accent-30), 0 0 0 1px var(--accent-18) inset;
+    @apply font-bold;
+  }
+  .nav-pill-inactive { color: var(--t-2); }
+  .nav-pill-inactive:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--t-1);
   }
 
-  .nav-pill-inactive {
-    @apply text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:text-[var(--text-muted)] dark:hover:text-[var(--primary)] dark:hover:bg-white/5;
-  }
-
+  /* --- Form inputs --- */
   .input-bento {
-    @apply bg-slate-100/50 dark:bg-[#1A1A1A] border border-transparent dark:border-[var(--pill-border)] rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:bg-white dark:focus:bg-[#0F0F0F] outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#666666] dark:[color-scheme:dark];
-    color: var(--foreground);
-    --tw-ring-color: rgba(135, 169, 107, 0.2);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--t-1);
+    @apply rounded-[10px] px-3 py-[11px] text-sm outline-none transition-all w-full;
+    -webkit-appearance: none;
+    color-scheme: dark;
+    font-family: inherit;
+  }
+  .input-bento::placeholder { color: var(--t-4); }
+  .input-bento:focus {
+    border-color: rgba(0,200,150,0.5);
+    box-shadow: 0 0 0 4px var(--accent-12);
   }
 
-  .dark .input-bento {
-    --tw-ring-color: rgba(232, 178, 152, 0.3);
+  /* --- Stat tile --- */
+  .stat-tile {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    @apply rounded-[var(--r-md)] p-4;
   }
+
+  /* --- Primary CTA button --- */
+  .btn-accent {
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: #062018;
+    box-shadow: 0 8px 24px -10px var(--accent-30), 0 0 0 1px var(--accent-18) inset;
+    @apply font-semibold py-[10px] px-4 rounded-[10px] w-full transition-all duration-200 active:scale-[0.98] text-[13px];
+  }
+  .btn-accent:hover:not(:disabled) {
+    box-shadow: 0 12px 28px -8px rgba(0,200,150,0.45), 0 0 0 1px rgba(0,200,150,0.5) inset;
+    transform: translateY(-1px);
+  }
+  .btn-accent:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* --- Secondary ghost button --- */
+  .btn-ghost {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--t-1);
+    @apply font-semibold py-[10px] px-4 rounded-[10px] transition-all duration-200 text-[13px];
+  }
+  .btn-ghost:hover { background: var(--surface-3); }
+
+  /* --- Delta badge (profit/loss pill) --- */
+  .delta-pos {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--accent); background: var(--accent-12);
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .delta-neg {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--neg); background: var(--neg-12);
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Label caps --- */
+  .label-cap {
+    font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--t-3); font-weight: 600;
+  }
+
+  /* --- Big number values --- */
+  .value-xl { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .value-lg { font-size: 28px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.05; }
+  .value-md { font-size: 18px; font-weight: 600; letter-spacing: -0.005em; }
+
+  /* --- Segmented control --- */
+  .segmented {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .segmented button {
+    appearance: none; border: 0;
+    background: transparent;
+    padding: 6px 14px;
+    color: var(--t-2);
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .segmented button:hover { color: var(--t-1); }
+  .segmented button.on {
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: #062018;
+    box-shadow: 0 4px 16px -6px var(--accent-30), 0 0 0 1px var(--accent-18) inset;
+  }
+
+  /* --- Progress bar --- */
+  .pbar {
+    height: 6px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden;
+  }
+  .pbar > span {
+    display: block; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-d), var(--accent));
+  }
+
+  /* --- Bar row (analytics) --- */
+  .bar-row { display: grid; grid-template-columns: 120px 1fr 64px; gap: 12px; align-items: center; }
+  .bar-row .bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+  .bar-row .bar > span {
+    position: absolute; inset: 0 auto 0 0; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-d), var(--accent));
+    box-shadow: 0 0 24px -4px var(--accent-30);
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  .bar-row .bar.alt > span { background: linear-gradient(90deg, #2a4dff, #6ea8ff); box-shadow: 0 0 24px -4px rgba(110,168,255,0.4); }
+  .bar-row .bar.neg > span { background: linear-gradient(90deg, #b03340, var(--neg)); }
+  .bar-row .pct { font-variant-numeric: tabular-nums; text-align: right; font-size: 12.5px; font-weight: 600; }
+  .bar-row .name { font-weight: 600; font-size: 13px; color: var(--t-2); }
+
+  /* --- Category icon colour modifiers --- */
+  .cat-icon-stock  { background: var(--info-12);   color: var(--info); }
+  .cat-icon-fund   { background: var(--accent-12); color: var(--accent); }
+  .cat-icon-gold   { background: rgba(255,181,71,0.12); color: var(--warn); }
+  .cat-icon-saving { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+  /* --- Profit / Loss text helpers --- */
+  .profit-text { color: var(--accent); }
+  .loss-text   { color: var(--neg); }
+  .profit-bg   { background: var(--accent-12); }
+  .loss-bg     { background: var(--neg-12); }
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 9px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+@keyframes shimmer {
+  0%   { background-position: -800px 0; }
+  100% { background-position:  800px 0; }
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 dark:bg-zinc-800 rounded-full hover:dark:bg-zinc-700 transition-colors;
+.animate-fade-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Skeleton loading shimmer */
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--glass) 25%,
+    rgba(255, 255, 255, 0.07) 50%,
+    var(--glass) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+/* Progress bar smooth fill */
+.progress-fill {
+  transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
 }

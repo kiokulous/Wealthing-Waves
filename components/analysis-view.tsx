@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
-import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+    LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine,
+} from "recharts";
 
+/* ============================================================
+   Types
+   ============================================================ */
 type Transaction = {
     id: string;
     date: string;
@@ -20,251 +25,503 @@ type MarketPrice = {
     date: string;
     symbol: string;
     price: number;
+    category?: string;
 };
 
-export function AnalysisView() {
-    const [loading, setLoading] = useState(true);
-    const [symbols, setSymbols] = useState<string[]>([]);
-    const [selectedSymbol, setSelectedSymbol] = useState<string>("");
-    const [yearFilter, setYearFilter] = useState<string>("all");
+/* ============================================================
+   Helpers
+   ============================================================ */
+const fmtVND      = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+const fmtNum      = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
+const formatMoney = (n: number) => fmtVND.format(Math.round(n)) + " đ";
 
-    // Data State
-    const [txns, setTxns] = useState<Transaction[]>([]);
-    const [prices, setPrices] = useState<MarketPrice[]>([]);
+function fmtCompact(n: number) {
+    const abs = Math.abs(n), sign = n < 0 ? "-" : "";
+    if (abs >= 1e9) return sign + (abs / 1e9).toFixed(2) + " tỷ";
+    if (abs >= 1e6) return sign + (abs / 1e6).toFixed(1) + " tr";
+    if (abs >= 1e3) return sign + (abs / 1e3).toFixed(0) + " ngàn";
+    return sign + abs.toFixed(0);
+}
 
-    // Calculated State
-    const [stats, setStats] = useState({
-        pl: 0,
-        plPercent: 0,
-        qty: 0,
-        duration: 0,
-        invested: 0
+function pct(n: number) { return (n >= 0 ? "+" : "") + n.toFixed(2) + "%"; }
+
+function getLatestPrice(prices: MarketPrice[], symbol: string, cutoff: Date) {
+    const filtered = prices
+        .filter((p) => p.symbol === symbol && new Date(p.date) <= cutoff)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return filtered.length > 0 ? Number(filtered[filtered.length - 1].price) : 0;
+}
+
+function computeMetrics(
+    txns: Transaction[],
+    prices: MarketPrice[],
+    symbol: string,
+    yearFilter: string
+) {
+    const cutoff =
+        yearFilter !== "all"
+            ? new Date(Number(yearFilter), 11, 31, 23, 59, 59)
+            : new Date();
+
+    let holdingQty = 0, invested = 0, realized = 0;
+    let firstBuy: Date | null = null;
+
+    const symTxns = txns
+        .filter((t) => t.symbol === symbol && new Date(t.date) <= cutoff)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    symTxns.forEach((t) => {
+        const qty = Number(t.qty);
+        const val = Math.abs(Number(t.total));
+        if (t.type === "Mua") {
+            holdingQty += qty;
+            invested   += val;
+            if (!firstBuy) firstBuy = new Date(t.date);
+        } else {
+            if (holdingQty > 0) {
+                const avg  = invested / holdingQty;
+                const cost = Math.min(qty, holdingQty) * avg;
+                invested  -= cost;
+                holdingQty = Math.max(0, holdingQty - qty);
+                realized  += val - cost;
+            }
+        }
     });
-    const [history, setHistory] = useState<Transaction[]>([]);
-    const [chartData, setChartData] = useState<any[]>([]);
+
+    const latestPrice = getLatestPrice(prices, symbol, cutoff);
+    const marketVal   = holdingQty * latestPrice;
+    const pnl         = marketVal - invested + realized;
+    const base        = invested > 1 ? invested : Math.max(Math.abs(realized), 1);
+    const pnlPct      = (pnl / base) * 100;
+    const closed      = holdingQty < 0.001 && invested < 1;
+    const avgCost     = holdingQty > 0 ? invested / holdingQty : 0;
+
+    const days =
+        holdingQty > 0 && firstBuy
+            ? Math.ceil(Math.abs(cutoff.getTime() - (firstBuy as Date).getTime()) / 86_400_000)
+            : 0;
+
+    const cagr =
+        days > 30 && pnlPct !== 0
+            ? (Math.pow(1 + pnlPct / 100, 365 / days) - 1) * 100
+            : null;
+
+    const priceHistory = prices
+        .filter((p) => p.symbol === symbol && new Date(p.date) <= cutoff)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(-20)
+        .map((p) => ({
+            date:    new Date(p.date).toLocaleDateString("vi-VN"),
+            price:   Number(p.price),
+            avgCost: avgCost,
+        }));
+
+    return {
+        pnl, pnlPct, holdingQty, invested, realized, days, cagr,
+        avgCost, latestPrice, closed, priceHistory,
+        history: [...symTxns].reverse(),
+    };
+}
+
+/* ============================================================
+   Custom tooltip for Recharts
+   ============================================================ */
+function CustomTooltip({ active, payload, label }: any) {
+    if (!active || !payload?.length) return null;
+    return (
+        <div
+            style={{
+                background:   "var(--bg-3)",
+                border:       "1px solid var(--glass-border)",
+                borderRadius: 14,
+                padding:      "10px 14px",
+                fontSize:     12,
+                fontWeight:   700,
+            }}
+        >
+            <p style={{ color: "var(--text-3)", marginBottom: 4 }}>{label}</p>
+            {payload.map((p: any) => (
+                <p key={p.name} style={{ color: p.color }}>
+                    {p.name}: {formatMoney(p.value)}
+                </p>
+            ))}
+        </div>
+    );
+}
+
+/* ============================================================
+   Main component
+   ============================================================ */
+export function AnalysisView() {
+    const [loading,         setLoading]         = useState(true);
+    const [txns,            setTxns]            = useState<Transaction[]>([]);
+    const [prices,          setPrices]          = useState<MarketPrice[]>([]);
+    const [symbols,         setSymbols]         = useState<string[]>([]);
+    const [availableYears,  setAvailableYears]  = useState<number[]>([]);
+    const [selectedSymbol,  setSelectedSymbol]  = useState("");
+    const [yearFilter,      setYearFilter]      = useState("all");
 
     const supabase = createClient();
 
+    /* ── Load data once ── */
     useEffect(() => {
-        fetchData();
+        (async () => {
+            try {
+                const [{ data: tData }, { data: pData }] = await Promise.all([
+                    supabase.from("transactions").select("*"),
+                    supabase.from("market_prices").select("*"),
+                ]);
+                const tList = (tData as Transaction[]) || [];
+                const pList = (pData as MarketPrice[]) || [];
+                setTxns(tList);
+                setPrices(pList);
+                setSymbols(Array.from(new Set(tList.map((t) => t.symbol))).sort() as string[]);
+                setAvailableYears(
+                    Array.from(new Set(tList.map((t) => new Date(t.date).getFullYear())))
+                        .filter((y) => !isNaN(y))
+                        .sort((a, b) => b - a) as number[]
+                );
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, []);
 
-    useEffect(() => {
-        if (selectedSymbol) {
-            calculateMetrics();
-        }
-    }, [selectedSymbol, yearFilter, txns, prices]);
+    /* ── Derived metrics ── */
+    const metrics = selectedSymbol
+        ? computeMetrics(txns, prices, selectedSymbol, yearFilter)
+        : null;
 
-    async function fetchData() {
-        try {
-            const { data: tData } = await supabase.from('transactions').select('*');
-            const { data: pData } = await supabase.from('market_prices').select('*');
+    const allRanks = selectedSymbol
+        ? symbols
+            .map((s) => {
+                const m = computeMetrics(txns, prices, s, yearFilter);
+                return { symbol: s, pnl: m.pnl, pnlPct: m.pnlPct };
+            })
+            .sort((a, b) => b.pnlPct - a.pnlPct)
+            .slice(0, 6)
+        : [];
 
-            const tList = tData || [];
-            const pList = pData || [];
+    /* ── Loading ── */
+    if (loading)
+        return (
+            <div className="flex justify-center py-24">
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--accent)" }} />
+            </div>
+        );
 
-            setTxns(tList);
-            setPrices(pList);
+    const isProfit = (metrics?.pnl ?? 0) >= 0;
+    const profitColor = isProfit ? "var(--profit)" : "var(--loss)";
 
-            // Extract unique symbols
-            const uniqueSyms = Array.from(new Set(tList.map((t: any) => t.symbol))).sort();
-            setSymbols(uniqueSyms as string[]);
-
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+    /* ── Rank medal ── */
+    function medalStyle(i: number): React.CSSProperties {
+        if (i === 0) return { background: "var(--gold-dim)", color: "var(--gold)" };
+        if (i === 1) return { background: "rgba(203,213,225,0.1)", color: "#CBD5E1" };
+        if (i === 2) return { background: "rgba(180,120,60,0.1)", color: "#CD7F32" };
+        return { background: "var(--glass)", color: "var(--text-3)" };
     }
-
-    function calculateMetrics() {
-        if (!selectedSymbol) return;
-
-        // Filter Date Limit
-        let cutoffDate = new Date();
-        if (yearFilter !== 'all') {
-            cutoffDate = new Date(Number(yearFilter), 11, 31, 23, 59, 59);
-        }
-
-        let holdingQty = 0;
-        let invested = 0;
-        let realized = 0;
-        let firstBuyDate: Date | null = null;
-
-        // Filter Txns
-        const symTxns = txns
-            .filter(t => t.symbol === selectedSymbol && new Date(t.date) <= cutoffDate)
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        symTxns.forEach(t => {
-            const qty = Number(t.qty);
-            const val = Math.abs(Number(t.total));
-
-            if (t.type === 'Mua') {
-                holdingQty += qty;
-                invested += val;
-                if (!firstBuyDate) firstBuyDate = new Date(t.date);
-            } else if (t.type === 'Bán' || t.type === 'Chốt') {
-                if (holdingQty > 0) {
-                    const avg = invested / holdingQty;
-                    const cost = qty * avg;
-                    invested -= cost;
-                    holdingQty -= qty;
-                    realized += (val - cost);
-                }
-            }
-        });
-
-        // Duration
-        let duration = 0;
-        if (holdingQty > 0 && firstBuyDate) {
-            const diff = Math.abs(cutoffDate.getTime() - (firstBuyDate as Date).getTime());
-            duration = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        }
-
-        // Market Value
-        const symPrices = prices
-            .filter(p => p.symbol === selectedSymbol && new Date(p.date) <= cutoffDate)
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        const latestPrice = symPrices.length > 0 ? Number(symPrices[symPrices.length - 1].price) : 0;
-        const marketVal = holdingQty * latestPrice;
-        const totalPL = (marketVal - invested) + realized;
-
-        const baseInvest = invested > 0 ? invested : (Math.abs(realized) + 1);
-        const plPercent = (totalPL / baseInvest) * 100;
-
-        setStats({
-            pl: totalPL,
-            plPercent: (holdingQty <= 0.001 && invested <= 1) ? 0 : plPercent,
-            qty: holdingQty,
-            duration: duration,
-            invested
-        });
-
-        // History List (Newest first)
-        setHistory([...symTxns].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-
-        // Chart Data
-        const chartD = symPrices.slice(-20).map(p => ({
-            date: new Date(p.date).toLocaleDateString('vi-VN'),
-            price: Number(p.price),
-            cost: invested / (holdingQty || 1) // Approx avg cost
-        }));
-        setChartData(chartD);
-    }
-
-    const fmt = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
-    const fmtNum = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
-
-    if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>;
 
     return (
-        <div className="space-y-6 pb-24">
-            {/* CONTROLS */}
+        <div className="space-y-5 pb-24">
+            {/* ── Controls ── */}
             <div className="flex gap-3">
-                <div className="flex-1 bg-white p-3 rounded-2xl border border-indigo-100 shadow-sm">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Mã</label>
-                    <select
-                        value={selectedSymbol}
-                        onChange={(e) => setSelectedSymbol(e.target.value)}
-                        className="w-full bg-transparent font-bold text-lg text-indigo-600 outline-none"
-                    >
-                        <option value="">-- Chọn --</option>
-                        {symbols.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                </div>
-                <div className="w-1/3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Năm</label>
-                    <select
-                        value={yearFilter}
-                        onChange={(e) => setYearFilter(e.target.value)}
-                        className="w-full bg-transparent font-bold text-lg text-slate-600 outline-none"
-                    >
-                        <option value="all">All</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                    </select>
-                </div>
+                <select
+                    value={selectedSymbol}
+                    onChange={(e) => setSelectedSymbol(e.target.value)}
+                    className="input-bento flex-[2]"
+                    style={{ fontSize: 15, fontWeight: 900, color: selectedSymbol ? "var(--accent)" : "var(--text-3)" }}
+                >
+                    <option value="">— Chọn mã để mổ xẻ —</option>
+                    {symbols.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+
+                <select
+                    value={yearFilter}
+                    onChange={(e) => setYearFilter(e.target.value)}
+                    className="input-bento flex-1"
+                    style={{ fontSize: 14, fontWeight: 800 }}
+                >
+                    <option value="all">Tất cả</option>
+                    {availableYears.map((y) => <option key={y} value={String(y)}>{y}</option>)}
+                </select>
             </div>
 
-            {selectedSymbol ? (
-                <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* MAIN CARD */}
-                    <div className="bg-gradient-to-br from-white to-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <p className="text-xs text-slate-500 uppercase font-bold">Lợi Nhuận</p>
-                                <h3 className={`text-3xl font-extrabold mt-1 tracking-tight ${stats.pl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {fmt.format(stats.pl)}
-                                </h3>
-                            </div>
-                            <div className={`px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm border ${stats.pl >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
-                                {stats.pl >= 0 ? '+' : ''}{stats.plPercent.toFixed(2)}%
-                            </div>
-                        </div>
+            {/* ── Empty state ── */}
+            {!selectedSymbol && (
+                <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
+                    <span style={{ fontSize: 48 }}>🔍</span>
+                    <h4 className="text-base font-black" style={{ color: "var(--text-1)" }}>
+                        Chọn một mã bên trên
+                    </h4>
+                    <p className="text-sm" style={{ color: "var(--text-3)", maxWidth: 260, lineHeight: 1.5 }}>
+                        Mình sẽ chẩn đoán ngay xem con đó đang khỏe hay đang... bốc mùi.
+                    </p>
+                </div>
+            )}
 
-                        {/* Progress Bar */}
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-5">
+            {/* ── Analysis content ── */}
+            {metrics && (
+                <div className="space-y-5 animate-fade-up">
+
+                    {/* Main P&L card */}
+                    <div
+                        className="rounded-[2rem] p-6"
+                        style={{
+                            background: isProfit
+                                ? "linear-gradient(135deg, rgba(52,211,153,0.08) 0%, transparent 100%)"
+                                : "linear-gradient(135deg, rgba(248,113,113,0.08) 0%, transparent 100%)",
+                            border: `1px solid ${isProfit ? "rgba(52,211,153,0.2)" : "rgba(248,113,113,0.2)"}`,
+                        }}
+                    >
+                        <div className="flex items-start justify-between mb-4">
+                            <div>
+                                <p
+                                    className="text-[10px] font-black uppercase tracking-widest mb-2"
+                                    style={{ color: "var(--text-3)" }}
+                                >
+                                    Tiền đẻ ra tiền 🥚
+                                </p>
+                                <p
+                                    className="text-3xl font-black tracking-tight"
+                                    style={{ color: profitColor }}
+                                >
+                                    {isProfit ? "+" : ""}{formatMoney(metrics.pnl)}
+                                </p>
+                            </div>
                             <div
-                                className={`h-full transition-all duration-1000 ${stats.pl >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                                style={{ width: '100%' }}
-                            ></div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                            <div>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Số lượng</p>
-                                <p className="text-lg font-bold text-slate-700">{fmtNum.format(stats.qty)}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Thời gian</p>
-                                <p className="text-lg font-bold text-slate-700">{stats.qty > 0 ? `${stats.duration} ngày` : 'Đã bán hết'}</p>
+                                className="px-4 py-2 rounded-full text-sm font-black"
+                                style={{
+                                    background: isProfit ? "var(--profit-dim)" : "var(--loss-dim)",
+                                    color:      profitColor,
+                                    border:     `1px solid ${profitColor}44`,
+                                }}
+                            >
+                                {pct(metrics.pnlPct)}
                             </div>
                         </div>
-                    </div>
 
-                    {/* CHART */}
-                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-700 mb-4 text-xs uppercase">Biến động giá</h3>
-                        <div className="h-48 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={chartData}>
-                                    <Line type="monotone" dataKey="price" stroke="#6366f1" strokeWidth={2} dot={false} />
-                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                    <XAxis dataKey="date" hide />
-                                    <YAxis hide domain={['auto', 'auto']} />
-                                </LineChart>
-                            </ResponsiveContainer>
+                        {/* Progress bar */}
+                        <div
+                            className="h-1 w-full rounded-full overflow-hidden mb-5"
+                            style={{ background: "var(--glass-border)" }}
+                        >
+                            <div
+                                className="h-full rounded-full progress-fill"
+                                style={{
+                                    width:      Math.min(Math.abs(metrics.pnlPct), 100) + "%",
+                                    background: profitColor,
+                                }}
+                            />
                         </div>
-                    </div>
 
-                    {/* HISTORY LIST */}
-                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-700 mb-4 text-xs uppercase">Lịch sử giao dịch</h3>
-                        <div className="space-y-4 max-h-80 overflow-y-auto pr-2 text-sm">
-                            {history.length === 0 && <p className="text-center text-slate-400 text-xs py-4">Chưa có giao dịch</p>}
-                            {history.map((h, i) => (
-                                <div key={i} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
-                                    <div>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                                            {new Date(h.date).toLocaleDateString('vi-VN')}
-                                        </span>
-                                        <div className={`font-bold text-sm mt-0.5 ${h.type === 'Mua' ? 'text-slate-700' : 'text-emerald-600'}`}>
-                                            {h.type} {fmtNum.format(Number(h.qty))}
-                                        </div>
-                                    </div>
-                                    <div className="font-bold text-sm text-indigo-600">
-                                        {fmt.format(Math.abs(Number(h.total)))}
-                                    </div>
+                        {/* Stat row */}
+                        <div
+                            className="grid grid-cols-3 gap-3 pt-4"
+                            style={{ borderTop: "1px solid var(--glass-border)" }}
+                        >
+                            {[
+                                { label: "Đang nắm", value: fmtNum.format(metrics.holdingQty), sub: "đơn vị" },
+                                { label: "Đã rót",   value: fmtCompact(metrics.invested),      sub: "đồng" },
+                                { label: "Ngày giữ", value: metrics.days > 0 ? String(metrics.days) : (metrics.closed ? "Đã bán" : "--"), sub: "ngày" },
+                            ].map((s) => (
+                                <div key={s.label} className="stat-tile text-center">
+                                    <p className="text-[9px] font-black uppercase tracking-wider mb-1" style={{ color: "var(--text-3)" }}>{s.label}</p>
+                                    <p className="text-base font-black" style={{ color: "var(--text-1)" }}>{s.value}</p>
+                                    <p className="text-[10px] font-medium mt-0.5" style={{ color: "var(--text-3)" }}>{s.sub}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </div>
-            ) : (
-                <div className="text-center py-20 opacity-40">
-                    <p className="text-sm font-medium">Chọn một mã để xem chi tiết</p>
+
+                    {/* CAGR callout */}
+                    <div
+                        className="flex items-center justify-between p-5 rounded-2xl"
+                        style={{
+                            background: "linear-gradient(90deg, rgba(110,231,183,0.06) 0%, transparent 100%)",
+                            border:     "1px solid rgba(110,231,183,0.15)",
+                        }}
+                    >
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--text-3)" }}>
+                                CAGR hàng năm 🚀
+                            </p>
+                            <p className="text-xs font-medium mt-0.5" style={{ color: "var(--text-3)" }}>
+                                Lãi kép hoá của bậc thầy
+                            </p>
+                        </div>
+                        <p
+                            className="text-2xl font-black"
+                            style={{ color: metrics.cagr !== null && metrics.cagr >= 0 ? "var(--accent)" : "var(--loss)" }}
+                        >
+                            {metrics.cagr !== null ? pct(metrics.cagr) : "N/A"}
+                        </p>
+                    </div>
+
+                    {/* Price chart */}
+                    <div
+                        className="rounded-[2rem] p-5"
+                        style={{ background: "var(--glass)", border: "1px solid var(--glass-border)" }}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-2)" }}>
+                                📊 Sóng giá gần đây
+                            </p>
+                            <span
+                                className="text-[10px] font-bold px-3 py-1 rounded-full"
+                                style={{ background: "var(--glass)", border: "1px solid var(--glass-border)", color: "var(--text-3)" }}
+                            >
+                                20 phiên
+                            </span>
+                        </div>
+                        <div style={{ height: 160 }}>
+                            {metrics.priceHistory.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={metrics.priceHistory}>
+                                        <Line
+                                            type="monotone"
+                                            dataKey="price"
+                                            stroke={profitColor}
+                                            strokeWidth={2}
+                                            dot={false}
+                                            name="Giá TT"
+                                        />
+                                        {metrics.avgCost > 0 && (
+                                            <Line
+                                                type="monotone"
+                                                dataKey="avgCost"
+                                                stroke="rgba(251,191,36,0.6)"
+                                                strokeWidth={1.5}
+                                                strokeDasharray="5 4"
+                                                dot={false}
+                                                name="Giá vốn BQ"
+                                            />
+                                        )}
+                                        <XAxis dataKey="date" hide />
+                                        <YAxis hide domain={["auto", "auto"]} />
+                                        <Tooltip content={<CustomTooltip />} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p style={{ color: "var(--text-3)", fontSize: 13 }}>
+                                        Chưa có dữ liệu giá thị trường
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        {/* Legend */}
+                        <div className="flex gap-4 mt-3">
+                            <span className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: profitColor }}>
+                                <span style={{ width: 16, height: 2, background: profitColor, display: "inline-block", borderRadius: 9 }} />
+                                Giá thị trường
+                            </span>
+                            {metrics.avgCost > 0 && (
+                                <span className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: "var(--gold)" }}>
+                                    <span style={{ width: 16, height: 2, background: "var(--gold)", display: "inline-block", borderRadius: 9, opacity: 0.7 }} />
+                                    Giá vốn bình quân
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Ranking table */}
+                    <div
+                        className="rounded-[2rem] p-5"
+                        style={{ background: "var(--glass)", border: "1px solid var(--glass-border)" }}
+                    >
+                        <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: "var(--text-2)" }}>
+                            🏆 Bảng xếp hạng danh mục
+                        </p>
+                        <div className="space-y-2">
+                            {allRanks.map((item, i) => {
+                                const isCurrent = item.symbol === selectedSymbol;
+                                const ip        = item.pnl >= 0;
+                                return (
+                                    <div
+                                        key={item.symbol}
+                                        className="flex items-center gap-3 p-3 rounded-xl transition-all"
+                                        style={{
+                                            background:   isCurrent ? "var(--accent-dim)" : "var(--glass)",
+                                            border:       `1px solid ${isCurrent ? "var(--accent)" : "var(--glass-border)"}`,
+                                        }}
+                                    >
+                                        <div
+                                            className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black flex-shrink-0"
+                                            style={medalStyle(i)}
+                                        >
+                                            {i + 1}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-black" style={{ color: isCurrent ? "var(--accent)" : "var(--text-1)" }}>
+                                                {item.symbol}{isCurrent ? " ← bạn đang xem" : ""}
+                                            </p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-black" style={{ color: ip ? "var(--profit)" : "var(--loss)" }}>
+                                                {pct(item.pnlPct)}
+                                            </p>
+                                            <p className="text-[10px] font-bold" style={{ color: "var(--text-3)" }}>
+                                                {ip ? "+" : ""}{fmtCompact(item.pnl)} đ
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Transaction history */}
+                    <div
+                        className="rounded-[2rem] p-5"
+                        style={{ background: "var(--glass)", border: "1px solid var(--glass-border)" }}
+                    >
+                        <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: "var(--text-2)" }}>
+                            📜 Lịch sử giao dịch
+                        </p>
+                        <div className="space-y-0 max-h-80 overflow-y-auto">
+                            {metrics.history.length === 0 && (
+                                <p className="text-center text-sm py-8" style={{ color: "var(--text-3)" }}>
+                                    Chưa có giao dịch nào
+                                </p>
+                            )}
+                            {metrics.history.map((h, i) => {
+                                const isBuy  = h.type === "Mua";
+                                const isLast = i === metrics.history.length - 1;
+                                return (
+                                    <div
+                                        key={i}
+                                        className="flex justify-between items-center py-3"
+                                        style={{
+                                            borderBottom: isLast ? "none" : "1px solid var(--glass-border)",
+                                        }}
+                                    >
+                                        <div>
+                                            <p className="text-[10px] font-bold mb-0.5" style={{ color: "var(--text-3)" }}>
+                                                {new Date(h.date).toLocaleDateString("vi-VN")}
+                                            </p>
+                                            <p
+                                                className="text-sm font-black"
+                                                style={{ color: isBuy ? "var(--blue)" : "var(--profit)" }}
+                                            >
+                                                {h.type} {fmtNum.format(Number(h.qty))} CP
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-black" style={{ color: "var(--text-1)" }}>
+                                                {fmtCompact(Math.abs(Number(h.total)))} đ
+                                            </p>
+                                            <p className="text-[10px] font-medium mt-0.5" style={{ color: "var(--text-3)" }}>
+                                                @ {fmtCompact(Number(h.price))}/cp
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                 </div>
             )}
         </div>

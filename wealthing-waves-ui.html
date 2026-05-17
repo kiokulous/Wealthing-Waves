@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Wealthing Waves 🌊</title>
+
+<!-- Chart.js CDN — lightweight, responsive, zero dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS — Single Dark Premium Theme
+   ============================================================ */
+:root {
+  /* Base Palette */
+  --bg:           #080C14;
+  --bg-2:         #0D1421;
+  --bg-3:         #111827;
+  --glass:        rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-hover:  rgba(255,255,255,0.07);
+
+  /* Accent */
+  --accent:       #6EE7B7;   /* Emerald glow — wealth green */
+  --accent-dim:   rgba(110,231,183,0.12);
+  --accent-glow:  rgba(110,231,183,0.25);
+  --blue:         #60A5FA;
+  --blue-dim:     rgba(96,165,250,0.12);
+  --gold:         #FBBF24;
+  --gold-dim:     rgba(251,191,36,0.12);
+  --rose:         #F87171;
+  --rose-dim:     rgba(248,113,113,0.12);
+  --violet:       #A78BFA;
+  --violet-dim:   rgba(167,139,250,0.12);
+
+  /* Profit/Loss */
+  --profit:       #34D399;
+  --profit-dim:   rgba(52,211,153,0.15);
+  --loss:         #F87171;
+  --loss-dim:     rgba(248,113,113,0.15);
+
+  /* Typography */
+  --text-1: #F1F5F9;    /* Primary text */
+  --text-2: #94A3B8;    /* Secondary */
+  --text-3: #475569;    /* Muted */
+
+  /* Spacing & Radius */
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  /* Nav */
+  --nav-h: 68px;        /* Bottom nav height */
+  --nav-safe: 80px;     /* + safe area */
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 9px; }
+
+/* ============================================================
+   LAYOUT SHELL
+   ============================================================ */
+#app {
+  max-width: 480px;         /* Mobile-first: cap at phone width */
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+}
+
+/* Desktop: wider layout */
+@media (min-width: 768px) {
+  #app { max-width: 1280px; }
+  body { background: var(--bg-2); }
+}
+
+/* Top Header */
+#top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  background: rgba(8,12,20,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent) 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 16px;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--text-1);
+}
+
+.brand-name span {
+  color: var(--accent);
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+  border: 2px solid var(--glass-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 14px;
+  color: #fff;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.avatar-btn:hover { transform: scale(1.08); border-color: var(--accent); }
+
+/* Page content area */
+#pages {
+  padding: 20px 16px calc(var(--nav-safe) + 20px);
+}
+
+@media (min-width: 768px) {
+  #pages { padding: 32px 32px calc(var(--nav-h) + 32px); }
+}
+
+/* ============================================================
+   BOTTOM NAV
+   ============================================================ */
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  z-index: 200;
+  padding: 0 16px env(safe-area-inset-bottom, 12px);
+  background: rgba(8,12,20,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--glass-border);
+}
+
+@media (min-width: 768px) {
+  #bottom-nav {
+    max-width: 1280px;
+    padding: 0 32px env(safe-area-inset-bottom, 12px);
+  }
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: var(--nav-h);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: var(--r-md);
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  flex: 1;
+}
+
+.nav-item svg { width: 22px; height: 22px; stroke-width: 1.8; transition: all 0.2s; }
+.nav-item span { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; transition: all 0.2s; }
+
+.nav-item.active {
+  color: var(--accent);
+}
+
+.nav-item.active svg {
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+.nav-item:hover:not(.active) { color: var(--text-2); }
+
+/* ============================================================
+   PAGE SECTIONS (Tab switching)
+   ============================================================ */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ============================================================
+   GLASSMORPHISM CARD
+   ============================================================ */
+.card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  padding: 24px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.card:hover { border-color: rgba(255,255,255,0.13); }
+
+.card-sm {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 18px;
+}
+
+/* ============================================================
+   HERO TOTAL CARD (Home)
+   ============================================================ */
+.hero-card {
+  background: linear-gradient(135deg, rgba(110,231,183,0.08) 0%, rgba(96,165,250,0.06) 60%, transparent 100%);
+  border: 1px solid rgba(110,231,183,0.2);
+  border-radius: var(--r-xl);
+  padding: 32px 28px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.hero-amount {
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: var(--text-1);
+  line-height: 1.1;
+}
+
+.hero-amount .currency {
+  font-size: 0.45em;
+  font-weight: 700;
+  color: var(--text-2);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+
+.hero-pnl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hero-pnl.profit { background: var(--profit-dim); color: var(--profit); }
+.hero-pnl.loss   { background: var(--loss-dim);   color: var(--loss);   }
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.hero-meta-item { flex: 1; }
+.hero-meta-item .label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.hero-meta-item .value { font-size: 15px; font-weight: 800; color: var(--text-2); }
+
+/* ============================================================
+   CHART CONTAINER
+   ============================================================ */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* ============================================================
+   STAT GRID (2-col, 3-col)
+   ============================================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stat-tile {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+}
+
+.stat-tile .t-label {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+
+.stat-tile .t-value {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--text-1);
+  line-height: 1;
+}
+
+.stat-tile .t-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   SECTION HEADER
+   ============================================================ */
+.section-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-hd h3 {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-2);
+}
+
+.section-hd .badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-3);
+}
+
+/* ============================================================
+   TICKER ROWS (Asset list)
+   ============================================================ */
+.ticker-list { display: flex; flex-direction: column; gap: 2px; }
+
+.ticker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.ticker-row:hover { background: var(--glass-hover); border-color: var(--glass-border); }
+
+.ticker-left { display: flex; align-items: center; gap: 12px; }
+
+.ticker-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 13px;
+  flex-shrink: 0;
+}
+
+.ticker-icon.stock  { background: rgba(96,165,250,0.15); color: var(--blue); }
+.ticker-icon.fund   { background: rgba(110,231,183,0.15); color: var(--accent); }
+.ticker-icon.gold   { background: rgba(251,191,36,0.15);  color: var(--gold); }
+.ticker-icon.saving { background: rgba(167,139,250,0.15); color: var(--violet); }
+
+.ticker-sym { font-size: 15px; font-weight: 900; letter-spacing: -0.3px; }
+.ticker-cat { font-size: 10px; font-weight: 700; color: var(--text-3); margin-top: 1px; }
+
+.ticker-right { text-align: right; }
+.ticker-val { font-size: 15px; font-weight: 800; }
+.ticker-pct {
+  font-size: 11px; font-weight: 800; margin-top: 2px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 2px;
+}
+.ticker-pct.profit { color: var(--profit); }
+.ticker-pct.loss   { color: var(--loss); }
+
+/* Closed badge */
+.closed-badge {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-3);
+}
+
+/* ============================================================
+   CATEGORY PILLS (Home filter)
+   ============================================================ */
+.cat-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.cat-pills::-webkit-scrollbar { display: none; }
+
+.cat-pill {
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text-3);
+  transition: all 0.2s;
+}
+
+.cat-pill.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ============================================================
+   YEAR SELECTOR
+   ============================================================ */
+.year-select {
+  appearance: none;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 32px 8px 14px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.2s;
+}
+
+.year-select:focus { border-color: var(--accent); }
+.year-select option { background: #1e2433; color: var(--text-1); }
+
+/* ============================================================
+   FORM INPUTS (Update Tab)
+   ============================================================ */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.form-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-3);
+}
+
+.form-input, .form-select {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 16px;        /* Prevents iOS zoom */
+  font-weight: 700;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.form-input::placeholder { color: var(--text-3); font-weight: 500; font-size: 14px; }
+.form-input:focus, .form-select:focus {
+  border-color: var(--accent);
+  background: rgba(110,231,183,0.04);
+}
+
+.form-select option { background: #1e2433; }
+
+.form-input.sym-input {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Toggle Mode Switcher */
+.mode-toggle {
+  display: flex;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  padding: 4px;
+  gap: 4px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: calc(var(--r-md) - 4px);
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--text-3);
+}
+
+.mode-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* Submit Button */
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: #000;
+  font-size: 15px;
+  font-weight: 900;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-primary.success {
+  background: var(--profit);
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 13px;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+
+/* ============================================================
+   ANALYSIS TAB
+   ============================================================ */
+.analysis-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.analysis-controls .form-select { font-size: 14px; font-weight: 800; flex: 1; }
+
+/* Performance Rank List */
+.rank-list { display: flex; flex-direction: column; gap: 8px; }
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  transition: border-color 0.15s;
+}
+
+.rank-item:hover { border-color: rgba(255,255,255,0.15); }
+
+.rank-num {
+  width: 24px; height: 24px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900;
+  flex-shrink: 0;
+}
+
+.rank-num.top1 { background: var(--gold-dim); color: var(--gold); }
+.rank-num.top2 { background: rgba(203,213,225,0.12); color: #CBD5E1; }
+.rank-num.top3 { background: rgba(180,120,60,0.12); color: #CD7F32; }
+.rank-num.other { background: var(--glass); color: var(--text-3); }
+
+.rank-body { flex: 1; }
+.rank-sym { font-size: 14px; font-weight: 900; }
+.rank-detail { font-size: 10px; font-weight: 700; color: var(--text-3); margin-top: 1px; }
+
+.rank-right { text-align: right; }
+.rank-pnl { font-size: 14px; font-weight: 800; }
+.rank-pct { font-size: 11px; font-weight: 700; margin-top: 2px; }
+
+/* Progress bar inside analysis detail */
+.progress-bar-wrap {
+  height: 4px;
+  background: var(--glass);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Metric Chip */
+.metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.metric-chip .chip-label { color: var(--text-3); }
+.metric-chip .chip-val { color: var(--text-1); font-weight: 900; }
+
+/* CAGR callout */
+.cagr-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(90deg, rgba(110,231,183,0.06) 0%, transparent 100%);
+  border: 1px solid rgba(110,231,183,0.15);
+  border-radius: var(--r-lg);
+}
+
+.cagr-callout .label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-3); }
+.cagr-callout .val   { font-size: 22px; font-weight: 900; color: var(--accent); }
+
+/* ============================================================
+   USER / PROFILE TAB
+   ============================================================ */
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0 24px;
+  text-align: center;
+}
+
+.avatar-large {
+  width: 88px; height: 88px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; font-weight: 900; color: #fff;
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--glass-border), 0 16px 40px rgba(167,139,250,0.3);
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: -6px; right: -6px;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+.profile-name { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+.profile-email { font-size: 13px; font-weight: 600; color: var(--text-3); margin-top: 2px; }
+.profile-tag {
+  margin-top: 10px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Settings list items */
+.settings-list { display: flex; flex-direction: column; gap: 2px; }
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.settings-item:hover { background: var(--glass-hover); border-color: var(--glass-border); }
+
+.settings-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-icon {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-icon.blue  { background: var(--blue-dim); color: var(--blue); }
+.settings-icon.green { background: var(--accent-dim); color: var(--accent); }
+.settings-icon.rose  { background: var(--rose-dim); color: var(--rose); }
+
+.settings-title { font-size: 14px; font-weight: 800; }
+.settings-sub   { font-size: 11px; font-weight: 600; color: var(--text-3); margin-top: 1px; }
+
+.settings-arrow { color: var(--text-3); }
+
+/* Inline Edit Panel */
+.edit-panel {
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--glass-border);
+  display: none;
+}
+
+.edit-panel.open { display: block; }
+
+/* ============================================================
+   LOADING SKELETON
+   ============================================================ */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: var(--r-md);
+  background: linear-gradient(90deg, var(--glass) 25%, rgba(255,255,255,0.06) 50%, var(--glass) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================================
+   TOAST NOTIFICATION
+   ============================================================ */
+#toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 24px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-3);
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+  padding: 12px 24px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 700;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+  backdrop-filter: blur(20px);
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#toast.success { border-color: var(--profit); color: var(--profit); }
+#toast.error   { border-color: var(--loss);   color: var(--loss); }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+.empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 4px;
+}
+
+.empty-state h4 { font-size: 16px; font-weight: 800; }
+.empty-state p  { font-size: 13px; color: var(--text-3); line-height: 1.5; max-width: 260px; }
+
+/* ============================================================
+   LOGIN PAGE
+   ============================================================ */
+#login-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(ellipse at 30% 0%, rgba(110,231,183,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(96,165,250,0.06) 0%, transparent 60%),
+              var(--bg);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  padding: 40px 36px;
+}
+
+.login-logo {
+  width: 56px; height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent) 0%, #059669 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 900; color: #000;
+  margin: 0 auto 20px;
+}
+
+.login-card h1 { text-align: center; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+.login-card .login-sub { text-align: center; font-size: 13px; color: var(--text-3); margin-top: 4px; margin-bottom: 32px; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--glass-border);
+}
+.divider span {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-google {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.btn-google:hover { border-color: var(--text-2); background: var(--glass-hover); }
+
+/* ============================================================
+   RESPONSIVE — Desktop layout overrides
+   ============================================================ */
+@media (min-width: 768px) {
+  /* On desktop, show 2-column layout for some sections */
+  .desktop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .desktop-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .hero-amount { font-size: 48px; }
+
+  #bottom-nav {
+    max-width: 1280px;
+    left: 50%;
+  }
+
+  /* Desktop top bar wider */
+  #top-bar {
+    padding: 18px 32px;
+  }
+
+  .stat-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  /* On desktop, page sections use side-by-side layout */
+  .page-main-grid {
+    display: grid;
+    grid-template-columns: 5fr 3fr;
+    gap: 24px;
+    align-items: start;
+  }
+}
+
+/* ============================================================
+   MICRO-ANIMATIONS
+   ============================================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-in-d1 { animation-delay: 0.05s; opacity: 0; }
+.animate-in-d2 { animation-delay: 0.10s; opacity: 0; }
+.animate-in-d3 { animation-delay: 0.15s; opacity: 0; }
+.animate-in-d4 { animation-delay: 0.20s; opacity: 0; }
+.animate-in-d5 { animation-delay: 0.25s; opacity: 0; }
+
+/* Number count-up class — applied via JS */
+.count-up { display: inline-block; }
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.profit-text { color: var(--profit); }
+.loss-text   { color: var(--loss); }
+.muted       { color: var(--text-3); }
+.bold        { font-weight: 800; }
+.flex        { display: flex; }
+.flex-1      { flex: 1; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-8       { gap: 8px; }
+.gap-12      { gap: 12px; }
+.gap-16      { gap: 16px; }
+.gap-20      { gap: 20px; }
+.mt-4        { margin-top: 4px; }
+.mt-8        { margin-top: 8px; }
+.mt-12       { margin-top: 12px; }
+.mt-16       { margin-top: 16px; }
+.mt-20       { margin-top: 20px; }
+.mt-24       { margin-top: 24px; }
+.w-full      { width: 100%; }
+.text-right  { text-align: right; }
+.text-center { text-align: center; }
+.space-y-12  > * + * { margin-top: 12px; }
+.space-y-16  > * + * { margin-top: 16px; }
+.space-y-20  > * + * { margin-top: 20px; }
+.space-y-24  > * + * { margin-top: 24px; }
+.hidden      { display: none !important; }
+.sr-only     { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     LOGIN PAGE — shown until authenticated
+     ============================================================ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">W</div>
+    <h1>Wealthing <span style="color:var(--accent)">Waves</span></h1>
+    <p class="login-sub">Tiền không tự đẻ ra tiền... nhưng gần đúng vậy 📈</p>
+
+    <div class="space-y-16">
+      <div class="form-group">
+        <label class="form-label">Địa chỉ Email</label>
+        <input id="login-email" type="email" class="form-input" placeholder="ten@cty.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mật khẩu</label>
+        <input id="login-password" type="password" class="form-input" placeholder="••••••••" />
+      </div>
+      <div id="login-error" class="hidden" style="padding:10px 14px;background:var(--rose-dim);border:1px solid var(--rose);border-radius:var(--r-sm);font-size:12px;font-weight:700;color:var(--rose);"></div>
+      <button class="btn-primary" onclick="handleLogin()">
+        <span id="login-btn-text">Đăng nhập / Xác thực</span>
+      </button>
+    </div>
+
+    <div class="divider"><span>hoặc</span></div>
+
+    <button class="btn-google" onclick="handleGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Tiếp tục với Google
+    </button>
+
+    <p style="text-align:center;margin-top:24px;font-size:11px;color:var(--text-3);font-weight:700;">
+      Chưa có tài khoản?
+      <button onclick="toggleSignUp()" style="background:none;border:none;color:var(--accent);font-weight:800;cursor:pointer;font-size:11px;">Tạo ngay</button>
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP — hidden until logged in
+     ============================================================ -->
+<div id="app" class="hidden">
+
+  <!-- TOP BAR -->
+  <header id="top-bar">
+    <div class="brand">
+      <div class="brand-logo">W</div>
+      <div class="brand-name">Wealthing <span>Waves</span></div>
+    </div>
+    <div class="top-bar-right">
+      <!-- Greeting time label -->
+      <span id="greeting-label" style="font-size:12px;font-weight:700;color:var(--text-3);"></span>
+      <button class="avatar-btn" id="user-avatar-btn" onclick="goToTab('user')">B</button>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <div id="pages">
+
+    <!-- ====================================================
+         HOME TAB
+         ==================================================== -->
+    <section id="page-home" class="page active">
+
+      <!-- Hero Total Card -->
+      <div class="hero-card animate-in">
+        <div class="hero-label">🌊 Vũ trụ tài sản của bạn</div>
+        <div class="hero-amount">
+          <span id="home-total-value" class="count-up">--</span>
+          <span class="currency">đ</span>
+        </div>
+        <div id="home-pnl-pill" class="hero-pnl profit">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>
+          <span id="home-pnl-text">+0 đ · +0.0%</span>
+        </div>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <div class="label">Đã rót vào</div>
+            <div class="value" id="home-invested">--</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="label">Đang nắm giữ</div>
+            <div class="value" id="home-holdings-count">-- mã</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="label">Cập nhật</div>
+            <div class="value" id="home-last-update">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Year Filter + Category Pills -->
+      <div class="mt-20 animate-in animate-in-d1">
+        <div class="flex items-center justify-between gap-12 mb-14" style="margin-bottom:14px;">
+          <div class="cat-pills" id="cat-pills">
+            <button class="cat-pill active" data-cat="all">Tất cả</button>
+            <button class="cat-pill" data-cat="Cổ phiếu">🏦 Cổ phiếu</button>
+            <button class="cat-pill" data-cat="Chứng chỉ quỹ">📊 CC Quỹ</button>
+            <button class="cat-pill" data-cat="Vàng">✨ Vàng</button>
+            <button class="cat-pill" data-cat="Tiết kiệm">🏦 Tiết kiệm</button>
+          </div>
+          <select id="home-year-filter" class="year-select" onchange="applyHomeFilters()">
+            <option value="all">Tất cả năm</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Portfolio Value Chart -->
+      <div class="card mt-20 animate-in animate-in-d2" style="margin-top:16px;">
+        <div class="section-hd">
+          <h3>📈 Sóng tổng tài sản</h3>
+          <span class="badge">12 tháng</span>
+        </div>
+        <div class="chart-wrap" style="height:160px;">
+          <canvas id="chart-portfolio"></canvas>
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div class="mt-16 animate-in animate-in-d3" style="margin-top:16px;">
+        <div class="section-hd"><h3>🗂️ Phân bổ danh mục</h3></div>
+        <div class="stat-grid" id="cat-stat-grid">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Asset Ticker List -->
+      <div class="mt-16 animate-in animate-in-d4" style="margin-top:16px;">
+        <div class="section-hd">
+          <h3>📡 Tín hiệu thị trường</h3>
+          <span class="badge" id="ticker-count-badge">-- mã</span>
+        </div>
+        <div class="ticker-list" id="ticker-list">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+    </section><!-- /HOME -->
+
+    <!-- ====================================================
+         UPDATE TAB (Data Entry)
+         ==================================================== -->
+    <section id="page-update" class="page">
+
+      <div class="animate-in">
+        <h2 style="font-size:20px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px;">Trạm nạp dữ liệu 🔫</h2>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:24px;">Nhét số vào — để tiền biết mình ở đâu.</p>
+
+        <!-- Mode toggle -->
+        <div class="mode-toggle" id="mode-toggle">
+          <button class="mode-btn active" data-mode="txn" onclick="switchMode('txn')">💰 Giao dịch</button>
+          <button class="mode-btn" data-mode="price" onclick="switchMode('price')">📊 Cập nhật giá</button>
+        </div>
+
+        <!-- TRANSACTION FORM -->
+        <form id="txn-form" class="space-y-16 mt-24" style="margin-top:24px;" onsubmit="handleTxnSubmit(event)">
+
+          <div class="form-group">
+            <label class="form-label">📅 Ngày giao dịch</label>
+            <input type="date" id="f-date" class="form-input" required />
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">🎯 Loại lệnh</label>
+              <select id="f-type" class="form-select">
+                <option value="Mua">🟢 Mua vào</option>
+                <option value="Bán">🔴 Bán ra</option>
+                <option value="Chốt">⚡ Chốt lời/lỗ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📂 Hạng mục</label>
+              <select id="f-category" class="form-select">
+                <option value="Cổ phiếu">🏦 Cổ phiếu</option>
+                <option value="Chứng chỉ quỹ">📊 CC Quỹ</option>
+                <option value="Vàng">✨ Vàng</option>
+                <option value="Tiết kiệm">💎 Tiết kiệm</option>
+                <option value="Khác">🗂️ Khác</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🔤 Mã chứng khoán</label>
+            <input type="text" id="f-symbol" class="form-input sym-input" placeholder="VNM" required autocomplete="off" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📦 Số lượng</label>
+            <input type="number" id="f-qty" class="form-input" placeholder="0" step="0.01" required inputmode="decimal" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">💵 Tổng tiền (gồm phí)</label>
+            <input type="number" id="f-total" class="form-input" placeholder="0" step="1" required inputmode="numeric" style="color:var(--accent);" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🏷️ Phí giao dịch</label>
+            <input type="number" id="f-fee" class="form-input" value="0" step="1" inputmode="numeric" />
+          </div>
+
+          <!-- Auto-calc price preview -->
+          <div id="price-preview" style="padding:12px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-md);font-size:13px;color:var(--text-3);">
+            Giá bình quân: <strong id="avg-price-display" style="color:var(--text-1);">--</strong>
+          </div>
+
+          <button type="submit" class="btn-primary" id="txn-submit-btn">
+            ✅ Ghi nhận giao dịch
+          </button>
+        </form>
+
+        <!-- PRICE UPDATE FORM -->
+        <form id="price-form" class="space-y-16 mt-24 hidden" style="margin-top:24px;" onsubmit="handlePriceSubmit(event)">
+
+          <div class="form-group">
+            <label class="form-label">📅 Ngày cập nhật</label>
+            <input type="date" id="p-date" class="form-input" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📂 Hạng mục</label>
+            <select id="p-category" class="form-select">
+              <option value="Cổ phiếu">🏦 Cổ phiếu</option>
+              <option value="Chứng chỉ quỹ">📊 CC Quỹ</option>
+              <option value="Vàng">✨ Vàng</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🔤 Mã chứng khoán</label>
+            <input type="text" id="p-symbol" class="form-input sym-input" placeholder="VNM" required autocomplete="off" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">💲 Giá thị trường (1 đơn vị)</label>
+            <input type="number" id="p-price" class="form-input" placeholder="0" step="0.01" required inputmode="decimal" style="color:var(--gold);" />
+          </div>
+
+          <button type="submit" class="btn-primary" id="price-submit-btn">
+            📡 Cập nhật giá thị trường
+          </button>
+        </form>
+
+      </div>
+    </section><!-- /UPDATE -->
+
+    <!-- ====================================================
+         ANALYSIS TAB
+         ==================================================== -->
+    <section id="page-analysis" class="page">
+
+      <div class="animate-in">
+        <h2 style="font-size:20px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px;">Phòng mổ xẻ 🔬</h2>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:24px;">Con nào đang đẻ trứng vàng, con nào đang ăn thóc?</p>
+
+        <!-- Controls -->
+        <div class="analysis-controls">
+          <select id="analysis-symbol" class="form-select" onchange="loadAnalysis()" style="flex:2;">
+            <option value="">— Chọn mã để mổ xẻ —</option>
+          </select>
+          <select id="analysis-year" class="form-select year-select" onchange="loadAnalysis()" style="flex:1;">
+            <option value="all">Tất cả</option>
+          </select>
+        </div>
+
+        <!-- Analysis content — hidden until symbol selected -->
+        <div id="analysis-empty" class="empty-state mt-20" style="margin-top:20px;">
+          <div class="empty-icon">🔍</div>
+          <h4>Chọn một mã bên trên</h4>
+          <p>Mình sẽ chẩn đoán ngay xem con đó đang khỏe hay đang... bốc mùi.</p>
+        </div>
+
+        <div id="analysis-content" class="hidden space-y-16" style="margin-top:20px;">
+
+          <!-- Main P&L Card -->
+          <div class="card" id="analysis-pnl-card">
+            <div class="flex items-center justify-between" style="margin-bottom:16px;">
+              <div>
+                <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:4px;">Tiền đẻ ra tiền 🥚</div>
+                <div id="a-pnl" style="font-size:32px;font-weight:900;letter-spacing:-1px;">--</div>
+              </div>
+              <div id="a-pct-badge" style="padding:8px 16px;border-radius:999px;font-size:15px;font-weight:900;">--%</div>
+            </div>
+
+            <!-- Progress bar (visual of return vs invested) -->
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="a-progress" style="width:0%;background:var(--profit);"></div>
+            </div>
+
+            <div class="stat-grid-3 mt-20" style="margin-top:20px;">
+              <div class="stat-tile">
+                <div class="t-label">Đang nắm</div>
+                <div class="t-value" id="a-qty">--</div>
+                <div class="t-sub">đơn vị</div>
+              </div>
+              <div class="stat-tile">
+                <div class="t-label">Đã rót</div>
+                <div class="t-value" id="a-invested">--</div>
+                <div class="t-sub">đồng</div>
+              </div>
+              <div class="stat-tile">
+                <div class="t-label">Đang giữ</div>
+                <div class="t-value" id="a-duration">--</div>
+                <div class="t-sub">ngày</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAGR Callout -->
+          <div class="cagr-callout">
+            <div>
+              <div class="label">CAGR hàng năm 🚀</div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Lãi kép hóa của bậc thầy</div>
+            </div>
+            <div class="val" id="a-cagr">--%</div>
+          </div>
+
+          <!-- Price Chart -->
+          <div class="card">
+            <div class="section-hd">
+              <h3>📊 Sóng giá gần đây</h3>
+              <span class="badge">20 phiên</span>
+            </div>
+            <div class="chart-wrap" style="height:150px;">
+              <canvas id="chart-analysis"></canvas>
+            </div>
+          </div>
+
+          <!-- Performance vs Categories (Bar) -->
+          <div class="card">
+            <div class="section-hd">
+              <h3>🏆 Bảng xếp hạng danh mục</h3>
+            </div>
+            <div class="rank-list" id="rank-list">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+
+          <!-- Transaction History -->
+          <div class="card">
+            <div class="section-hd">
+              <h3>📜 Lịch sử giao dịch</h3>
+            </div>
+            <div id="analysis-history" style="max-height:320px;overflow-y:auto;">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+
+        </div><!-- /analysis-content -->
+
+      </div>
+    </section><!-- /ANALYSIS -->
+
+    <!-- ====================================================
+         USER / PROFILE TAB
+         ==================================================== -->
+    <section id="page-user" class="page">
+
+      <div class="animate-in">
+        <!-- Profile Hero -->
+        <div class="profile-hero">
+          <div class="avatar-large" id="user-avatar-large">
+            <span id="user-initial">B</span>
+            <div class="avatar-edit-btn" onclick="toggleEditProfile()">
+              <svg width="12" height="12" fill="none" stroke="#000" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+          </div>
+          <div class="profile-name" id="user-name-display">Sóng Thủ</div>
+          <div class="profile-email" id="user-email-display">user@wealthingwaves.com</div>
+          <div class="profile-tag">🌊 Wave Rider · Level 1</div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stat-grid" style="margin-bottom:24px;">
+          <div class="stat-tile">
+            <div class="t-label">Tổng giao dịch</div>
+            <div class="t-value" id="u-txn-count">--</div>
+            <div class="t-sub">lệnh đã thực hiện</div>
+          </div>
+          <div class="stat-tile">
+            <div class="t-label">Mã đang theo</div>
+            <div class="t-value" id="u-sym-count">--</div>
+            <div class="t-sub">chứng khoán</div>
+          </div>
+        </div>
+
+        <!-- Settings List -->
+        <div class="settings-list">
+
+          <!-- Edit Nickname -->
+          <div class="card-sm" style="padding:0;overflow:hidden;border-radius:var(--r-lg);">
+            <div class="settings-item" onclick="toggleSection('edit-nickname')">
+              <div class="settings-item-left">
+                <div class="settings-icon blue">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                  <div class="settings-title">Thông tin cá nhân</div>
+                  <div class="settings-sub">Tên hiển thị & danh tính</div>
+                </div>
+              </div>
+              <svg class="settings-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+            <div class="edit-panel" id="edit-nickname">
+              <div class="form-group" style="margin-bottom:12px;">
+                <label class="form-label">Tên hiển thị mới</label>
+                <input type="text" id="new-nickname" class="form-input" placeholder="Nhập tên mới..." />
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn-secondary" onclick="toggleSection('edit-nickname')" style="flex:1;padding:11px;">Hủy</button>
+                <button class="btn-primary" onclick="saveNickname()" style="flex:2;">💾 Lưu lại</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Password -->
+          <div class="card-sm" style="padding:0;overflow:hidden;border-radius:var(--r-lg);margin-top:8px;">
+            <div class="settings-item" onclick="toggleSection('edit-password')">
+              <div class="settings-item-left">
+                <div class="settings-icon green">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <div>
+                  <div class="settings-title">Bảo mật & Mật khẩu</div>
+                  <div class="settings-sub">Đổi mật khẩu đăng nhập</div>
+                </div>
+              </div>
+              <svg class="settings-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+            <div class="edit-panel" id="edit-password">
+              <div class="space-y-12">
+                <div class="form-group">
+                  <label class="form-label">Mật khẩu mới</label>
+                  <input type="password" id="new-password" class="form-input" placeholder="Tối thiểu 6 ký tự" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Xác nhận mật khẩu</label>
+                  <input type="password" id="confirm-password" class="form-input" placeholder="Nhập lại..." />
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:12px;">
+                <button class="btn-secondary" onclick="toggleSection('edit-password')" style="flex:1;padding:11px;">Hủy</button>
+                <button class="btn-primary" onclick="savePassword()" style="flex:2;">🔐 Đổi mật khẩu</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sign Out -->
+          <div class="card-sm" style="padding:0;overflow:hidden;border-radius:var(--r-lg);margin-top:8px;">
+            <div class="settings-item" onclick="handleSignOut()" style="border-color:transparent;">
+              <div class="settings-item-left">
+                <div class="settings-icon rose">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                <div>
+                  <div class="settings-title" style="color:var(--rose);">Thoát phiên làm việc</div>
+                  <div class="settings-sub">Đăng xuất khỏi Wealthing Waves</div>
+                </div>
+              </div>
+              <svg class="settings-arrow" width="16" height="16" fill="none" stroke="var(--rose)" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
+
+        </div>
+
+        <p style="text-align:center;margin-top:40px;font-size:10px;color:var(--text-3);font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+          Wealthing Waves · v2.0 · Ride the wave 🌊
+        </p>
+      </div>
+    </section><!-- /USER -->
+
+  </div><!-- /pages -->
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <div class="nav-inner">
+
+      <!-- Home -->
+      <button class="nav-item active" data-tab="home" onclick="goToTab('home')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline stroke-linecap="round" stroke-linejoin="round" points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Tổng quan</span>
+      </button>
+
+      <!-- Update -->
+      <button class="nav-item" data-tab="update" onclick="goToTab('update')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line stroke-linecap="round" x1="12" y1="8" x2="12" y2="16"/><line stroke-linecap="round" x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>Nhập liệu</span>
+      </button>
+
+      <!-- Analysis -->
+      <button class="nav-item" data-tab="analysis" onclick="goToTab('analysis')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline stroke-linecap="round" stroke-linejoin="round" points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Phân tích</span>
+      </button>
+
+      <!-- User -->
+      <button class="nav-item" data-tab="user" onclick="goToTab('user')">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Cá nhân</span>
+      </button>
+
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* ============================================================
+   APP STATE
+   ============================================================ */
+const state = {
+  user: null,          // { name, email, initial }
+  transactions: [],    // raw txn array from Supabase / mock
+  marketPrices: [],    // raw prices array
+  portfolio: [],       // computed per-symbol items
+  categories: [],      // computed category summaries
+  totalValue: 0,
+  totalInvested: 0,
+  totalPnL: 0,
+  totalPnLPct: 0,
+  homeYearFilter: 'all',
+  homeCatFilter: 'all',
+  analysisSymbol: '',
+  analysisYear: 'all',
+  currentTab: 'home',
+};
+
+/* ============================================================
+   SUPABASE — Replace these with real values when integrating.
+   The app will gracefully fall back to DEMO DATA if not configured.
+   ============================================================ */
+const SUPABASE_URL = ''; // e.g. 'https://xxxx.supabase.co'
+const SUPABASE_ANON_KEY = '';
+
+/* ============================================================
+   DEMO DATA — realistic mock for UI preview
+   ============================================================ */
+const DEMO_TRANSACTIONS = [
+  { id:'t1', date:'2024-02-15', type:'Mua', category:'Cổ phiếu',      symbol:'VNM',  qty:500,  price:70000, fee:35000,  total:-35035000 },
+  { id:'t2', date:'2024-03-20', type:'Mua', category:'Cổ phiếu',      symbol:'HPG',  qty:300,  price:26500, fee:15000,  total:-7965000  },
+  { id:'t3', date:'2024-05-10', type:'Mua', category:'Chứng chỉ quỹ', symbol:'DCDS', qty:1000, price:15200, fee:20000,  total:-15220000 },
+  { id:'t4', date:'2024-07-01', type:'Bán', category:'Cổ phiếu',      symbol:'VNM',  qty:200,  price:75000, fee:22500,  total:14977500  },
+  { id:'t5', date:'2024-09-15', type:'Mua', category:'Vàng',          symbol:'GOLD', qty:2,    price:8500000, fee:50000, total:-17050000 },
+  { id:'t6', date:'2025-01-10', type:'Mua', category:'Cổ phiếu',      symbol:'FPT',  qty:100,  price:125000, fee:19000, total:-12519000 },
+  { id:'t7', date:'2025-02-20', type:'Mua', category:'Chứng chỉ quỹ', symbol:'VESAF',qty:500,  price:18500, fee:15000,  total:-9265000  },
+  { id:'t8', date:'2025-03-05', type:'Bán', category:'Cổ phiếu',      symbol:'HPG',  qty:100,  price:29000, fee:8700,   total:2891300   },
+  { id:'t9', date:'2025-04-12', type:'Mua', category:'Tiết kiệm',     symbol:'SAVE', qty:1,    price:50000000, fee:0,  total:-50000000 },
+];
+
+const DEMO_PRICES = [
+  { date:'2025-05-01', symbol:'VNM',   price:72000,    category:'Cổ phiếu' },
+  { date:'2025-05-01', symbol:'HPG',   price:30500,    category:'Cổ phiếu' },
+  { date:'2025-05-01', symbol:'FPT',   price:138000,   category:'Cổ phiếu' },
+  { date:'2025-05-01', symbol:'DCDS',  price:16800,    category:'Chứng chỉ quỹ' },
+  { date:'2025-05-01', symbol:'VESAF', price:20100,    category:'Chứng chỉ quỹ' },
+  { date:'2025-05-01', symbol:'GOLD',  price:9200000,  category:'Vàng' },
+  { date:'2025-05-01', symbol:'SAVE',  price:50000000, category:'Tiết kiệm' },
+  // Historical prices for charts
+  { date:'2025-04-01', symbol:'VNM',   price:70000 },
+  { date:'2025-03-01', symbol:'VNM',   price:68000 },
+  { date:'2025-02-01', symbol:'VNM',   price:71000 },
+  { date:'2025-04-01', symbol:'HPG',   price:28000 },
+  { date:'2025-03-01', symbol:'HPG',   price:27000 },
+  { date:'2025-04-01', symbol:'FPT',   price:130000 },
+  { date:'2025-03-01', symbol:'FPT',   price:128000 },
+];
+
+const DEMO_USER = { name: 'Bi Nguyễn', email: 'ntnguyen1991@gmail.com', initial: 'B' };
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+const fmt = (n) => new Intl.NumberFormat('vi-VN').format(Math.round(n));
+const fmtFull = (n) => new Intl.NumberFormat('vi-VN').format(Math.round(n)) + ' đ';
+const fmtCompact = (n) => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 1e9)  return sign + (abs/1e9).toFixed(2) + ' tỷ';
+  if (abs >= 1e6)  return sign + (abs/1e6).toFixed(1) + ' triệu';
+  if (abs >= 1e3)  return sign + (abs/1e3).toFixed(0) + ' ngàn';
+  return sign + abs.toFixed(0);
+};
+const pct  = (n) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+
+function getCatIcon(cat) {
+  const map = { 'Cổ phiếu': 'stock', 'Chứng chỉ quỹ': 'fund', 'Vàng': 'gold', 'Tiết kiệm': 'saving' };
+  return map[cat] || 'stock';
+}
+
+function getCatEmoji(cat) {
+  const map = { 'Cổ phiếu': '🏦', 'Chứng chỉ quỹ': '📊', 'Vàng': '✨', 'Tiết kiệm': '💎' };
+  return map[cat] || '📂';
+}
+
+function getLatestPrice(symbol, beforeDate) {
+  const cutoff = beforeDate ? new Date(beforeDate) : new Date();
+  const filtered = state.marketPrices
+    .filter(p => p.symbol === symbol && new Date(p.date) <= cutoff)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  return filtered.length > 0 ? Number(filtered[filtered.length - 1].price) : 0;
+}
+
+function computePortfolio(txns, prices, yearFilter) {
+  const cutoff = yearFilter !== 'all'
+    ? new Date(Number(yearFilter), 11, 31, 23, 59, 59)
+    : new Date();
+
+  const holdings = {};
+
+  txns
+    .filter(t => new Date(t.date) <= cutoff)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .forEach(t => {
+      const sym = t.symbol;
+      const qty = Number(t.qty);
+      const val = Math.abs(Number(t.total));
+      if (!holdings[sym]) holdings[sym] = { qty: 0, invested: 0, realized: 0, category: t.category, firstBuy: null };
+      const h = holdings[sym];
+
+      if (t.type === 'Mua') {
+        h.qty += qty;
+        h.invested += val;
+        if (!h.firstBuy) h.firstBuy = new Date(t.date);
+      } else {
+        if (h.qty > 0) {
+          const avgCost = h.invested / h.qty;
+          const cost = Math.min(qty, h.qty) * avgCost;
+          h.invested -= cost;
+          h.qty = Math.max(0, h.qty - qty);
+          h.realized += (val - cost);
+        }
+      }
+    });
+
+  const items = Object.entries(holdings).map(([symbol, h]) => {
+    const latestPrice = getLatestPrice(symbol, cutoff);
+    const marketVal   = h.qty * latestPrice;
+    const pnl         = (marketVal - h.invested) + h.realized;
+    const base        = h.invested > 1 ? h.invested : Math.max(Math.abs(h.realized), 1);
+    const pnlPct      = (pnl / base) * 100;
+    const days        = h.qty > 0 && h.firstBuy
+      ? Math.ceil(Math.abs(cutoff - h.firstBuy) / 86400000)
+      : 0;
+    // CAGR = (1 + r)^(365/days) - 1
+    const cagr = days > 30 && pnlPct !== 0
+      ? (Math.pow(1 + pnlPct / 100, 365 / days) - 1) * 100
+      : null;
+
+    return { symbol, category: h.category, qty: h.qty, invested: h.invested, realized: h.realized, marketVal, pnl, pnlPct, days, cagr, closed: h.qty < 0.001 && h.invested < 1 };
+  });
+
+  return items;
+}
+
+function computeCategories(items) {
+  const cats = {};
+  items.forEach(item => {
+    const c = item.category;
+    if (!cats[c]) cats[c] = { category: c, value: 0, invested: 0, pnl: 0 };
+    cats[c].value    += item.marketVal;
+    cats[c].invested += item.invested;
+    cats[c].pnl      += item.pnl;
+  });
+  return Object.values(cats).sort((a, b) => b.value - a.value);
+}
+
+/* ============================================================
+   CHART INSTANCES
+   ============================================================ */
+let chartPortfolio = null;
+let chartAnalysis  = null;
+
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'nearest', intersect: false },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#1e2433',
+      borderColor: 'rgba(255,255,255,0.1)',
+      borderWidth: 1,
+      titleColor: '#94A3B8',
+      bodyColor: '#F1F5F9',
+      padding: 12,
+      cornerRadius: 12,
+      displayColors: false,
+    }
+  },
+  scales: {
+    x: { display: false },
+    y: { display: false, grid: { display: false } }
+  },
+  elements: {
+    point: { radius: 0, hoverRadius: 5, hitRadius: 20, backgroundColor: '#6EE7B7' },
+    line:  { tension: 0.4 }
+  }
+};
+
+function buildPortfolioChart(data) {
+  const ctx = document.getElementById('chart-portfolio').getContext('2d');
+  if (chartPortfolio) chartPortfolio.destroy();
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 160);
+  grad.addColorStop(0,   'rgba(110,231,183,0.25)');
+  grad.addColorStop(1,   'rgba(110,231,183,0)');
+
+  chartPortfolio = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.date),
+      datasets: [{
+        data: data.map(d => d.value),
+        borderColor: '#6EE7B7',
+        borderWidth: 2,
+        backgroundColor: grad,
+        fill: true,
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        tooltip: {
+          ...CHART_DEFAULTS.plugins.tooltip,
+          callbacks: { label: ctx => fmtFull(ctx.raw) }
+        }
+      }
+    }
+  });
+}
+
+function buildAnalysisChart(priceData, avgCost) {
+  const ctx = document.getElementById('chart-analysis').getContext('2d');
+  if (chartAnalysis) chartAnalysis.destroy();
+
+  const isProfit = priceData.length > 1 && priceData[priceData.length-1].price >= priceData[0].price;
+  const color = isProfit ? '#34D399' : '#F87171';
+
+  const grad = ctx.createLinearGradient(0, 0, 0, 150);
+  grad.addColorStop(0, isProfit ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+  chartAnalysis = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: priceData.map(d => new Date(d.date).toLocaleDateString('vi-VN')),
+      datasets: [
+        {
+          data: priceData.map(d => d.price),
+          borderColor: color,
+          borderWidth: 2,
+          backgroundColor: grad,
+          fill: true,
+          label: 'Giá TT',
+        },
+        {
+          data: priceData.map(() => avgCost),
+          borderColor: 'rgba(251,191,36,0.5)',
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          fill: false,
+          label: 'Giá vốn BQ',
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        tooltip: {
+          ...CHART_DEFAULTS.plugins.tooltip,
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${fmtFull(ctx.raw)}`
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function goToTab(tab) {
+  // Update pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+
+  state.currentTab = tab;
+
+  // Lazy-load analysis when switching to it
+  if (tab === 'analysis') populateAnalysisSymbols();
+}
+
+/* ============================================================
+   HOME TAB — RENDER
+   ============================================================ */
+function renderHome() {
+  const items     = computePortfolio(state.transactions, state.marketPrices, state.homeYearFilter);
+  const cats      = computeCategories(items);
+  const totalVal  = items.reduce((s, i) => s + i.marketVal, 0);
+  const totalInv  = items.reduce((s, i) => s + i.invested, 0);
+  const totalPnL  = items.reduce((s, i) => s + i.pnl, 0);
+  const pnlPct    = totalInv > 0 ? (totalPnL / totalInv) * 100 : 0;
+
+  // Update hero
+  document.getElementById('home-total-value').textContent = fmtCompact(totalVal);
+  document.getElementById('home-invested').textContent    = fmtCompact(totalInv);
+
+  const openItems = items.filter(i => !i.closed);
+  document.getElementById('home-holdings-count').textContent = openItems.length + ' mã';
+
+  const latestDate = state.marketPrices.length > 0
+    ? new Date(Math.max(...state.marketPrices.map(p => new Date(p.date)))).toLocaleDateString('vi-VN')
+    : '--';
+  document.getElementById('home-last-update').textContent = latestDate;
+
+  const pill = document.getElementById('home-pnl-pill');
+  const isProfit = totalPnL >= 0;
+  pill.className = 'hero-pnl ' + (isProfit ? 'profit' : 'loss');
+  pill.innerHTML = `
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      ${isProfit ? '<path d="M7 17 17 7M7 7h10v10"/>' : '<path d="M7 7l10 10M17 7H7v10"/>'}
+    </svg>
+    <span>${isProfit ? '+' : ''}${fmtCompact(totalPnL)} đ · ${pct(pnlPct)}</span>
+  `;
+
+  // Category stat tiles
+  const catGrid = document.getElementById('cat-stat-grid');
+  const catColors = { 'Cổ phiếu': 'var(--blue)', 'Chứng chỉ quỹ': 'var(--accent)', 'Vàng': 'var(--gold)', 'Tiết kiệm': 'var(--violet)' };
+  catGrid.innerHTML = cats.map(c => {
+    const cPct = c.invested > 0 ? (c.pnl / c.invested) * 100 : 0;
+    const color = catColors[c.category] || 'var(--text-2)';
+    return `<div class="stat-tile">
+      <div class="t-label">${getCatEmoji(c.category)} ${c.category}</div>
+      <div class="t-value" style="color:${color};">${fmtCompact(c.value)}<span style="font-size:12px;color:var(--text-3);font-weight:700;"> đ</span></div>
+      <div class="t-sub ${cPct >= 0 ? 'profit-text' : 'loss-text'}">${pct(cPct)}</div>
+    </div>`;
+  }).join('');
+
+  // Ticker list (filter by cat)
+  let filtered = items;
+  if (state.homeCatFilter !== 'all') {
+    filtered = items.filter(i => i.category === state.homeCatFilter);
+  }
+
+  document.getElementById('ticker-count-badge').textContent = filtered.length + ' mã';
+
+  const tickerList = document.getElementById('ticker-list');
+  if (filtered.length === 0) {
+    tickerList.innerHTML = `<div class="empty-state"><div class="empty-icon">🌊</div><h4>Chưa có sóng nào</h4><p>Nhập giao dịch đầu tiên ở tab Nhập liệu để bắt đầu hành trình.</p></div>`;
+    return;
+  }
+
+  tickerList.innerHTML = filtered
+    .sort((a, b) => b.pnl - a.pnl)
+    .map(item => {
+      const isProfit = item.pnl >= 0;
+      const pnlClass = isProfit ? 'profit' : 'loss';
+      const arrowSvg = isProfit
+        ? `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg>`
+        : `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7H7v10"/></svg>`;
+
+      return `
+      <div class="ticker-row" onclick="goToTab('analysis');setTimeout(()=>{document.getElementById('analysis-symbol').value='${item.symbol}';loadAnalysis();},100);">
+        <div class="ticker-left">
+          <div class="ticker-icon ${getCatIcon(item.category)}">${item.symbol.substring(0,3)}</div>
+          <div>
+            <div class="ticker-sym">${item.symbol}</div>
+            <div class="ticker-cat">${item.category}${item.closed ? ' · <span class="closed-badge">Tất toán</span>' : ''}</div>
+          </div>
+        </div>
+        <div class="ticker-right">
+          <div class="ticker-val">${fmtCompact(item.closed ? item.pnl : item.marketVal)} đ</div>
+          <div class="ticker-pct ${pnlClass}">${arrowSvg} ${Math.abs(item.pnlPct).toFixed(1)}%</div>
+        </div>
+      </div>`;
+    }).join('');
+
+  // Portfolio chart (mock history — in production wire up real calculatePortfolioHistory)
+  buildPortfolioChartMock(totalVal, totalInv);
+}
+
+function buildPortfolioChartMock(totalVal, totalInv) {
+  // Generate plausible 12-month curve if no real history is available
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ date: d.toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }), value: 0 });
+  }
+  // Simple interpolation
+  months.forEach((m, idx) => {
+    const progress = idx / 11;
+    const noise = (Math.random() - 0.4) * totalVal * 0.05;
+    m.value = Math.max(0, totalInv * 0.8 + (totalVal - totalInv * 0.8) * progress + noise);
+  });
+  months[months.length - 1].value = totalVal;
+
+  buildPortfolioChart(months);
+}
+
+function applyHomeFilters() {
+  state.homeYearFilter = document.getElementById('home-year-filter').value;
+  renderHome();
+}
+
+// Category pill click
+document.getElementById('cat-pills').addEventListener('click', (e) => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  state.homeCatFilter = pill.dataset.cat;
+  renderHome();
+});
+
+/* ============================================================
+   ANALYSIS TAB — RENDER
+   ============================================================ */
+function populateAnalysisSymbols() {
+  const symbols = [...new Set(state.transactions.map(t => t.symbol))].sort();
+  const sel = document.getElementById('analysis-symbol');
+  const current = sel.value;
+
+  // Populate year filter
+  const years = [...new Set(state.transactions.map(t => new Date(t.date).getFullYear()))].sort((a,b)=>b-a);
+  const yearSel = document.getElementById('analysis-year');
+  yearSel.innerHTML = '<option value="all">Tất cả</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+  sel.innerHTML = '<option value="">— Chọn mã để mổ xẻ —</option>' + symbols.map(s => `<option value="${s}">${s}</option>`).join('');
+  if (current && symbols.includes(current)) { sel.value = current; loadAnalysis(); }
+}
+
+function loadAnalysis() {
+  const symbol = document.getElementById('analysis-symbol').value;
+  const year   = document.getElementById('analysis-year').value;
+
+  document.getElementById('analysis-empty').classList.toggle('hidden', !!symbol);
+  document.getElementById('analysis-content').classList.toggle('hidden', !symbol);
+
+  if (!symbol) return;
+
+  state.analysisSymbol = symbol;
+  state.analysisYear   = year;
+
+  const cutoff = year !== 'all' ? new Date(Number(year), 11, 31, 23, 59, 59) : new Date();
+
+  // Compute for this symbol
+  let holdingQty = 0, invested = 0, realized = 0, firstBuy = null;
+
+  state.transactions
+    .filter(t => t.symbol === symbol && new Date(t.date) <= cutoff)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .forEach(t => {
+      const qty = Number(t.qty);
+      const val = Math.abs(Number(t.total));
+      if (t.type === 'Mua') {
+        holdingQty += qty;
+        invested   += val;
+        if (!firstBuy) firstBuy = new Date(t.date);
+      } else {
+        if (holdingQty > 0) {
+          const avg  = invested / holdingQty;
+          const cost = Math.min(qty, holdingQty) * avg;
+          invested  -= cost;
+          holdingQty = Math.max(0, holdingQty - qty);
+          realized  += (val - cost);
+        }
+      }
+    });
+
+  const latestPrice = getLatestPrice(symbol, cutoff);
+  const marketVal   = holdingQty * latestPrice;
+  const pnl         = (marketVal - invested) + realized;
+  const base        = invested > 1 ? invested : Math.max(Math.abs(realized), 1);
+  const pnlPct      = (pnl / base) * 100;
+  const days        = holdingQty > 0 && firstBuy
+    ? Math.ceil(Math.abs(cutoff - firstBuy) / 86400000)
+    : 0;
+  const cagr = days > 30 ? (Math.pow(1 + pnlPct/100, 365/days) - 1) * 100 : null;
+  const avgCost = holdingQty > 0 ? invested / holdingQty : 0;
+
+  const isProfit = pnl >= 0;
+
+  // Update UI
+  document.getElementById('a-pnl').textContent = (isProfit ? '+' : '') + fmtFull(pnl);
+  document.getElementById('a-pnl').className   = isProfit ? 'profit-text' : 'loss-text';
+
+  const badge = document.getElementById('a-pct-badge');
+  badge.textContent = pct(pnlPct);
+  badge.style.background = isProfit ? 'var(--profit-dim)' : 'var(--loss-dim)';
+  badge.style.color      = isProfit ? 'var(--profit)'     : 'var(--loss)';
+
+  // Progress bar (cap at 100%)
+  const progPct = Math.min(Math.abs(pnlPct), 100);
+  document.getElementById('a-progress').style.width      = progPct + '%';
+  document.getElementById('a-progress').style.background = isProfit ? 'var(--profit)' : 'var(--loss)';
+
+  document.getElementById('a-qty').textContent      = new Intl.NumberFormat('vi-VN').format(holdingQty);
+  document.getElementById('a-invested').textContent = fmtCompact(invested);
+  document.getElementById('a-duration').textContent = days > 0 ? days : (holdingQty < 0.001 ? 'Đã bán' : '--');
+  document.getElementById('a-cagr').textContent     = cagr !== null ? pct(cagr) : 'N/A';
+
+  // Price chart
+  const priceHistory = state.marketPrices
+    .filter(p => p.symbol === symbol && new Date(p.date) <= cutoff)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(-20);
+
+  buildAnalysisChart(priceHistory, avgCost);
+
+  // Rank list (all symbols by PnL%)
+  const allItems = computePortfolio(state.transactions, state.marketPrices, year);
+  allItems.sort((a, b) => b.pnlPct - a.pnlPct);
+  const rankList = document.getElementById('rank-list');
+  rankList.innerHTML = allItems.slice(0, 6).map((item, i) => {
+    const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'other';
+    const iCurrent  = item.symbol === symbol;
+    const ip = item.pnl >= 0;
+    return `<div class="rank-item" style="${iCurrent ? 'border-color:var(--accent);background:var(--accent-dim);' : ''}">
+      <div class="rank-num ${rankClass}">${i+1}</div>
+      <div class="rank-body">
+        <div class="rank-sym">${item.symbol} ${iCurrent ? '← bạn đang xem' : ''}</div>
+        <div class="rank-detail">${item.category} · ${item.days} ngày</div>
+      </div>
+      <div class="rank-right">
+        <div class="rank-pnl ${ip ? 'profit-text' : 'loss-text'}">${ip ? '+' : ''}${fmtCompact(item.pnl)} đ</div>
+        <div class="rank-pct ${ip ? 'profit-text' : 'loss-text'}">${pct(item.pnlPct)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Transaction history
+  const historyEl = document.getElementById('analysis-history');
+  const symTxns = state.transactions
+    .filter(t => t.symbol === symbol && new Date(t.date) <= cutoff)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (symTxns.length === 0) {
+    historyEl.innerHTML = '<div class="empty-state" style="padding:30px;"><div class="empty-icon">📭</div><p>Chưa có giao dịch nào.</p></div>';
+    return;
+  }
+
+  historyEl.innerHTML = symTxns.map(t => {
+    const isBuy = t.type === 'Mua';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--glass-border);">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-3);">${new Date(t.date).toLocaleDateString('vi-VN')}</div>
+        <div style="font-size:14px;font-weight:800;color:${isBuy ? 'var(--blue)' : 'var(--profit)'};">${t.type} ${new Intl.NumberFormat('vi-VN').format(t.qty)} CP</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:800;">${fmtCompact(Math.abs(t.total))} đ</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);">@ ${fmtCompact(t.price)}/cp</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   UPDATE TAB — Form Logic
+   ============================================================ */
+function switchMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('txn-form').classList.toggle('hidden',   mode !== 'txn');
+  document.getElementById('price-form').classList.toggle('hidden', mode !== 'price');
+}
+
+// Auto-calc average price preview
+['f-qty', 'f-total', 'f-fee', 'f-type'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updatePricePreview);
+});
+
+function updatePricePreview() {
+  const qty   = parseFloat(document.getElementById('f-qty').value)   || 0;
+  const total = parseFloat(document.getElementById('f-total').value) || 0;
+  const fee   = parseFloat(document.getElementById('f-fee').value)   || 0;
+  const type  = document.getElementById('f-type').value;
+  if (qty <= 0 || total <= 0) { document.getElementById('avg-price-display').textContent = '--'; return; }
+  const price = type === 'Mua' ? (total - fee) / qty : (total + fee) / qty;
+  document.getElementById('avg-price-display').textContent = fmtFull(price);
+}
+
+function handleTxnSubmit(e) {
+  e.preventDefault();
+  const qty   = parseFloat(document.getElementById('f-qty').value);
+  const total = parseFloat(document.getElementById('f-total').value);
+  const fee   = parseFloat(document.getElementById('f-fee').value) || 0;
+  const type  = document.getElementById('f-type').value;
+  const cat   = document.getElementById('f-category').value;
+  const sym   = document.getElementById('f-symbol').value.toUpperCase();
+  const date  = document.getElementById('f-date').value;
+  const price = type === 'Mua' ? (total - fee) / qty : (total + fee) / qty;
+
+  const txn = {
+    id: 'local_' + Date.now(),
+    date, type, category: cat, symbol: sym, qty, price, fee,
+    total: type === 'Mua' ? -Math.abs(total) : Math.abs(total)
+  };
+
+  state.transactions.push(txn);
+  refreshYearFilters();
+  renderHome();
+
+  showToast('✅ Giao dịch đã ghi nhận!', 'success');
+  e.target.reset();
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-fee').value  = '0';
+  document.getElementById('avg-price-display').textContent = '--';
+}
+
+function handlePriceSubmit(e) {
+  e.preventDefault();
+  const sym   = document.getElementById('p-symbol').value.toUpperCase();
+  const date  = document.getElementById('p-date').value;
+  const price = parseFloat(document.getElementById('p-price').value);
+  const cat   = document.getElementById('p-category').value;
+
+  // Remove old price for same date+symbol, then add new
+  state.marketPrices = state.marketPrices.filter(p => !(p.symbol === sym && p.date === date));
+  state.marketPrices.push({ date, symbol: sym, price, category: cat });
+
+  renderHome();
+  showToast('📡 Giá thị trường đã cập nhật!', 'success');
+  e.target.reset();
+  document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+}
+
+/* ============================================================
+   USER TAB
+   ============================================================ */
+function renderUserProfile() {
+  if (!state.user) return;
+  const u = state.user;
+  document.getElementById('user-initial').textContent      = u.initial;
+  document.getElementById('user-avatar-btn').textContent   = u.initial;
+  document.getElementById('user-name-display').textContent = u.name;
+  document.getElementById('user-email-display').textContent= u.email;
+  document.getElementById('user-avatar-large').querySelector('span').textContent = u.initial;
+  document.getElementById('u-txn-count').textContent = state.transactions.length;
+  document.getElementById('u-sym-count').textContent = [...new Set(state.transactions.map(t=>t.symbol))].length;
+}
+
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function toggleEditProfile() { toggleSection('edit-nickname'); }
+
+function saveNickname() {
+  const newName = document.getElementById('new-nickname').value.trim();
+  if (!newName) { showToast('Tên không được để trống!', 'error'); return; }
+  state.user.name = newName;
+  state.user.initial = newName.charAt(0).toUpperCase();
+  renderUserProfile();
+  toggleSection('edit-nickname');
+  showToast('✅ Đã cập nhật tên!', 'success');
+  // In production: call supabase.auth.updateUser({ data: { full_name: newName } })
+}
+
+function savePassword() {
+  const p1 = document.getElementById('new-password').value;
+  const p2 = document.getElementById('confirm-password').value;
+  if (p1.length < 6) { showToast('Mật khẩu cần ≥ 6 ký tự!', 'error'); return; }
+  if (p1 !== p2)     { showToast('Mật khẩu không khớp!',     'error'); return; }
+  toggleSection('edit-password');
+  showToast('🔐 Đã cập nhật mật khẩu!', 'success');
+  // In production: call supabase.auth.updateUser({ password: p1 })
+}
+
+function handleSignOut() {
+  if (!confirm('Chắc chắn muốn đăng xuất không?')) return;
+  state.user = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-page').classList.remove('hidden');
+  showToast('Tạm biệt, hẹn gặp lại sóng thủ! 🌊');
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+let isSignUpMode = false;
+
+function toggleSignUp() {
+  isSignUpMode = !isSignUpMode;
+  document.getElementById('login-btn-text').textContent = isSignUpMode ? 'Tạo tài khoản mới' : 'Đăng nhập / Xác thực';
+}
+
+function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const err   = document.getElementById('login-error');
+
+  if (!email) {
+    err.textContent = 'Nhập email đi bạn ơi 😅';
+    err.classList.remove('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+
+  // In production: call supabase signIn / signUp
+  // For demo: log in with DEMO_USER
+  state.user = { ...DEMO_USER };
+  if (email !== DEMO_USER.email) {
+    // Generic user from email
+    const name = email.split('@')[0];
+    state.user = { name, email, initial: name.charAt(0).toUpperCase() };
+  }
+  bootApp();
+}
+
+function handleGoogleLogin() {
+  // In production: call supabase.auth.signInWithOAuth({ provider: 'google' })
+  state.user = { ...DEMO_USER };
+  bootApp();
+}
+
+/* ============================================================
+   APP BOOT
+   ============================================================ */
+function bootApp() {
+  // Load data (demo for now)
+  state.transactions = [...DEMO_TRANSACTIONS];
+  state.marketPrices = [...DEMO_PRICES];
+
+  refreshYearFilters();
+  renderHome();
+  renderUserProfile();
+  setGreeting();
+
+  document.getElementById('login-page').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+  // Set today's date on forms
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-date').value = today;
+  document.getElementById('p-date').value = today;
+}
+
+function refreshYearFilters() {
+  const years = [...new Set(state.transactions.map(t => new Date(t.date).getFullYear()))].sort((a,b)=>b-a);
+  const homeYr = document.getElementById('home-year-filter');
+  homeYr.innerHTML = '<option value="all">Tất cả năm</option>' + years.map(y => `<option value="${y}">Năm ${y}</option>`).join('');
+}
+
+function setGreeting() {
+  const h = new Date().getHours();
+  let msg = h < 12 ? '☀️ Chào buổi sáng' : h < 18 ? '🌤️ Buổi chiều vui' : '🌙 Tối tốt lành';
+  document.getElementById('greeting-label').textContent = msg;
+}
+
+/* ============================================================
+   INIT — Auto boot with demo data for preview
+   Swap bootApp() with real Supabase auth check in production
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // For UI preview, auto-login with demo user
+  // In production: check supabase.auth.getSession() first
+  handleGoogleLogin();
+});
+</script>
+</body>
+</html>

@@ -143,48 +143,67 @@ export default function TransactionPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
                 <div>
-                    <h1 className="text-4xl font-bold text-[var(--foreground)] tracking-tight mb-1">
-                        Cổng <span className="text-[var(--primary)]">Dữ liệu</span>
+                    <h1 className="text-[28px] font-bold tracking-tight mb-1" style={{ color: 'var(--t-1)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                        Nhập <span style={{ color: 'var(--accent)' }}>liệu</span>
                     </h1>
-                    <p className="text-[var(--text-muted)] font-medium tracking-tight">Đồng bộ hóa các giao dịch mới nhất và giá thị trường của bạn.</p>
+                    <p className="text-[13.5px]" style={{ color: 'var(--t-2)' }}>Đồng bộ hóa các giao dịch mới nhất và giá thị trường của bạn.</p>
                 </div>
             </header>
 
             {/* Add Form Section */}
             <div className="space-y-6">
                 {/* Mode Selector Bento Block */}
-                <div className="flex p-2 bg-white dark:bg-[#1A1A1A] border border-slate-200 dark:border-white/10 rounded-[2rem] shadow-sm relative overflow-hidden group h-16 items-center transition-colors">
+                <div
+                    className="flex p-[3px] relative overflow-hidden items-center"
+                    style={{
+                        background: 'var(--surface-2)',
+                        border: '1px solid var(--line)',
+                        borderRadius: 999,
+                        width: 'fit-content',
+                    }}
+                >
                     <div
-                        className={`absolute top-2 bottom-2 left-2 w-[calc(50%-12px)] rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] bg-slate-900 dark:bg-[var(--primary)] shadow-lg shadow-black/10 ${mode === 'price' ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'}`}
-                    ></div>
+                        className="absolute transition-all duration-400"
+                        style={{
+                            top: 3, bottom: 3, borderRadius: 999,
+                            background: 'linear-gradient(180deg, var(--accent-2), var(--accent))',
+                            boxShadow: '0 4px 16px -6px var(--accent-30)',
+                            width: 'calc(50% - 3px)',
+                            left: mode === 'transaction' ? 3 : 'calc(50%)',
+                        }}
+                    />
                     <button
                         onClick={() => setMode('transaction')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 font-bold text-[11px] sm:text-sm tracking-tight transition-all relative z-10 px-1.5 ${mode === 'transaction' ? 'text-white' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
+                        className="flex items-center justify-center gap-2 relative z-10 px-5 py-2 rounded-full text-[13px] font-semibold transition-colors"
+                        style={{ color: mode === 'transaction' ? '#062018' : 'var(--t-2)' }}
                     >
                         <PlusCircle className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate">Giao dịch</span>
+                        Giao dịch
                     </button>
                     <button
                         onClick={() => setMode('price')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 font-bold text-[11px] sm:text-sm tracking-tight transition-all relative z-10 px-1.5 ${mode === 'price' ? 'text-white' : 'text-[var(--text-muted)] hover:text-slate-900 dark:hover:text-white'}`}
+                        className="flex items-center justify-center gap-2 relative z-10 px-5 py-2 rounded-full text-[13px] font-semibold transition-colors"
+                        style={{ color: mode === 'price' ? '#062018' : 'var(--t-2)' }}
                     >
                         <Database className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate">Thị trường</span>
+                        Thị trường
                     </button>
                 </div>
 
                 {/* Form Bento Card */}
-                <div className="bento-card p-10 shadow-xl shadow-slate-200/50">
+                <div className="ww-card p-7">
                     {error && (
-                        <div className="mb-8 p-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-3 border border-red-100 dark:border-red-500/20 animate-in slide-in-from-top-2">
-                            <AlertCircle className="w-5 h-5" />
+                        <div className="mb-6 p-3.5 flex items-center gap-3 rounded-[10px] text-[13px] font-semibold"
+                            style={{ background: 'var(--neg-12)', border: '1px solid rgba(255,90,110,0.25)', color: 'var(--neg)' }}>
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="mb-8 p-4 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest rounded-2xl flex items-center gap-3 border border-emerald-100 dark:border-emerald-500/20 animate-in slide-in-from-top-2">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <div className="mb-6 p-3.5 flex items-center gap-3 rounded-[10px] text-[13px] font-semibold"
+                            style={{ background: 'var(--accent-12)', border: '1px solid var(--accent-18)', color: 'var(--accent)' }}>
+                            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                             {success}
                         </div>
                     )}
@@ -193,7 +212,7 @@ export default function TransactionPage() {
                         {/* Core Fields - Grid Layout */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
+                                <label className="flex items-center gap-2 label-cap">
                                     <Calendar className="w-3 h-3" />
                                     Chu kỳ Giao dịch
                                 </label>
@@ -207,7 +226,7 @@ export default function TransactionPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
+                                <label className="flex items-center gap-2 label-cap">
                                     <Tag className="w-3 h-3" />
                                     Mã Tín hiệu
                                 </label>
@@ -222,7 +241,7 @@ export default function TransactionPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">
+                                <label className="flex items-center gap-2 label-cap">
                                     <Layers className="w-3 h-3" />
                                     Phân loại Tài sản
                                 </label>
@@ -231,7 +250,7 @@ export default function TransactionPage() {
                                         name="category"
                                         value={formData.category}
                                         onChange={handleChange}
-                                        className="w-full appearance-none bg-slate-100 dark:bg-[#1A1A1A] border-none rounded-2xl px-5 py-3 text-sm text-[var(--foreground)] font-bold focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-[#0F0F0F] transition-all outline-none cursor-pointer"
+                                        className="input-bento cursor-pointer"
                                     >
                                         <option value="Chứng chỉ quỹ">Chứng chỉ quỹ</option>
                                         <option value="Cổ phiếu">Cổ phiếu</option>
@@ -252,19 +271,27 @@ export default function TransactionPage() {
                         {mode === 'transaction' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Lệnh Giao dịch</label>
+                                    <label className="label-cap">Lệnh Giao dịch</label>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Mua' }))}
-                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Mua' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-lg shadow-emerald-500/10' : 'bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-white/10 text-[var(--text-muted)] hover:border-slate-200 dark:hover:border-white/20'}`}
+                                            className="p-3.5 text-[13px] font-semibold transition-all rounded-[10px]"
+                                            style={formData.type === 'Mua'
+                                                ? { background: 'var(--accent-12)', border: '2px solid var(--accent-18)', color: 'var(--accent)' }
+                                                : { background: 'var(--surface-2)', border: '2px solid var(--line)', color: 'var(--t-2)' }
+                                            }
                                         >
                                             Cộng hưởng (Mua)
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, type: 'Chốt' }))}
-                                            className={`rounded-2xl p-4 border-2 font-bold text-sm transition-all ${formData.type === 'Chốt' ? 'bg-red-50 dark:bg-red-500/10 border-red-500 text-red-700 dark:text-red-400 shadow-lg shadow-red-500/10' : 'bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-white/10 text-[var(--text-muted)] hover:border-slate-200 dark:hover:border-white/20'}`}
+                                            className="p-3.5 text-[13px] font-semibold transition-all rounded-[10px]"
+                                            style={formData.type === 'Chốt'
+                                                ? { background: 'var(--neg-12)', border: '2px solid rgba(255,90,110,0.25)', color: 'var(--neg)' }
+                                                : { background: 'var(--surface-2)', border: '2px solid var(--line)', color: 'var(--t-2)' }
+                                            }
                                         >
                                             Phát tán (Bán)
                                         </button>
@@ -273,7 +300,7 @@ export default function TransactionPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Số lượng</label>
+                                        <label className="label-cap">Số lượng</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -285,7 +312,7 @@ export default function TransactionPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Giá cơ sở</label>
+                                        <label className="label-cap">Giá cơ sở</label>
                                         <input
                                             type="number"
                                             step="0.01"
@@ -293,12 +320,13 @@ export default function TransactionPage() {
                                             value={formData.price}
                                             onChange={handleChange}
                                             placeholder="0"
-                                            className="input-bento w-full bg-slate-50 dark:bg-[#0F0F0F] text-slate-500 dark:text-[var(--text-muted)]"
+                                            className="input-bento w-full"
+                                            style={{ color: 'var(--t-3)' }}
                                             readOnly={true}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Phí & Thuế</label>
+                                        <label className="label-cap">Phí & Thuế</label>
                                         <input
                                             type="number"
                                             step="1"
@@ -310,7 +338,7 @@ export default function TransactionPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Tổng năng lượng (VNĐ)</label>
+                                        <label className="label-cap">Tổng năng lượng (VNĐ)</label>
                                         <input
                                             type="number"
                                             step="1"
@@ -318,7 +346,8 @@ export default function TransactionPage() {
                                             value={formData.total_money}
                                             onChange={handleChange}
                                             placeholder="0"
-                                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl px-5 py-3 text-sm font-bold text-slate-900 dark:text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none"
+                                            className="input-bento w-full font-semibold"
+                                            style={{ color: 'var(--accent)' }}
                                         />
                                     </div>
                                 </div>
@@ -327,7 +356,7 @@ export default function TransactionPage() {
 
                         {mode === 'price' && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                                <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest ml-1">Giá trị thị trường hiện tại</label>
+                                <label className="label-cap">Giá trị thị trường hiện tại</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -335,9 +364,10 @@ export default function TransactionPage() {
                                     value={formData.price}
                                     onChange={handleChange}
                                     placeholder="Nhập giá thị trường..."
-                                    className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl px-5 py-5 text-2xl font-bold text-slate-900 dark:text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:bg-white dark:focus:bg-black transition-all outline-none"
+                                    className="input-bento w-full font-bold"
+                                    style={{ fontSize: 22, color: 'var(--accent)' }}
                                 />
-                                <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-tight mt-3 ml-1">
+                                <p className="text-[11px] mt-2" style={{ color: 'var(--t-3)' }}>
                                     Hệ thống sẽ cập nhật chỉ số hiệu quả cho các mã này dựa trên giá trị này.
                                 </p>
                             </div>
@@ -346,10 +376,11 @@ export default function TransactionPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full py-5 rounded-[2rem] font-bold text-sm tracking-widest shadow-xl transition-all mt-6 flex items-center justify-center gap-2 active:scale-[0.98] ${loading ? 'bg-slate-100 dark:bg-zinc-800 text-[var(--text-muted)]' : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] shadow-black/10'}`}
+                            className="btn-accent mt-6 flex items-center justify-center gap-2 py-3"
+                            style={loading ? { opacity: 0.5 } : {}}
                         >
                             {loading ? (
-                                <div className="w-5 h-5 border-2 border-slate-300 dark:border-zinc-500 border-t-slate-500 dark:border-t-[var(--primary)] rounded-full animate-spin" />
+                                <div className="w-5 h-5 border-2 border-[#062018]/30 border-t-[#062018] rounded-full animate-spin" />
                             ) : (
                                 <>
                                     {mode === 'transaction' ? 'Phê duyệt Tín hiệu' : 'Đồng bộ Giá trị Thị trường'}

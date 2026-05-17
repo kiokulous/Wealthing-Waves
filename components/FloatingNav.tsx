@@ -2,59 +2,61 @@
 
 import React from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import {
-    LayoutDashboard,
-    BarChart3,
-    Plus,
-    Wallet,
-    User
-} from 'lucide-react'
+import { Home, PlusCircle, Activity, User } from 'lucide-react'
 
+/* Mobile bottom navigation — 4 tabs per spec */
 export default function FloatingNav() {
-    const router = useRouter()
+    const router   = useRouter()
     const pathname = usePathname()
 
-    const isActive = (path: string) => pathname === path
+    const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
 
     const navItems = [
-        { label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/dashboard' },
-        { label: 'Tài sản', icon: Wallet, path: '/assets' },
-        { label: 'Thêm', icon: Plus, path: '/transaction', isCenter: true },
-        { label: 'Thống kê', icon: BarChart3, path: '/analysis' },
-        { label: 'Tôi', icon: User, path: '/profile' },
+        { label: 'Tổng quan', icon: Home,     path: '/dashboard' },
+        { label: 'Nhập liệu', icon: PlusCircle, path: '/transaction' },
+        { label: 'Phân tích', icon: Activity,  path: '/analysis' },
+        { label: 'Cá nhân',   icon: User,      path: '/profile' },
     ]
 
     return (
-        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 dark:bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/50 dark:border-white/10 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 z-50 shadow-black/20 transition-all">
+        <nav
+            className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around"
+            style={{
+                background: 'rgba(11,13,18,0.92)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderTop: '1px solid var(--line)',
+                paddingBottom: 'env(safe-area-inset-bottom, 12px)',
+                height: '68px',
+            }}
+        >
             {navItems.map((item) => {
                 const active = isActive(item.path)
-                if (item.isCenter) {
-                    return (
-                        <button
-                            key={item.path}
-                            onClick={() => router.push(item.path)}
-                            className="bg-[var(--primary)] p-4 rounded-full text-white dark:text-black shadow-lg shadow-black/20 mx-1 active:scale-90 transition-all"
-                            title={item.label}
-                        >
-                            <item.icon className="w-6 h-6" />
-                        </button>
-                    )
-                }
-
                 return (
                     <button
                         key={item.path}
                         onClick={() => router.push(item.path)}
-                        className={`p-3 rounded-full transition-all duration-300 relative ${active
-                            ? 'text-[var(--primary)] bg-[var(--primary)]/10'
-                            : 'text-[var(--text-muted)] hover:text-[var(--primary)]'
-                            }`}
-                        title={item.label}
+                        className="flex flex-col items-center gap-1 flex-1 py-2 transition-all duration-200"
+                        style={{ color: active ? 'var(--accent)' : 'var(--t-3)' }}
                     >
-                        <item.icon className="w-5 h-5" />
+                        <item.icon
+                            className="transition-all duration-200"
+                            style={{
+                                width:       22,
+                                height:      22,
+                                strokeWidth: active ? 2.5 : 1.8,
+                                filter:      active ? 'drop-shadow(0 0 6px rgba(110,231,183,0.5))' : 'none',
+                            }}
+                        />
+                        <span
+                            className="text-[10px] font-bold tracking-wide transition-all duration-200"
+                            style={{ color: active ? 'var(--accent)' : 'var(--t-3)' }}
+                        >
+                            {item.label}
+                        </span>
                     </button>
                 )
             })}
-        </div>
+        </nav>
     )
 }
