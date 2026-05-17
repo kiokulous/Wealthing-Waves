@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio } from '@/lib/api/portfolio'
 import { Save, X, Loader2, LogOut, ShieldCheck, UserCircle, TrendingUp, Wallet, Calendar } from 'lucide-react'
+import { getUserLevel } from '@/lib/userLevel'
 
 export default function ProfilePage() {
     const router = useRouter()
@@ -84,6 +85,17 @@ export default function ProfilePage() {
 
     const formatCurrency = (v: number) =>
         new Intl.NumberFormat('vi-VN', { notation: 'compact', maximumFractionDigits: 1 }).format(v) + ' đ'
+
+    // Preview titles for "next level" hint text
+    const LEVELS_PREVIEW: Record<number, string> = {
+        2: '🌊 Lướt Sóng Tập Sự',
+        3: '🏄 Surfer Chân Trần',
+        4: '⚓ Thuyền Trưởng Cảng Nhỏ',
+        5: '🐋 Cá Voi Nhỏ',
+        6: '🦈 Cá Mập Giả Vờ Hiền',
+        7: '🌊⚡ Thần Sóng Thức Giấc',
+        8: '🏔️🌊 Tsunami Đi Bộ',
+    }
 
     if (loading || !user) {
         return (
@@ -209,40 +221,56 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* Wave Rider badge */}
-                    <div className="mb-6">
-                        <div
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold"
-                            style={{
-                                background: 'var(--accent-12)',
-                                border: '1px solid var(--accent-18)',
-                                color: 'var(--accent)',
-                            }}
-                        >
-                            <span>🌊</span>
-                            <span>WAVE RIDER · LEVEL 1</span>
-                        </div>
-                        <p className="text-[11.5px] mt-3 leading-relaxed" style={{ color: 'var(--t-3)' }}>
-                            Bắt đầu hành trình tài chính từ {joinDate || 'đầu'}.
-                            Tiếp tục ghi nhận giao dịch để nâng cấp.
-                        </p>
-                    </div>
+                    {/* Dynamic level badge */}
+                    {(() => {
+                        const lvl = getUserLevel(txnCount)
+                        return (
+                            <>
+                                {/* Badge */}
+                                <div className="mb-5">
+                                    <div
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold"
+                                        style={{
+                                            background: lvl.bgColor,
+                                            border: `1px solid ${lvl.borderColor}`,
+                                            color: lvl.color,
+                                        }}
+                                    >
+                                        <span>{lvl.emoji}</span>
+                                        <span>{lvl.title.toUpperCase()} · LEVEL {lvl.level}</span>
+                                    </div>
+                                    <p className="text-[11.5px] mt-3 leading-relaxed" style={{ color: 'var(--t-3)' }}>
+                                        {lvl.description}
+                                    </p>
+                                </div>
 
-                    {/* XP bar */}
-                    <div className="mb-6">
-                        <div className="flex justify-between text-[11px] mb-2" style={{ color: 'var(--t-3)' }}>
-                            <span className="font-semibold">Tiến độ Level</span>
-                            <span className="font-semibold" style={{ color: 'var(--accent)' }}>
-                                {Math.min(txnCount, 20)} / 20 giao dịch
-                            </span>
-                        </div>
-                        <div className="pbar">
-                            <span style={{ width: `${Math.min((txnCount / 20) * 100, 100)}%` }} />
-                        </div>
-                        <p className="text-[11px] mt-1.5" style={{ color: 'var(--t-4)' }}>
-                            Còn {Math.max(20 - txnCount, 0)} giao dịch để đạt Level 2
-                        </p>
-                    </div>
+                                {/* XP bar */}
+                                <div className="mb-6">
+                                    <div className="flex justify-between text-[11px] mb-2" style={{ color: 'var(--t-3)' }}>
+                                        <span className="font-semibold">Tiến độ Level {lvl.level}</span>
+                                        {lvl.isMaxLevel ? (
+                                            <span className="font-semibold" style={{ color: lvl.color }}>
+                                                ✦ Đỉnh cao rồi bro
+                                            </span>
+                                        ) : (
+                                            <span className="font-semibold" style={{ color: lvl.color }}>
+                                                {txnCount} / {lvl.nextLevelTxns} giao dịch
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="pbar">
+                                        <span style={{ width: `${lvl.progressPct}%`, background: lvl.color }} />
+                                    </div>
+                                    <p className="text-[11px] mt-1.5" style={{ color: 'var(--t-4)' }}>
+                                        {lvl.isMaxLevel
+                                            ? `${txnCount} giao dịch — Tsunami không thể nâng cấp hơn nữa 🌊`
+                                            : `Còn ${lvl.nextLevelTxns - txnCount} giao dịch để đạt "${LEVELS_PREVIEW[lvl.level]}"`
+                                        }
+                                    </p>
+                                </div>
+                            </>
+                        )
+                    })()}
 
                     {/* Stats row */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 'auto' }}>
