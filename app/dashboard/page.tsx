@@ -154,7 +154,7 @@ export default function DashboardPage() {
     const rangeLabels: Record<string, string> = { '1m': '1 tháng', '3m': '3 tháng', ytd: 'Năm nay', all: 'Toàn bộ' }
 
     return (
-        <div style={{ maxWidth: 1160, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
 
             {/* ── Greeting row ── */}
             <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>

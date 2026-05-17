@@ -5,10 +5,38 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculateSymbolDetail } from '@/lib/api/portfolio'
-import Sparkline from '@/components/Sparkline'
-import type { Transaction, MarketPrice } from '@/lib/supabase'
-import { ArrowLeft, TrendingUp, TrendingDown, Clock, Calendar, CheckCircle2, ArrowUpRight, ArrowDownRight, Activity, PlusCircle } from 'lucide-react'
+import type { Transaction } from '@/lib/supabase'
 
+// ─── Sparkline SVG ────────────────────────────────────────────────────────────
+function Sparkline({ data, color = 'var(--accent)' }: { data: number[]; color?: string }) {
+    if (!data || data.length < 2) return null
+    const w = 400, h = 80
+    const min = Math.min(...data), max = Math.max(...data)
+    const range = max - min || 1
+    const pts = data.map((v, i) => {
+        const x = (i / (data.length - 1)) * w
+        const y = h - ((v - min) / range) * h * 0.8 - h * 0.1
+        return `${x},${y}`
+    })
+    const areaPath = `M${pts[0]} L${pts.join(' L')} L${w},${h} L0,${h} Z`
+    return (
+        <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: '100%', height: 72, display: 'block' }}>
+            <defs>
+                <linearGradient id={`sg-${color.replace(/[^a-z0-9]/gi,'')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0" />
+                </linearGradient>
+            </defs>
+            <path d={areaPath} fill={`url(#sg-${color.replace(/[^a-z0-9]/gi,'')})`} />
+            <polyline points={pts.join(' ')} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+}
+
+function fmtFull(v: number) { return new Intl.NumberFormat('vi-VN').format(Math.round(v)) }
+function fmtDate(s: string)  { return new Date(s).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PortfolioDetailPage() {
     const params = useParams()
     const symbol = typeof params.symbol === 'string' ? decodeURIComponent(params.symbol) : ''
@@ -16,10 +44,10 @@ export default function PortfolioDetailPage() {
     const { user, loading: authLoading } = useAuth()
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
-    const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([])
-    const [loading, setLoading] = useState(true)
-    const [filterYear, setFilterYear] = useState<number | 'all'>('all')
-    const [detail, setDetail] = useState<any>(null)
+    const [marketPrices, setMarketPrices] = useState<any[]>([])
+    const [loading, setLoading]           = useState(true)
+    const [filterYear, setFilterYear]     = useState<number | 'all'>('all')
+    const [detail, setDetail]             = useState<any>(null)
     const [availableYears, setAvailableYears] = useState<number[]>([])
 
     useEffect(() => {
@@ -31,240 +59,227 @@ export default function PortfolioDetailPage() {
     }, [user, symbol])
 
     useEffect(() => {
-        if (transactions.length > 0) {
-            calculateDetail()
-        }
+        if (transactions.length > 0) recalc()
     }, [transactions, marketPrices, filterYear])
 
     const loadData = async () => {
         try {
             setLoading(true)
-            const [txns, prices] = await Promise.all([
-                getAllTransactions(),
-                getAllMarketPrices()
-            ])
+            const [txns, prices] = await Promise.all([getAllTransactions(), getAllMarketPrices()])
             setTransactions(txns)
             setMarketPrices(prices)
-
             const years = Array.from(new Set(txns.filter(t => t.symbol === symbol).map(t => new Date(t.date).getFullYear())))
-                .filter(y => !isNaN(y))
-                .sort((a, b) => b - a)
+                .filter(y => !isNaN(y)).sort((a, b) => b - a)
             setAvailableYears(years)
-
-            setLoading(false)
-        } catch (error) {
-            console.error('Error loading detail:', error)
-            setLoading(false)
-        }
+        } catch (err) { console.error(err) }
+        finally { setLoading(false) }
     }
 
-    const calculateDetail = () => {
+    const recalc = () => {
         const year = filterYear === 'all' ? undefined : filterYear
-        const data = calculateSymbolDetail(symbol, transactions, marketPrices, year)
-        setDetail(data)
+        setDetail(calculateSymbolDetail(symbol, transactions, marketPrices, year))
     }
-
-    const formatCurrency = (val: number) => new Intl.NumberFormat('vi-VN').format(Math.round(val)) + ' đ'
-    const formatValue = (val: number) => new Intl.NumberFormat('vi-VN').format(Math.round(val))
-    const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('vi-VN')
 
     if (authLoading || (loading && !detail)) {
         return (
-            <div className="flex items-center justify-center p-20">
-                <div className="text-center">
-                    <div className="inline-block w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p className="text-[#A3AED0] font-bold text-sm tracking-widest uppercase">Phân tích sóng tín hiệu...</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', margin: '0 auto 12px', border: '3px solid var(--accent)', borderTopColor: 'transparent', animation: 'spin .8s linear infinite' }} />
+                    <p style={{ color: 'var(--t-3)', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Phân tích tín hiệu...</p>
                 </div>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
         )
     }
 
     if (!detail) return null
 
-    const isProfit = detail.totalPL >= 0
+    const isProfit       = detail.totalPL >= 0
+    const accentColor    = isProfit ? 'var(--accent)' : 'var(--neg)'
+    const sparkPrices    = (detail.priceHistory || []).map((p: any) => p.price)
+
+    const statCards = [
+        { label: 'Vị thế hoạt động', value: detail.quantity.toLocaleString('vi-VN'), unit: 'Đơn vị', desc: 'Hiện có trong danh mục' },
+        { label: 'Vốn đầu tư',        value: fmtFull(detail.invested),                unit: 'đ',      desc: 'Tổng giá vốn' },
+        { label: 'Giai đoạn nắm giữ', value: detail.holdingDays,                      unit: 'Ngày',   desc: 'Kể từ lần mua đầu tiên' },
+        { label: 'Điểm vào ban đầu',  value: detail.firstBuyDate ? fmtDate(detail.firstBuyDate) : '—', unit: '', desc: 'Ngày mua đầu tiên' },
+    ]
 
     return (
-        <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 pb-10">
-            {/* Header / Nav */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-                <div className="flex items-center gap-6">
+        <div style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 60 }}>
+
+            {/* ── Header ── */}
+            <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+                <div className="row" style={{ gap: 14 }}>
                     <button
                         onClick={() => router.back()}
-                        className="p-3 bg-white dark:bg-[#111111] border border-slate-200 dark:border-white/5 rounded-2xl text-[#A3AED0] hover:text-[var(--primary)] transition-all shadow-sm hover:translate-x-[-2px]"
+                        className="btn btn-ghost"
+                        style={{ width: 40, height: 40, padding: 0, borderRadius: 12, display: 'grid', placeItems: 'center' }}
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                     </button>
                     <div>
-                        <h1 className="text-4xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">{symbol}</h1>
-                        <p className="text-[#A3AED0] font-medium tracking-tight uppercase text-xs">Hồ sơ Cộng hưởng Tài sản</p>
+                        <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--t-1)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                            {symbol}
+                        </div>
+                        <div className="label-cap" style={{ marginTop: 4 }}>Hồ sơ Cộng hưởng Tài sản</div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="relative min-w-[160px]">
-                        <select
-                            value={filterYear}
-                            onChange={(e) => setFilterYear(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                            className="w-full appearance-none bg-white dark:bg-[#111111] border border-slate-200 dark:border-white/5 text-[#2B3674] dark:text-white rounded-2xl py-3 pl-5 pr-12 text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/10 cursor-pointer transition-all"
-                        >
-                            <option value="all">Toàn bộ lịch sử</option>
-                            {availableYears.map(year => (
-                                <option key={year} value={year}>Năm {year}</option>
-                            ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#A3AED0] border-l border-slate-100 dark:border-white/10 my-2">
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                {/* Year filter */}
+                <select
+                    value={filterYear}
+                    onChange={e => setFilterYear(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                    style={{
+                        background: 'var(--surface-1)', border: '1px solid var(--line)',
+                        borderRadius: 10, padding: '8px 14px', color: 'var(--t-1)',
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer', outline: 'none',
+                    }}
+                >
+                    <option value="all">Toàn bộ lịch sử</option>
+                    {availableYears.map(y => <option key={y} value={y}>Năm {y}</option>)}
+                </select>
+            </div>
+
+            {/* ── Hero grid: P&L + sparkline (left wide) + 4 stat cards (right) ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 18, marginBottom: 18 }}>
+
+                {/* P&L hero card */}
+                <div className="card" style={{ padding: 24, position: 'relative', overflow: 'hidden' }}>
+                    <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 4 }}>
+                        <div>
+                            <div className="label-cap">Hiệu suất ròng</div>
+                            <div className="mono num value-xl" style={{ color: accentColor, marginTop: 10 }}>
+                                {isProfit ? '+' : ''}{fmtFull(detail.totalPL)}
+                                <span style={{ color: 'var(--t-3)', fontSize: 22, fontWeight: 500, marginLeft: 6 }}>đ</span>
+                            </div>
+                            <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                                <span className={`delta ${isProfit ? 'pos' : 'neg'}`}>
+                                    {isProfit ? '▲' : '▼'} {Math.abs(detail.plPercent).toFixed(2)}% ROI
+                                </span>
+                                <span className="muted" style={{ fontSize: 12.5 }}>
+                                    Giá hiện tại: {fmtFull(detail.currentPrice || 0)} đ
+                                </span>
+                            </div>
+                        </div>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: isProfit ? 'var(--accent-12)' : 'var(--neg-12)', color: accentColor, display: 'grid', placeItems: 'center' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                {isProfit
+                                    ? <><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></>
+                                    : <><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></>}
                             </svg>
                         </div>
                     </div>
-                </div>
-            </header>
 
-            {/* Main Stats Bento Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-6 px-2">
-
-                {/* Total P/L Card (Hero) */}
-                <div className="md:col-span-4 lg:col-span-4 lg:row-span-2 bento-card p-10 flex flex-col justify-between group overflow-hidden relative">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--primary)]/5 rounded-full blur-3xl transition-transform duration-700" />
-
-                    <div>
-                        <div className="flex items-center justify-between mb-8">
-                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Hiệu suất ròng</p>
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isProfit ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' : 'bg-red-50 dark:bg-red-500/10 text-red-600'}`}>
-                                <Activity className="w-5 h-5" />
-                            </div>
-                        </div>
-                        <h2 className={`text-3xl lg:text-4xl font-bold tracking-tighter mb-2 ${isProfit ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {isProfit ? '+' : ''}{formatValue(detail.totalPL)} <span className="text-sm">đ</span>
-                        </h2>
-                        <div className={`inline-flex items-center gap-1 text-sm font-bold ${isProfit ? 'text-emerald-500' : 'text-red-500'}`}>
-                            {isProfit ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                            {detail.plPercent.toFixed(2)}% ROI
-                        </div>
-                    </div>
-
-                    <div className="mt-12">
-                        <div className="h-32 w-full mt-auto">
-                            <Sparkline
-                                data={detail.priceHistory.map((p: any) => p.price)}
-                                width={300}
-                                height={80}
-                                color={isProfit ? '#10B981' : '#EF4444'}
-                                className="opacity-80"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Holdings & Cost Basis (Medium) */}
-                <div className="md:col-span-4 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Vị thế hoạt động</p>
-                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#A3AED0]">
-                                <TrendingUp className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <h3 className="text-3xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
-                            {detail.quantity.toLocaleString('vi-VN')}
-                            <span className="text-sm font-bold text-[#A3AED0] ml-2 uppercase tracking-widest">Đơn vị</span>
-                        </h3>
-                        <p className="text-[#A3AED0] text-xs font-bold uppercase mt-2">Hiện có trong danh mục</p>
-                    </div>
-
-                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Vốn đầu tư</p>
-                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#A3AED0]">
-                                <Calendar className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <h3 className="text-2xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
-                            {formatValue(detail.invested)} <span className="text-sm">đ</span>
-                        </h3>
-                        <p className="text-[#A3AED0] text-xs font-bold uppercase mt-2">Tổng giá vốn</p>
-                    </div>
-                </div>
-
-                {/* Timeline Details (Long Horizontal) */}
-                <div className="md:col-span-4 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Giai đoạn Cộng hưởng</p>
-                            <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
-                                <Clock className="w-5 h-5" />
-                            </div>
-                        </div>
-                        <h3 className="text-3xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
-                            {detail.holdingDays} <span className="text-sm font-bold text-[#A3AED0] ml-2 uppercase tracking-widest">Ngày</span>
-                        </h3>
-                    </div>
-
-                    <div className="bento-card p-8 group hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-[#A3AED0] font-bold uppercase text-[11px] tracking-widest">Điểm vào Ban đầu</p>
-                            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[#A3AED0] dark:text-white">
-                                <Calendar className="w-5 h-5" />
-                            </div>
-                        </div>
-                        <h3 className="text-3xl font-bold text-[#2B3674] dark:text-white tracking-tight leading-none mb-1">
-                            {detail.firstBuyDate ? formatDate(detail.firstBuyDate) : '-'}
-                        </h3>
-                    </div>
-                </div>
-            </div>
-
-            {/* History Table Bento Block */}
-            <div className="px-2">
-                <div className="bento-card overflow-hidden">
-                    <div className="p-8 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-bold text-[#2B3674] dark:text-white">Lịch sử Tín hiệu</h3>
-                            <p className="text-[#A3AED0] text-sm font-medium">Nhật ký chi tiết tất cả các tương tác đã ghi lại cho {symbol}.</p>
-                        </div>
-                        <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-[#A3AED0]">
-                            <CheckCircle2 className="w-5 h-5" />
-                        </div>
-                    </div>
-
-                    <div className="divide-y divide-slate-50">
-                        {detail.transactions.map((t: Transaction) => {
-                            const isBuy = t.type === 'Mua'
-                            return (
-                                <div key={t.id} className="p-6 md:p-8 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-all group">
-                                    <div className="flex items-center gap-6">
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isBuy
-                                            ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
-                                            : 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white'
-                                            }`}>
-                                            {isBuy ? <PlusCircle className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-[#2B3674] dark:text-white text-lg tracking-tight">{formatDate(t.date)}</p>
-                                            <p className="text-[10px] text-[#A3AED0] font-bold uppercase tracking-widest">{isBuy ? 'Tăng vị thế' : 'Giảm vị thế'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={`font-bold text-lg tracking-tight ${isBuy ? 'text-[#2B3674] dark:text-white' : 'text-red-500'}`}>
-                                            {isBuy ? '' : '+'}{formatValue(t.total_money)} đ
-                                        </p>
-                                        <p className="text-[10px] text-[#A3AED0] font-bold uppercase tracking-widest mt-1">
-                                            {t.quantity} Đơn vị @ {formatValue(t.price)}
-                                        </p>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    {detail.transactions.length === 0 && (
-                        <div className="p-20 text-center">
-                            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Không tìm thấy dữ liệu lịch sử.</p>
+                    {/* Sparkline */}
+                    {sparkPrices.length >= 2 && (
+                        <div style={{ marginTop: 16, marginLeft: -8, marginRight: -8 }}>
+                            <Sparkline data={sparkPrices} color={accentColor} />
                         </div>
                     )}
                 </div>
+
+                {/* 2×2 stat grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                    {statCards.map((s, i) => (
+                        <div key={i} className="card" style={{ padding: 18 }}>
+                            <div className="label-cap" style={{ marginBottom: 10 }}>{s.label}</div>
+                            <div className="mono num" style={{ fontSize: 22, fontWeight: 700, color: 'var(--t-1)', letterSpacing: '-0.01em', lineHeight: 1.1 }}>
+                                {s.value}
+                                {s.unit && <span style={{ color: 'var(--t-3)', fontSize: 13, fontWeight: 500, marginLeft: 5 }}>{s.unit}</span>}
+                            </div>
+                            <div className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>{s.desc}</div>
+                        </div>
+                    ))}
+                </div>
             </div>
+
+            {/* ── Quick summary bar ── */}
+            <div className="card" style={{ padding: '14px 20px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
+                {[
+                    { label: 'Giá trị hiện tại', value: fmtFull(detail.currentValue || 0) + ' đ', color: 'var(--t-1)' },
+                    { label: 'Lợi nhuận đã thực hiện', value: fmtFull(detail.realized || 0) + ' đ', color: detail.realized >= 0 ? 'var(--accent)' : 'var(--neg)' },
+                    { label: 'Tổng giao dịch', value: detail.transactions.length + ' lệnh', color: 'var(--t-1)' },
+                    { label: 'Danh mục', value: detail.category || '—', color: 'var(--t-2)' },
+                ].map((item, i) => (
+                    <div key={i}>
+                        <div className="label-cap">{item.label}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: item.color, marginTop: 3 }}>{item.value}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* ── Transaction history table ── */}
+            <div className="card" style={{ overflow: 'hidden' }}>
+                <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                        <div className="title" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t-1)' }}>Lịch sử Tín hiệu</div>
+                        <div className="desc muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                            Nhật ký chi tiết tất cả giao dịch cho <b style={{ color: 'var(--t-1)' }}>{symbol}</b>
+                        </div>
+                    </div>
+                    <div className="ico-box alt">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                </div>
+
+                {detail.transactions.length === 0 ? (
+                    <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                        <p className="muted" style={{ fontSize: 13 }}>Không tìm thấy giao dịch nào.</p>
+                    </div>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="table" style={{ width: '100%' }}>
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Loại</th>
+                                    <th style={{ textAlign: 'right' }}>Số lượng</th>
+                                    <th style={{ textAlign: 'right' }}>Đơn giá</th>
+                                    <th style={{ textAlign: 'right' }}>Phí</th>
+                                    <th style={{ textAlign: 'right' }}>Tổng tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {detail.transactions.map((t: Transaction) => {
+                                    const isBuy = t.type === 'Mua'
+                                    return (
+                                        <tr key={t.id}>
+                                            <td className="num-cell" style={{ color: 'var(--t-2)' }}>{fmtDate(t.date)}</td>
+                                            <td>
+                                                {isBuy
+                                                    ? <span className="badge green">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                                                        Mua
+                                                      </span>
+                                                    : <span className="badge red">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+                                                        Bán
+                                                      </span>
+                                                }
+                                            </td>
+                                            <td className="num-cell" style={{ textAlign: 'right' }}>
+                                                {t.quantity.toLocaleString('vi-VN')}
+                                            </td>
+                                            <td className="num-cell" style={{ textAlign: 'right', color: 'var(--t-2)' }}>
+                                                {fmtFull(t.price)}
+                                            </td>
+                                            <td className="num-cell" style={{ textAlign: 'right', color: t.fee ? 'var(--t-2)' : 'var(--t-4)' }}>
+                                                {t.fee ? fmtFull(t.fee) : '—'}
+                                            </td>
+                                            <td className="num-cell" style={{ textAlign: 'right', fontWeight: 700, color: isBuy ? 'var(--accent)' : 'var(--neg)' }}>
+                                                {fmtFull(t.total_money)} đ
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
     )
 }

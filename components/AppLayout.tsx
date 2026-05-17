@@ -3,7 +3,6 @@
 import React from 'react'
 import { usePathname } from 'next/navigation'
 import FloatingNav from './FloatingNav'
-import TopNav from './TopNav'
 import AppSidebar from './AppSidebar'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -35,11 +34,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Main content column */}
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                {/* Sticky topbar */}
-                <div className="hidden md:block">
-                    <TopNav />
-                </div>
-
                 {/* Page content */}
                 <main className="animate-fade-up p-4 md:p-7 md:pb-16">
                     {children}

@@ -4,22 +4,14 @@ import React from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import {
-    LayoutDashboard, ArrowDownUp, BarChart3, User,
-    Landmark, ShieldCheck, Settings, HelpCircle, LogOut,
+    LayoutDashboard, ArrowDownUp, BarChart3,
+    Settings, LogOut,
 } from 'lucide-react'
 
 const NAV_MAIN = [
     { label: 'Tổng quan',  icon: LayoutDashboard, path: '/dashboard' },
     { label: 'Nhập liệu',  icon: ArrowDownUp,     path: '/transaction', badge: true },
     { label: 'Phân tích',  icon: BarChart3,        path: '/analysis' },
-    { label: 'Cá nhân',    icon: User,             path: '/profile' },
-]
-
-const NAV_ACCOUNT = [
-    { label: 'Tài khoản liên kết', icon: Landmark,     path: '/assets' },
-    { label: 'Bảo mật',            icon: ShieldCheck,  path: '/profile' },
-    { label: 'Cài đặt',            icon: Settings,     path: '/profile' },
-    { label: 'Trợ giúp',           icon: HelpCircle,   path: '#' },
 ]
 
 export default function AppSidebar() {
@@ -131,62 +123,6 @@ export default function AppSidebar() {
                 })}
             </div>
 
-            {/* Account nav */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <div style={{ color: 'var(--t-4)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', padding: '12px 10px 6px', fontWeight: 600 }}>
-                    Tài khoản
-                </div>
-                {NAV_ACCOUNT.map((item) => (
-                    <button
-                        key={item.label}
-                        onClick={() => item.path !== '#' && router.push(item.path)}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '9px 10px', borderRadius: 10,
-                            color: 'var(--t-2)', fontWeight: 500, fontSize: 13.5,
-                            border: '1px solid transparent', background: 'transparent',
-                            cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
-                            width: '100%',
-                        }}
-                        onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.color = 'var(--t-1)'
-                            ;(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'
-                        }}
-                        onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.color = 'var(--t-2)'
-                            ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-                        }}
-                    >
-                        <item.icon size={18} style={{ opacity: 0.75, flexShrink: 0 }} />
-                        {item.label}
-                    </button>
-                ))}
-
-                {/* Sign out */}
-                <button
-                    onClick={() => signOut()}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '9px 10px', borderRadius: 10,
-                        color: 'var(--t-2)', fontWeight: 500, fontSize: 13.5,
-                        border: '1px solid transparent', background: 'transparent',
-                        cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
-                        width: '100%',
-                    }}
-                    onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = 'var(--neg)'
-                        ;(e.currentTarget as HTMLElement).style.background = 'var(--neg-12)'
-                    }}
-                    onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.color = 'var(--t-2)'
-                        ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-                    }}
-                >
-                    <LogOut size={18} style={{ opacity: 0.75, flexShrink: 0 }} />
-                    Đăng xuất
-                </button>
-            </div>
-
             {/* XP footer card */}
             <div style={{ marginTop: 'auto' }}>
                 <div
@@ -215,6 +151,94 @@ export default function AppSidebar() {
                         Ghi nhận 8 giao dịch nữa để lên cấp Sailor.
                     </div>
                 </div>
+            </div>
+
+            {/* User badge + Bottom actions */}
+            <div
+                style={{
+                    paddingTop: 14,
+                    borderTop: '1px solid var(--line)',
+                    marginTop: 14,
+                    display: 'flex', flexDirection: 'column', gap: 2,
+                }}
+            >
+                {/* User info */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10 }}>
+                    <div
+                        style={{
+                            width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                            background: 'linear-gradient(135deg, #5b6bff, #00c896)',
+                            display: 'grid', placeItems: 'center',
+                            color: '#fff', fontWeight: 700, fontSize: 13,
+                        }}
+                    >
+                        {(user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'W').charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--t-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Wave Rider'}
+                        </span>
+                        <span style={{ fontSize: 11, color: 'var(--t-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {user?.email}
+                        </span>
+                    </div>
+                </div>
+
+            {/* Cài đặt + Logout */}
+            <div
+                style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                }}
+            >
+                {/* Cài đặt — icon + chữ */}
+                <button
+                    onClick={() => router.push('/profile')}
+                    style={{
+                        flex: 1, display: 'flex', alignItems: 'center', gap: 9,
+                        padding: '9px 10px', borderRadius: 10,
+                        color: 'var(--t-2)', fontWeight: 500, fontSize: 13.5,
+                        background: 'transparent', border: 'none',
+                        cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLElement
+                        el.style.color = 'var(--t-1)'
+                        el.style.background = 'rgba(255,255,255,0.05)'
+                    }}
+                    onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLElement
+                        el.style.color = 'var(--t-2)'
+                        el.style.background = 'transparent'
+                    }}
+                >
+                    <Settings size={16} style={{ color: 'var(--t-3)', flexShrink: 0 }} />
+                    Cài đặt
+                </button>
+
+                {/* Logout — chỉ icon */}
+                <button
+                    onClick={() => signOut()}
+                    title="Đăng xuất"
+                    style={{
+                        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                        display: 'grid', placeItems: 'center',
+                        color: 'var(--t-3)', background: 'transparent', border: 'none',
+                        cursor: 'pointer', transition: 'all .15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLElement
+                        el.style.color = 'var(--neg)'
+                        el.style.background = 'var(--neg-12)'
+                    }}
+                    onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLElement
+                        el.style.color = 'var(--t-3)'
+                        el.style.background = 'transparent'
+                    }}
+                >
+                    <LogOut size={16} />
+                </button>
+            </div>
             </div>
         </aside>
     )
