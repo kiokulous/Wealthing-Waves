@@ -292,6 +292,105 @@
   .loss-text   { color: var(--neg); }
   .profit-bg   { background: var(--accent-12); }
   .loss-bg     { background: var(--neg-12); }
+
+  /* ── Prototype-matched utility classes ──────────────────────────── */
+
+  /* .card — base card (prototype alias for .ww-card) */
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.012), transparent), var(--surface-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--sh-card);
+  }
+  .card:hover { border-color: var(--line-2); }
+  .card.inset { background: var(--surface-2); }
+
+  /* .card-head */
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-head .left { display: flex; align-items: center; gap: 12px; }
+  .card-head .title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--t-1); }
+  .card-head .desc  { color: var(--t-3); font-size: 12px; margin-top: 2px; }
+  .card-head .ico-box {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--accent-12); color: var(--accent);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .card-head .ico-box.alt  { background: var(--info-12);  color: var(--info); }
+  .card-head .ico-box.warn { background: rgba(255,181,71,0.12); color: var(--warn); }
+
+  /* .ico-box standalone */
+  .ico-box {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--accent-12); color: var(--accent);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .ico-box.alt  { background: var(--info-12);  color: var(--info); }
+  .ico-box.warn { background: rgba(255,181,71,0.12); color: var(--warn); }
+
+  /* .divider */
+  .divider { height: 1px; background: var(--line); margin: 20px 0; }
+
+  /* .btn base */
+  .btn {
+    appearance: none; border: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: transform .05s ease, box-shadow .15s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: #062018;
+    box-shadow: 0 8px 24px -10px var(--accent-30), 0 0 0 1px rgba(0,200,150,0.4) inset;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 12px 28px -8px rgba(0,200,150,0.45), 0 0 0 1px rgba(0,200,150,0.5) inset;
+  }
+
+  /* .badge */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 9px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+  }
+  .badge.green  { background: var(--accent-12); color: var(--accent); }
+  .badge.red    { background: var(--neg-12);    color: var(--neg); }
+  .badge.blue   { background: var(--info-12);   color: var(--info); }
+  .badge.warn   { background: rgba(255,181,71,0.12); color: var(--warn); }
+  .badge.muted  { background: rgba(255,255,255,0.05); color: var(--t-2); }
+
+  /* .delta (prototype pill — different from .delta-pos/.delta-neg) */
+  .delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-weight: 600; font-size: 12px;
+    padding: 3px 8px; border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .delta.pos { color: var(--accent); background: var(--accent-12); }
+  .delta.neg { color: var(--neg);    background: var(--neg-12); }
+  .delta.flat{ color: var(--t-3);   background: rgba(255,255,255,0.05); }
+
+  /* layout helpers */
+  .row    { display: flex; align-items: center; gap: 12px; }
+  .col    { display: flex; flex-direction: column; }
+  .between { justify-content: space-between; }
+  .spacer { flex: 1; }
+  .muted  { color: var(--t-3); }
+  .dot    { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+
+  /* mono numbers */
+  .mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }
+  .num  { font-variant-numeric: tabular-nums; }
+
+  /* h-title / h-sub used in greeting */
+  .h-title { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; color: var(--t-1); line-height: 1.2; }
+  .h-sub   { color: var(--t-3); font-size: 13px; margin-top: 4px; }
 }
 
 /* ============================================================
