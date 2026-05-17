@@ -9,6 +9,7 @@ import {
     LayoutDashboard, ArrowDownUp, BarChart3,
     Settings, LogOut,
 } from 'lucide-react'
+import { getUserLevel } from '@/lib/userLevel'
 
 export default function AppSidebar() {
     const router   = useRouter()
@@ -200,30 +201,44 @@ export default function AppSidebar() {
             </div>
 
             {/* XP footer card */}
-            <div style={{ marginTop: 'auto' }}>
-                <div
-                    style={{
-                        padding: 12, borderRadius: 14,
-                        background: 'linear-gradient(180deg, rgba(0,200,150,0.08), rgba(0,200,150,0.02))',
-                        border: '1px solid rgba(0,200,150,0.16)',
-                        display: 'grid', gap: 8,
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 14 }}>⚡</span>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t-1)' }}>
-                            Wave Rider · Level 1
-                        </span>
+            {(() => {
+                const lvl = getUserLevel(txnCount)
+                return (
+                    <div style={{ marginTop: 'auto' }}>
+                        <div
+                            style={{
+                                padding: 12, borderRadius: 14,
+                                background: `linear-gradient(180deg, ${lvl.bgColor}, transparent)`,
+                                border: `1px solid ${lvl.borderColor}`,
+                                display: 'grid', gap: 8,
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 14 }}>{lvl.emoji}</span>
+                                <span style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--t-1)', lineHeight: 1.3 }}>
+                                    {lvl.title} · Lv {lvl.level}
+                                </span>
+                            </div>
+                            <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+                                <span style={{ display: 'block', height: '100%', background: lvl.color, width: `${lvl.progressPct}%`, borderRadius: 999, transition: 'width .5s ease' }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-3)', fontSize: 11 }}>
+                                {lvl.isMaxLevel ? (
+                                    <>
+                                        <span>{txnCount} GD</span>
+                                        <span style={{ color: lvl.color }}>✦ Max level</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>{txnCount} / {lvl.nextLevelTxns} GD</span>
+                                        <span>Lv {lvl.level + 1} sắp tới</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                    <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                        <span style={{ display: 'block', height: '100%', background: 'linear-gradient(90deg, var(--accent-d), var(--accent-2))', width: `${Math.min(100, (txnCount / 20) * 100)}%`, borderRadius: 999, transition: 'width .5s ease' }} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-3)', fontSize: 11 }}>
-                        <span>{txnCount} / 20 GD</span>
-                        <span>Lv 2 sắp tới</span>
-                    </div>
-                </div>
-            </div>
+                )
+            })()}
 
             {/* User badge + Bottom actions */}
             <div style={{ paddingTop: 14, borderTop: '1px solid var(--line)', marginTop: 14, display: 'flex', flexDirection: 'column', gap: 2 }}>
