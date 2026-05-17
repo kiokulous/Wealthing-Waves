@@ -69,8 +69,7 @@ export default function DashboardPage() {
     const [portfolio, setPortfolio]       = useState<PortfolioSummary | null>(null)
     const [loading, setLoading]           = useState(true)
     const [chartData, setChartData]       = useState<{ date: string; value: number }[]>([])
-    const [filterRange, setFilterRange]   = useState<'1m' | '3m' | 'ytd' | 'all'>('ytd')
-    const [filterYear, setFilterYear]     = useState<number | undefined>(undefined)
+    const [filterYear, setFilterYear]     = useState<number | 'all'>('all')
     const [availableYears, setAvailableYears] = useState<number[]>([])
 
     useEffect(() => {
@@ -102,7 +101,8 @@ export default function DashboardPage() {
     }
 
     const recalc = () => {
-        setPortfolio(calculatePortfolio(transactions, marketPrices, filterYear))
+        const yr = filterYear === 'all' ? undefined : filterYear
+        setPortfolio(calculatePortfolio(transactions, marketPrices, yr))
         setChartData(calculatePortfolioHistory(transactions, marketPrices, 12))
     }
 
@@ -151,8 +151,6 @@ export default function DashboardPage() {
         'Vàng':          'spark',
     }
 
-    const rangeLabels: Record<string, string> = { '1m': '1 tháng', '3m': '3 tháng', ytd: 'Năm nay', all: 'Toàn bộ' }
-
     return (
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
 
@@ -172,15 +170,21 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
-                    {/* Segmented range filter */}
+                    {/* Year filter */}
                     <div className="segmented">
-                        {(['1m','3m','ytd','all'] as const).map(k => (
+                        <button
+                            className={filterYear === 'all' ? 'on' : ''}
+                            onClick={() => setFilterYear('all')}
+                        >
+                            Toàn bộ
+                        </button>
+                        {availableYears.map(y => (
                             <button
-                                key={k}
-                                className={filterRange === k ? 'on' : ''}
-                                onClick={() => setFilterRange(k)}
+                                key={y}
+                                className={filterYear === y ? 'on' : ''}
+                                onClick={() => setFilterYear(y)}
                             >
-                                {rangeLabels[k]}
+                                {y}
                             </button>
                         ))}
                     </div>
@@ -314,19 +318,19 @@ export default function DashboardPage() {
                             onClick={() => router.push('/transaction')}
                         >
                             <span className="row" style={{ gap: 8 }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
-                                Đồng bộ dữ liệu mới
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Ghi nhận giao dịch
                             </span>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                         </button>
                         <button
                             className="btn btn-ghost"
                             style={{ justifyContent: 'space-between', padding: '12px 14px', width: '100%' }}
-                            onClick={() => router.push('/transaction')}
+                            onClick={() => router.push('/assets')}
                         >
                             <span className="row" style={{ gap: 8 }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                Ghi nhận giao dịch
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                Danh sách con hàng
                             </span>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                         </button>

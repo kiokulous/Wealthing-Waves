@@ -1,28 +1,50 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
+import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
+import { calculatePortfolio } from '@/lib/api/portfolio'
 import {
     LayoutDashboard, ArrowDownUp, BarChart3,
     Settings, LogOut,
 } from 'lucide-react'
-
-const NAV_MAIN = [
-    { label: 'Tổng quan',  icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Nhập liệu',  icon: ArrowDownUp,     path: '/transaction', badge: true },
-    { label: 'Phân tích',  icon: BarChart3,        path: '/analysis' },
-]
 
 export default function AppSidebar() {
     const router   = useRouter()
     const pathname = usePathname()
     const { user, signOut } = useAuth()
 
+    const [txnCount,   setTxnCount]   = useState<number>(0)
+    const [returnPct,  setReturnPct]  = useState<number | null>(null)
+
     const isActive = (path: string) =>
         pathname === path || (path !== '/' && pathname.startsWith(path + '/'))
 
-    const txnCount = 92 // TODO: pull from context if needed
+    useEffect(() => {
+        if (!user) return
+        const load = async () => {
+            try {
+                const [txns, prices] = await Promise.all([getAllTransactions(), getAllMarketPrices()])
+                setTxnCount(txns.length)
+                const p = calculatePortfolio(txns, prices)
+                setReturnPct(p.totalInvested > 0
+                    ? (p.totalProfitLoss / p.totalInvested) * 100
+                    : null)
+            } catch { /* ignore */ }
+        }
+        load()
+    }, [user])
+
+    // color code: xanh > 5%, cam -5%~5%, đỏ < -5%
+    const pctColor = returnPct === null ? 'var(--t-4)'
+        : returnPct > 5  ? 'var(--accent)'
+        : returnPct >= 0 ? '#ffb547'
+        : returnPct > -5 ? '#ffb547'
+        : 'var(--neg)'
+
+    const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Wave Rider'
+    const initial = displayName.charAt(0).toUpperCase()
 
     return (
         <aside
@@ -61,8 +83,8 @@ export default function AppSidebar() {
                     <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--t-1)' }}>
                         Wealthing Waves
                     </span>
-                    <span style={{ color: 'var(--t-3)', fontWeight: 500, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                        Personal Finance · v2.0
+                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 10, letterSpacing: '0.06em' }}>
+                        🌊 Tiền biết tự đẻ ra tiền · v2
                     </span>
                 </div>
             </div>
@@ -72,12 +94,13 @@ export default function AppSidebar() {
                 <div style={{ color: 'var(--t-4)', fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', padding: '12px 10px 6px', fontWeight: 600 }}>
                     Điều hướng
                 </div>
-                {NAV_MAIN.map((item) => {
-                    const active = isActive(item.path)
+
+                {/* Tổng quan */}
+                {(() => {
+                    const active = isActive('/dashboard')
                     return (
                         <button
-                            key={item.path}
-                            onClick={() => router.push(item.path)}
+                            onClick={() => router.push('/dashboard')}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 10,
                                 padding: '9px 10px', borderRadius: 10,
@@ -91,36 +114,89 @@ export default function AppSidebar() {
                                 cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
                                 width: '100%',
                             }}
-                            onMouseEnter={(e) => {
-                                if (!active) {
-                                    (e.currentTarget as HTMLElement).style.color = 'var(--t-1)'
-                                    ;(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!active) {
-                                    (e.currentTarget as HTMLElement).style.color = 'var(--t-2)'
-                                    ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-                                }
-                            }}
+                            onMouseEnter={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-1)'; el.style.background = 'rgba(255,255,255,0.03)' } }}
+                            onMouseLeave={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-2)'; el.style.background = 'transparent' } }}
                         >
-                            <item.icon
-                                size={18}
-                                style={{ color: active ? 'var(--accent)' : 'currentColor', opacity: active ? 1 : 0.85, flexShrink: 0 }}
-                            />
-                            <span style={{ flex: 1 }}>{item.label}</span>
-                            {item.badge && (
+                            <LayoutDashboard size={18} style={{ color: active ? 'var(--accent)' : 'currentColor', opacity: active ? 1 : 0.85, flexShrink: 0 }} />
+                            <span style={{ flex: 1 }}>Tổng quan</span>
+                            {/* % lời/lỗ */}
+                            {returnPct !== null && (
                                 <span style={{
-                                    fontSize: 10, padding: '2px 7px', borderRadius: 999,
-                                    background: 'var(--accent-12)', color: 'var(--accent)',
-                                    letterSpacing: '0.06em', fontWeight: 700,
+                                    fontSize: 10.5, fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                                    color: pctColor,
+                                    letterSpacing: '0.02em',
                                 }}>
-                                    {txnCount}
+                                    {returnPct >= 0 ? '+' : ''}{returnPct.toFixed(1)}%
                                 </span>
                             )}
                         </button>
                     )
-                })}
+                })()}
+
+                {/* Nhập liệu */}
+                {(() => {
+                    const active = isActive('/transaction')
+                    return (
+                        <button
+                            onClick={() => router.push('/transaction')}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '9px 10px', borderRadius: 10,
+                                color: active ? 'var(--t-1)' : 'var(--t-2)',
+                                fontWeight: 500, fontSize: 13.5,
+                                border: `1px solid ${active ? 'rgba(0,200,150,0.18)' : 'transparent'}`,
+                                background: active
+                                    ? 'linear-gradient(180deg, rgba(0,200,150,0.10), rgba(0,200,150,0.04))'
+                                    : 'transparent',
+                                boxShadow: active ? '0 0 0 1px rgba(0,200,150,0.06) inset, 0 8px 22px -16px rgba(0,200,150,0.5)' : 'none',
+                                cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
+                                width: '100%',
+                            }}
+                            onMouseEnter={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-1)'; el.style.background = 'rgba(255,255,255,0.03)' } }}
+                            onMouseLeave={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-2)'; el.style.background = 'transparent' } }}
+                        >
+                            <ArrowDownUp size={18} style={{ color: active ? 'var(--accent)' : 'currentColor', opacity: active ? 1 : 0.85, flexShrink: 0 }} />
+                            <span style={{ flex: 1 }}>Nhập liệu</span>
+                            {txnCount > 0 && (
+                                <span style={{
+                                    fontSize: 10, padding: '2px 7px', borderRadius: 999,
+                                    background: 'var(--accent-12)', color: 'var(--accent)',
+                                    letterSpacing: '0.04em', fontWeight: 700,
+                                }}>
+                                    {txnCount} GD
+                                </span>
+                            )}
+                        </button>
+                    )
+                })()}
+
+                {/* Phân tích */}
+                {(() => {
+                    const active = isActive('/analysis')
+                    return (
+                        <button
+                            onClick={() => router.push('/analysis')}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '9px 10px', borderRadius: 10,
+                                color: active ? 'var(--t-1)' : 'var(--t-2)',
+                                fontWeight: 500, fontSize: 13.5,
+                                border: `1px solid ${active ? 'rgba(0,200,150,0.18)' : 'transparent'}`,
+                                background: active
+                                    ? 'linear-gradient(180deg, rgba(0,200,150,0.10), rgba(0,200,150,0.04))'
+                                    : 'transparent',
+                                boxShadow: active ? '0 0 0 1px rgba(0,200,150,0.06) inset, 0 8px 22px -16px rgba(0,200,150,0.5)' : 'none',
+                                cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
+                                width: '100%',
+                            }}
+                            onMouseEnter={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-1)'; el.style.background = 'rgba(255,255,255,0.03)' } }}
+                            onMouseLeave={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-2)'; el.style.background = 'transparent' } }}
+                        >
+                            <BarChart3 size={18} style={{ color: active ? 'var(--accent)' : 'currentColor', opacity: active ? 1 : 0.85, flexShrink: 0 }} />
+                            <span style={{ flex: 1 }}>Phân tích</span>
+                        </button>
+                    )
+                })()}
             </div>
 
             {/* XP footer card */}
@@ -139,44 +215,26 @@ export default function AppSidebar() {
                             Wave Rider · Level 1
                         </span>
                     </div>
-                    {/* XP bar */}
                     <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                        <span style={{ display: 'block', height: '100%', background: 'linear-gradient(90deg, var(--accent-d), var(--accent-2))', width: '34%', borderRadius: 999 }} />
+                        <span style={{ display: 'block', height: '100%', background: 'linear-gradient(90deg, var(--accent-d), var(--accent-2))', width: `${Math.min(100, (txnCount / 20) * 100)}%`, borderRadius: 999, transition: 'width .5s ease' }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--t-3)', fontSize: 11 }}>
-                        <span>340 / 1000 XP</span>
+                        <span>{txnCount} / 20 GD</span>
                         <span>Lv 2 sắp tới</span>
-                    </div>
-                    <div style={{ color: 'var(--t-2)', fontSize: 12, lineHeight: 1.45 }}>
-                        Ghi nhận 8 giao dịch nữa để lên cấp Sailor.
                     </div>
                 </div>
             </div>
 
             {/* User badge + Bottom actions */}
-            <div
-                style={{
-                    paddingTop: 14,
-                    borderTop: '1px solid var(--line)',
-                    marginTop: 14,
-                    display: 'flex', flexDirection: 'column', gap: 2,
-                }}
-            >
+            <div style={{ paddingTop: 14, borderTop: '1px solid var(--line)', marginTop: 14, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {/* User info */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10 }}>
-                    <div
-                        style={{
-                            width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                            background: 'linear-gradient(135deg, #5b6bff, #00c896)',
-                            display: 'grid', placeItems: 'center',
-                            color: '#fff', fontWeight: 700, fontSize: 13,
-                        }}
-                    >
-                        {(user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'W').charAt(0).toUpperCase()}
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, #5b6bff, #00c896)', display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 700, fontSize: 13 }}>
+                        {initial}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.3, minWidth: 0 }}>
                         <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--t-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Wave Rider'}
+                            {displayName}
                         </span>
                         <span style={{ fontSize: 11, color: 'var(--t-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {user?.email}
@@ -184,61 +242,27 @@ export default function AppSidebar() {
                     </div>
                 </div>
 
-            {/* Cài đặt + Logout */}
-            <div
-                style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                }}
-            >
-                {/* Cài đặt — icon + chữ */}
-                <button
-                    onClick={() => router.push('/profile')}
-                    style={{
-                        flex: 1, display: 'flex', alignItems: 'center', gap: 9,
-                        padding: '9px 10px', borderRadius: 10,
-                        color: 'var(--t-2)', fontWeight: 500, fontSize: 13.5,
-                        background: 'transparent', border: 'none',
-                        cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
-                    }}
-                    onMouseEnter={(e) => {
-                        const el = e.currentTarget as HTMLElement
-                        el.style.color = 'var(--t-1)'
-                        el.style.background = 'rgba(255,255,255,0.05)'
-                    }}
-                    onMouseLeave={(e) => {
-                        const el = e.currentTarget as HTMLElement
-                        el.style.color = 'var(--t-2)'
-                        el.style.background = 'transparent'
-                    }}
-                >
-                    <Settings size={16} style={{ color: 'var(--t-3)', flexShrink: 0 }} />
-                    Cài đặt
-                </button>
-
-                {/* Logout — chỉ icon */}
-                <button
-                    onClick={() => signOut()}
-                    title="Đăng xuất"
-                    style={{
-                        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                        display: 'grid', placeItems: 'center',
-                        color: 'var(--t-3)', background: 'transparent', border: 'none',
-                        cursor: 'pointer', transition: 'all .15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        const el = e.currentTarget as HTMLElement
-                        el.style.color = 'var(--neg)'
-                        el.style.background = 'var(--neg-12)'
-                    }}
-                    onMouseLeave={(e) => {
-                        const el = e.currentTarget as HTMLElement
-                        el.style.color = 'var(--t-3)'
-                        el.style.background = 'transparent'
-                    }}
-                >
-                    <LogOut size={16} />
-                </button>
-            </div>
+                {/* Cài đặt + Logout */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                        onClick={() => router.push('/profile')}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, color: 'var(--t-2)', fontWeight: 500, fontSize: 13.5, background: 'transparent', border: 'none', cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-1)'; el.style.background = 'rgba(255,255,255,0.05)' }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-2)'; el.style.background = 'transparent' }}
+                    >
+                        <Settings size={16} style={{ color: 'var(--t-3)', flexShrink: 0 }} />
+                        Cài đặt
+                    </button>
+                    <button
+                        onClick={() => signOut()}
+                        title="Đăng xuất"
+                        style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, display: 'grid', placeItems: 'center', color: 'var(--t-3)', background: 'transparent', border: 'none', cursor: 'pointer', transition: 'all .15s ease' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--neg)'; el.style.background = 'var(--neg-12)' }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-3)'; el.style.background = 'transparent' }}
+                    >
+                        <LogOut size={16} />
+                    </button>
+                </div>
             </div>
         </aside>
     )
