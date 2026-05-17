@@ -465,6 +465,11 @@
   /* Analysis / generic 2-col → 1-col */
   .mob-single { grid-template-columns: 1fr !important; }
 
+  /* Assets page: desktop grid hidden on mobile */
+  .desktop-asset-grid { display: none !important; }
+  /* Assets page: mobile list shown on mobile */
+  .mob-asset-list { display: flex !important; }
+
   /* Buy/Sell toggle: side-by-side → stacked */
   .mob-toggle-row { flex-direction: column !important; }
   .mob-toggle-row .btn { width: 100% !important; }
@@ -472,4 +477,10 @@
   /* Form footer: split buttons → stacked, full-width */
   .mob-form-footer { flex-direction: column-reverse !important; gap: 10px !important; }
   .mob-form-footer .btn { width: 100% !important; justify-content: center !important; }
+}
+
+/* Desktop: show grid, hide mobile list */
+@media (min-width: 768px) {
+  .desktop-asset-grid { display: grid !important; }
+  .mob-asset-list { display: none !important; }
 }

@@ -208,7 +208,7 @@ export default function AssetsPage() {
 
             {/* ── Desktop Grid (3 cols) ── */}
             {filtered.length > 0 && (
-                <div className="hidden md:grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                <div className="desktop-asset-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                     {filtered.map(item => {
                         const isProfit = item.profitLoss >= 0
                         const isClosed = item.quantity === 0
@@ -298,7 +298,7 @@ export default function AssetsPage() {
 
             {/* ── Mobile List ── */}
             {filtered.length > 0 && (
-                <div className="md:hidden" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="mob-asset-list" style={{ flexDirection: 'column', gap: 10 }}>
                     {filtered.map(item => {
                         const isProfit = item.profitLoss >= 0
                         const isClosed = item.quantity === 0
