@@ -233,7 +233,7 @@ export default function TransactionPage() {
                             {/* Buy / Sell toggle */}
                             <div className="field" style={{ marginBottom: 18 }}>
                                 <label>Loại lệnh</label>
-                                <div className="row" style={{ gap: 10 }}>
+                                <div className="row mob-toggle-row" style={{ gap: 10 }}>
                                     <button
                                         type="button"
                                         className="btn"
@@ -266,7 +266,7 @@ export default function TransactionPage() {
                             </div>
 
                             {/* 4-col numeric fields */}
-                            <div className="mob-num-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+                            <div className="mob-num-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
                                 <div className="field mono">
                                     <label>Số lượng</label>
                                     <input type="number" step="0.01" name="qty" value={formData.qty} onChange={handleChange} placeholder="0,00" />
@@ -293,7 +293,7 @@ export default function TransactionPage() {
 
                     {/* ── Price update mode ── */}
                     {mode === 'price' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                        <div className="mob-single" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                             <div className="field mono">
                                 <label>Giá khớp (đ)</label>
                                 <input type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0" />
@@ -319,7 +319,7 @@ export default function TransactionPage() {
                     )}
 
                     {/* Form footer */}
-                    <div className="row between">
+                    <div className="row between mob-form-footer">
                         <div className="row" style={{ gap: 8 }}>
                             <span className="badge green">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

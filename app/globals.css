@@ -459,9 +459,17 @@
   /* Transaction form: 3-col → 1-col */
   .mob-form-row { grid-template-columns: 1fr !important; }
 
-  /* Numeric 4-col → 2-col */
-  .mob-num-row { grid-template-columns: 1fr 1fr !important; }
+  /* Numeric any-col → 1-col */
+  .mob-num-row { grid-template-columns: 1fr !important; }
 
   /* Analysis / generic 2-col → 1-col */
   .mob-single { grid-template-columns: 1fr !important; }
+
+  /* Buy/Sell toggle: side-by-side → stacked */
+  .mob-toggle-row { flex-direction: column !important; }
+  .mob-toggle-row .btn { width: 100% !important; }
+
+  /* Form footer: split buttons → stacked, full-width */
+  .mob-form-footer { flex-direction: column-reverse !important; gap: 10px !important; }
+  .mob-form-footer .btn { width: 100% !important; justify-content: center !important; }
 }
