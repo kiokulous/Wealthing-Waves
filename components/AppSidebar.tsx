@@ -62,7 +62,7 @@ export default function AppSidebar() {
             }}
         >
             {/* Brand */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 6px' }}>
                 <div
                     style={{
                         width: 36, height: 36, borderRadius: 11, flexShrink: 0,
@@ -79,12 +79,12 @@ export default function AppSidebar() {
                         <circle cx="24" cy="6.5" r="3.5" fill="currentColor" fillOpacity="0.18"/>
                     </svg>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.05 }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--t-1)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--t-1)', lineHeight: 1 }}>
                         Wealthing Waves
                     </span>
-                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 10, letterSpacing: '0.06em' }}>
-                        🌊 Tiền biết tự đẻ ra tiền · v2
+                    <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 10, letterSpacing: '0.05em', lineHeight: 1 }}>
+                        Tiền biết tự đẻ ra tiền
                     </span>
                 </div>
             </div>

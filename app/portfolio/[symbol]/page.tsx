@@ -142,7 +142,7 @@ export default function PortfolioDetailPage() {
             </div>
 
             {/* ── Hero grid: P&L + sparkline (left wide) + 4 stat cards (right) ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 18, marginBottom: 18 }}>
+            <div className="mob-single" style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 18, marginBottom: 18 }}>
 
                 {/* P&L hero card */}
                 <div className="card" style={{ padding: 24, position: 'relative', overflow: 'hidden' }}>
@@ -195,7 +195,7 @@ export default function PortfolioDetailPage() {
             </div>
 
             {/* ── Quick summary bar ── */}
-            <div className="card" style={{ padding: '14px 20px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
+            <div className="card" style={{ padding: '14px 20px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
                 {[
                     { label: 'Giá trị hiện tại', value: fmtFull(detail.currentValue || 0) + ' đ', color: 'var(--t-1)' },
                     { label: 'Lợi nhuận đã thực hiện', value: fmtFull(detail.realized || 0) + ' đ', color: detail.realized >= 0 ? 'var(--accent)' : 'var(--neg)' },

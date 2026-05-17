@@ -113,7 +113,15 @@ export default function TransactionPage() {
         <div style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 60 }}>
 
             {/* ── Header ── */}
-            <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+            {/* Mobile header */}
+            <div className="md:hidden" style={{ marginBottom: 16 }}>
+                <div className="h-title" style={{ fontSize: 22 }}>
+                    Cổng <span style={{ color: 'var(--accent)' }}>Dữ liệu</span>
+                </div>
+                <div className="h-sub">Đồng bộ giao dịch và giá thị trường.</div>
+            </div>
+            {/* Desktop header */}
+            <div className="hidden md:flex row between" style={{ alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                 <div>
                     <div className="h-title">
                         Cổng <span style={{ color: 'var(--accent)' }}>Dữ liệu</span>
@@ -190,7 +198,7 @@ export default function TransactionPage() {
 
                 <form onSubmit={handleSubmit}>
                     {/* Row 1: date / symbol / category */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 18 }}>
+                    <div className="mob-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 18 }}>
                         <div className="field">
                             <label>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -258,7 +266,7 @@ export default function TransactionPage() {
                             </div>
 
                             {/* 4-col numeric fields */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+                            <div className="mob-num-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
                                 <div className="field mono">
                                     <label>Số lượng</label>
                                     <input type="number" step="0.01" name="qty" value={formData.qty} onChange={handleChange} placeholder="0,00" />

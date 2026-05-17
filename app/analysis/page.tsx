@@ -160,10 +160,11 @@ export default function AnalysisPage() {
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
 
             {/* ── Header ── */}
-            <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+            <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                    <div className="h-title">Phân tích <span style={{ color: 'var(--accent)' }}>Nâng cao</span></div>
-                    <div className="h-sub">Trực quan hóa sự cộng hưởng và các chỉ số hiệu suất danh mục của bạn.</div>
+                    <div className="h-title" style={{ fontSize: 22 }}>Phân tích <span style={{ color: 'var(--accent)' }}>Nâng cao</span></div>
+                    <div className="h-sub hidden md:block">Trực quan hóa sự cộng hưởng và các chỉ số hiệu suất danh mục của bạn.</div>
+                    <div className="h-sub md:hidden">Sự cộng hưởng và hiệu suất danh mục.</div>
                 </div>
                 <div className="segmented">
                     {FILTERS.map(([k, l]) => (
@@ -172,8 +173,8 @@ export default function AnalysisPage() {
                 </div>
             </div>
 
-            {/* ── Top 2-col grid ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+            {/* ── Top 2-col grid (1-col on mobile) ── */}
+            <div className="mob-single" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
 
                 {/* Allocation card */}
                 <div className="card" style={{ padding: 22 }}>
@@ -331,7 +332,7 @@ export default function AnalysisPage() {
             </div>
 
             {/* ── 3 insight stat cards ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
+            <div className="mob-single" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
 
                 {/* Win rate */}
                 <div className="card" style={{ padding: 20 }}>

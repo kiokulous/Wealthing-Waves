@@ -435,3 +435,33 @@
 .progress-fill {
   transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ============================================================
+   MOBILE UTILITIES
+   ============================================================ */
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Mobile page wrapper — accounts for bottom nav */
+@media (max-width: 767px) {
+  .mobile-pb { padding-bottom: 80px; }
+
+  /* Tighter card padding on mobile */
+  .card-mobile { padding: 14px !important; }
+
+  /* Full-width on mobile */
+  .mob-full { width: 100% !important; }
+
+  /* AppLayout: disable sidebar grid on mobile */
+  .app-grid { grid-template-columns: 1fr !important; }
+
+  /* Transaction form: 3-col → 1-col */
+  .mob-form-row { grid-template-columns: 1fr !important; }
+
+  /* Numeric 4-col → 2-col */
+  .mob-num-row { grid-template-columns: 1fr 1fr !important; }
+
+  /* Analysis / generic 2-col → 1-col */
+  .mob-single { grid-template-columns: 1fr !important; }
+}

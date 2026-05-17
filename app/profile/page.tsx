@@ -162,16 +162,20 @@ export default function ProfilePage() {
 
             {/* Page header */}
             <div className="mb-6 pt-2">
-                <h1 className="text-[28px] font-bold tracking-tight" style={{ color: 'var(--t-1)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                    Cá nhân
+                <h1 className="text-[28px] font-bold tracking-tight hidden md:block" style={{ color: 'var(--t-1)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                    Tài khoản
                 </h1>
-                <p className="mt-1.5 text-[13.5px]" style={{ color: 'var(--t-2)' }}>
+                {/* Mobile: compact header */}
+                <h1 className="md:hidden text-[22px] font-bold" style={{ color: 'var(--t-1)', letterSpacing: '-0.01em', marginBottom: 2 }}>
+                    Tài khoản
+                </h1>
+                <p className="mt-1.5 text-[13.5px] hidden md:block" style={{ color: 'var(--t-2)' }}>
                     Quản lý hồ sơ, thành tích và tuỳ chọn của bạn trong Wealthing Waves.
                 </p>
             </div>
 
-            {/* Two-column layout */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20 }}>
+            {/* Two-column layout (1-col on mobile) */}
+            <div className="mob-single" style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20 }}>
 
                 {/* LEFT: Profile hero card */}
                 <div

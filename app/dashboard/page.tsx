@@ -154,6 +154,165 @@ export default function DashboardPage() {
     return (
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
 
+            {/* ══ MOBILE LAYOUT ══════════════════════════════════════════════ */}
+            <div className="md:hidden" style={{ paddingBottom: 80 }}>
+                {/* Mobile greeting row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div>
+                        <div style={{ fontSize: 12, color: 'var(--t-3)', marginBottom: 2 }}>{greeting}</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--t-1)', letterSpacing: '-0.01em' }}>
+                            {name} 👋
+                        </div>
+                    </div>
+                    {/* Year filter as select on mobile */}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {[...availableYears.slice(0,2)].map(y => (
+                            <button key={y}
+                                onClick={() => setFilterYear(y)}
+                                style={{
+                                    padding: '6px 12px', borderRadius: 20, fontSize: 12.5, fontWeight: 600,
+                                    border: `1px solid ${filterYear === y ? 'var(--accent)' : 'var(--line)'}`,
+                                    background: filterYear === y ? 'var(--accent-12)' : 'var(--surface-2)',
+                                    color: filterYear === y ? 'var(--accent)' : 'var(--t-2)',
+                                }}
+                            >{y}</button>
+                        ))}
+                        <button
+                            onClick={() => setFilterYear('all')}
+                            style={{
+                                padding: '6px 12px', borderRadius: 20, fontSize: 12.5, fontWeight: 600,
+                                border: `1px solid ${filterYear === 'all' ? 'var(--accent)' : 'var(--line)'}`,
+                                background: filterYear === 'all' ? 'var(--accent-12)' : 'var(--surface-2)',
+                                color: filterYear === 'all' ? 'var(--accent)' : 'var(--t-2)',
+                            }}
+                        >Toàn bộ</button>
+                    </div>
+                </div>
+
+                {/* Mobile: Balance card */}
+                <div className="card" style={{ padding: 20, marginBottom: 12, position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--t-3)', fontWeight: 600, marginBottom: 8 }}>Tổng số dư</div>
+                    <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--t-1)', fontVariantNumeric: 'tabular-nums' }}>
+                        {fmtFull(portfolio.totalCurrentValue)}{' '}
+                        <span style={{ fontSize: 18, fontWeight: 500, color: 'var(--t-3)' }}>đ</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+                        <span className={`delta ${isProfit ? 'pos' : 'neg'}`}>
+                            {isProfit ? '▲' : '+'}{portfolio.totalProfitLossPercent.toFixed(1)}%
+                        </span>
+                        <span style={{ fontSize: 12, color: 'var(--t-3)' }}>
+                            {isProfit ? '+' : ''}{fmtFull(portfolio.totalProfitLoss)} đ tháng này
+                        </span>
+                    </div>
+                    <div style={{ marginTop: 12, marginLeft: -4, marginRight: -4 }}>
+                        <Sparkline data={sparkValues} />
+                    </div>
+                </div>
+
+                {/* Mobile: Phân bổ tài sản */}
+                <div style={{ marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--t-1)' }}>Phân bổ tài sản</span>
+                        <span style={{ fontSize: 12, color: 'var(--t-3)' }}>{portfolio.categories.length} loại</span>
+                    </div>
+                    {/* Horizontal scroll cards */}
+                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+                        {portfolio.categories.map(cat => {
+                            const color = catColors[cat.category] || 'var(--accent)'
+                            const isPos = cat.profitLoss >= 0
+                            const share = portfolio.totalCurrentValue > 0
+                                ? Math.round((cat.currentValue / portfolio.totalCurrentValue) * 100) : 0
+                            return (
+                                <div key={cat.category} className="card" style={{ minWidth: 150, padding: 14, flexShrink: 0, borderRadius: 16 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                        <CategoryIcon category={cat.category as any} className="w-4 h-4" style={{ color }} />
+                                        <span className={`delta ${isPos ? 'pos' : 'neg'}`} style={{ fontSize: 11 }}>
+                                            {isPos ? '+' : ''}{cat.profitLossPercent.toFixed(1)}%
+                                        </span>
+                                    </div>
+                                    <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-4)', fontWeight: 600, marginBottom: 4 }}>{cat.category}</div>
+                                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--t-1)', fontVariantNumeric: 'tabular-nums' }}>
+                                        {fmtShort(cat.currentValue)} đ
+                                    </div>
+                                    <div className="pbar" style={{ marginTop: 10 }}>
+                                        <span style={{ width: `${share}%`, background: color }} />
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                        <span style={{ fontSize: 10, color: 'var(--t-4)' }}>Tỷ trọng</span>
+                                        <span style={{ fontSize: 10, color: 'var(--t-3)', fontWeight: 600 }}>{share}%</span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Mobile: P&L card */}
+                <div className="card" style={{ padding: 18, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                        <div className="ico-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+                        <div>
+                            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--t-1)' }}>Lợi nhuận ròng</div>
+                            <div style={{ fontSize: 11, color: 'var(--t-3)' }}>YTD · Toàn danh mục</div>
+                        </div>
+                        <span className={`delta ${isProfit ? 'pos' : 'neg'}`} style={{ marginLeft: 'auto' }}>
+                            {isProfit ? '+' : ''}{portfolio.totalProfitLossPercent.toFixed(1)}%
+                        </span>
+                    </div>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: isProfit ? 'var(--accent)' : 'var(--neg)', letterSpacing: '-0.02em', marginBottom: 12 }}>
+                        {isProfit ? '+' : '-'}{fmtFull(Math.abs(portfolio.totalProfitLoss))} đ
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--t-3)' }}>Vốn gốc</span>
+                            <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', margin: '0 12px', overflow: 'hidden' }}>
+                                <span style={{ display: 'block', height: '100%', width: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #6ea8ff, #5b6bff)' }} />
+                            </div>
+                            <span style={{ fontSize: 12, color: 'var(--t-2)', fontWeight: 600 }}>{fmtShort(portfolio.totalInvested)} đ</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--t-3)' }}>Lãi/Lỗ</span>
+                            <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)', margin: '0 12px', overflow: 'hidden' }}>
+                                <span style={{ display: 'block', height: '100%', width: `${Math.min(100, Math.abs(portfolio.totalProfitLossPercent) * 5)}%`, borderRadius: 999, background: isProfit ? 'linear-gradient(90deg, var(--accent-d), var(--accent))' : 'var(--neg)' }} />
+                            </div>
+                            <span style={{ fontSize: 12, color: isProfit ? 'var(--accent)' : 'var(--neg)', fontWeight: 600 }}>{isProfit ? '+' : ''}{fmtShort(portfolio.totalProfitLoss)} đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile: Market signals grid 2-col */}
+                <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--t-1)', marginBottom: 10 }}>Danh mục đang nắm</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {portfolio.items.filter(i => i.quantity > 0).sort((a,b) => b.currentValue - a.currentValue).map(item => {
+                        const isPos  = item.profitLoss >= 0
+                        const color  = catColors[item.category] || 'var(--accent)'
+                        return (
+                            <div key={item.symbol} className="card inset"
+                                onClick={() => router.push(`/portfolio/${item.symbol}`)}
+                                style={{ padding: 14, borderRadius: 14, cursor: 'pointer' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface-3)', display: 'grid', placeItems: 'center' }}>
+                                        <CategoryIcon category={item.category as any} className="w-3.5 h-3.5" style={{ color }} />
+                                    </div>
+                                    <span className={`delta ${isPos ? 'pos' : 'neg'}`} style={{ fontSize: 10.5 }}>
+                                        {isPos ? '+' : ''}{item.profitLossPercent.toFixed(1)}%
+                                    </span>
+                                </div>
+                                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--t-1)' }}>{item.symbol}</div>
+                                <div style={{ fontSize: 10, color: 'var(--t-4)', marginTop: 1 }}>{item.category}</div>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-1)', marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>
+                                    {fmtShort(item.currentValue)} đ
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+
+            {/* ══ DESKTOP LAYOUT ═════════════════════════════════════════════ */}
+            <div className="hidden md:block">
+
             {/* ── Greeting row ── */}
             <div className="row between" style={{ alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                 <div>
@@ -188,13 +347,6 @@ export default function DashboardPage() {
                             </button>
                         ))}
                     </div>
-                    <button
-                        className="btn btn-ghost"
-                        style={{ fontSize: 12.5, padding: '7px 14px' }}
-                        onClick={() => {}}
-                    >
-                        ↗ Xuất báo cáo
-                    </button>
                 </div>
             </div>
 
@@ -511,6 +663,8 @@ export default function DashboardPage() {
                 .bar-row .bar > span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent-d), var(--accent)); }
                 .bar-row .bar.alt > span { background: linear-gradient(90deg, #6ea8ff, #5b6bff); }
             `}</style>
+
+            </div>{/* end desktop */}
         </div>
     )
 }
