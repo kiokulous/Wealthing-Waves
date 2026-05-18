@@ -69,7 +69,11 @@ export default function AssetsPage() {
         setRefreshing(true)
         setRefreshMsg(null)
         try {
-            const res = await fetch('/api/refresh-prices', { method: 'POST' })
+            const res = await fetch('/api/refresh-prices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user?.id }),
+            })
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Lỗi không xác định')
 

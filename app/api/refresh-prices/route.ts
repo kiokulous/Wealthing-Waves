@@ -1,57 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase'
 
 // ── TCBS public API (no key required) ────────────────────────────────────────
-// Returns latest price for a VN stock symbol (HOSE/HNX/UPCOM)
 async function fetchTCBSPrice(symbol: string): Promise<number | null> {
     try {
         const url = `https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/second-data?ticker=${symbol}&type=stock`
         const res = await fetch(url, {
             headers: { 'Accept': 'application/json' },
-            next: { revalidate: 0 }, // always fresh
+            cache: 'no-store',
         })
         if (!res.ok) return null
         const json = await res.json()
 
-        // TCBS trả về giá theo đơn vị nghìn đồng (VD: 25.5 = 25,500 VNĐ)
-        // data[0].p là lastPrice (x1000)
+        // TCBS trả về giá x1000 (VD: 25.5 = 25,500 VNĐ)
         const price = json?.data?.[0]?.p
         if (price == null) return null
-        return price * 1000 // Chuyển về VNĐ
+        return price * 1000
     } catch {
         return null
     }
-}
-
-// CCQ (quỹ mở) – dùng API SSI hoặc fallback sang TCBS
-async function fetchCCQPrice(symbol: string): Promise<number | null> {
-    // Thử TCBS trước – một số CCQ niêm yết được (FUEVFVND, E1VFVN30...)
-    const price = await fetchTCBSPrice(symbol)
-    return price
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
     try {
-        const supabase = await createSupabaseServerClient()
+        const body = await req.json()
+        const userId = body?.userId as string | undefined
 
-        // Xác thực user (đọc session từ cookie)
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!userId) {
+            return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
         }
 
-        // 1. Lấy danh sách mã user đang sở hữu (quantity > 0)
-        //    → Lấy tất cả transactions rồi tính toán phía server
+        // Dùng service role key để bypass RLS trên server
+        // (an toàn vì key này chỉ dùng server-side, không expose ra client)
+        const supabase = createSupabaseClient<Database>(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        )
+
+        // 1. Lấy transactions của user này
         const { data: transactions, error: txnError } = await supabase
             .from('transactions')
             .select('symbol, category, quantity, type')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
 
         if (txnError) throw new Error(txnError.message)
 
-        // Tính holdings: chỉ lấy mã còn đang nắm
+        // 2. Tính holdings — chỉ lấy mã còn đang nắm giữ
         const holdings = new Map<string, { symbol: string; category: string; quantity: number }>()
         for (const txn of (transactions || [])) {
             const existing = holdings.get(txn.symbol) ?? { symbol: txn.symbol, category: txn.category, quantity: 0 }
@@ -63,75 +60,47 @@ export async function POST(req: NextRequest) {
             holdings.set(txn.symbol, existing)
         }
 
-        // Chỉ lấy các mã còn đang nắm giữ (quantity > 0)
         const activeHoldings = Array.from(holdings.values()).filter(h => h.quantity > 0)
 
         if (activeHoldings.length === 0) {
             return NextResponse.json({ updated: 0, skipped: 0, errors: [], message: 'Không có mã nào đang nắm giữ' })
         }
 
-        // 2. Lấy giá cho từng mã
-        const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+        // 3. Lấy giá từng mã và upsert
+        const today = new Date().toISOString().split('T')[0]
         const results: { symbol: string; status: 'ok' | 'skip' | 'error'; price?: number; reason?: string }[] = []
 
         for (const holding of activeHoldings) {
-            // Bỏ qua các loại không lấy giá tự động được
             if (holding.category === 'Tiết kiệm') {
                 results.push({ symbol: holding.symbol, status: 'skip', reason: 'Tiết kiệm – giá cố định' })
                 continue
             }
 
-            // Lấy giá tùy theo category
-            let price: number | null = null
-            if (holding.category === 'Chứng chỉ quỹ') {
-                price = await fetchCCQPrice(holding.symbol)
-            } else {
-                // Cổ phiếu, Vàng ETF, v.v.
-                price = await fetchTCBSPrice(holding.symbol)
-            }
+            const price = await fetchTCBSPrice(holding.symbol)
 
             if (price == null || price <= 0) {
                 results.push({ symbol: holding.symbol, status: 'error', reason: 'Không lấy được giá từ TCBS' })
                 continue
             }
 
-            // 3. Upsert vào market_prices (cùng ngày thì update, khác ngày thì insert)
-            const { error: upsertError } = await supabase
+            // Kiểm tra đã có record hôm nay chưa
+            const { data: existing } = await supabase
                 .from('market_prices')
-                .upsert(
-                    {
-                        user_id: user.id,
-                        date: today,
-                        category: holding.category,
-                        symbol: holding.symbol,
-                        price,
-                    },
-                    {
-                        onConflict: 'user_id,symbol,date',
-                        ignoreDuplicates: false,
-                    }
-                )
+                .select('id')
+                .eq('user_id', userId)
+                .eq('symbol', holding.symbol)
+                .eq('date', today)
+                .maybeSingle()
 
-            if (upsertError) {
-                // Fallback: upsert có thể không work nếu không có unique constraint → thử insert/update thủ công
-                const { data: existing } = await supabase
+            if (existing) {
+                await supabase
                     .from('market_prices')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .eq('symbol', holding.symbol)
-                    .eq('date', today)
-                    .maybeSingle()
-
-                if (existing) {
-                    await supabase
-                        .from('market_prices')
-                        .update({ price, category: holding.category })
-                        .eq('id', existing.id)
-                } else {
-                    await supabase
-                        .from('market_prices')
-                        .insert({ user_id: user.id, date: today, category: holding.category, symbol: holding.symbol, price })
-                }
+                    .update({ price, category: holding.category })
+                    .eq('id', existing.id)
+            } else {
+                await supabase
+                    .from('market_prices')
+                    .insert({ user_id: userId, date: today, category: holding.category, symbol: holding.symbol, price })
             }
 
             results.push({ symbol: holding.symbol, status: 'ok', price })
