@@ -71,6 +71,8 @@ export default function DashboardPage() {
     const [chartData, setChartData]       = useState<{ date: string; value: number }[]>([])
     const [filterYear, setFilterYear]     = useState<number | 'all'>('all')
     const [availableYears, setAvailableYears] = useState<number[]>([])
+    const [refreshing, setRefreshing]     = useState(false)
+    const [refreshErrors, setRefreshErrors] = useState<string[]>([])
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/login')
@@ -106,6 +108,22 @@ export default function DashboardPage() {
         setChartData(calculatePortfolioHistory(transactions, marketPrices, 12))
     }
 
+    const handleRefreshPrices = async () => {
+        setRefreshing(true)
+        setRefreshErrors([])
+        try {
+            const res = await fetch('/api/refresh-prices', { method: 'POST' })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Lỗi không xác định')
+            if (data.errors?.length) setRefreshErrors(data.errors)
+            await loadData()
+        } catch (err: any) {
+            setRefreshErrors([err.message || 'Cập nhật thất bại'])
+        } finally {
+            setRefreshing(false)
+        }
+    }
+
     if (authLoading || loading) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
@@ -130,10 +148,22 @@ export default function DashboardPage() {
     const name       = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Wave Rider'
     const today      = new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
     const activeItems = portfolio.items.filter(i => i.quantity > 0).length
-    const lastUpdate = marketPrices.length > 0
+    const lastUpdateDate = marketPrices.length > 0
         ? new Date(Math.max(...marketPrices.map(p => new Date(p.date).getTime())))
-            .toLocaleDateString('vi-VN', { day: '2-digit', month: 'numeric', year: 'numeric' })
+        : null
+
+    const lastUpdate = lastUpdateDate
+        ? lastUpdateDate.toLocaleDateString('vi-VN', { day: '2-digit', month: 'numeric', year: 'numeric' })
         : '—'
+
+    // Badge đồng bộ: xanh nếu có giá hôm nay, xám + số ngày nếu không
+    const todayStr = new Date().toISOString().split('T')[0]
+    const isSyncedToday = lastUpdateDate
+        ? lastUpdateDate.toISOString().split('T')[0] === todayStr
+        : false
+    const daysSinceUpdate = lastUpdateDate
+        ? Math.floor((Date.now() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24))
+        : null
 
     const sparkValues = chartData.map(d => d.value)
     const monthLabels = ['T6','T7','T8','T9','T10','T11','T12','T1','T2','T3','T4','T5']
@@ -164,8 +194,38 @@ export default function DashboardPage() {
                             {name} 👋
                         </div>
                     </div>
-                    {/* Year filter as select on mobile */}
-                    <div style={{ display: 'flex', gap: 6 }}>
+                    {/* Year filter + Refresh button */}
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {/* Refresh icon button */}
+                        <button
+                            onClick={handleRefreshPrices}
+                            disabled={refreshing}
+                            title="Cập nhật giá thị trường"
+                            style={{
+                                width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                                display: 'grid', placeItems: 'center',
+                                background: isSyncedToday ? 'var(--accent-12)' : 'var(--surface-2)',
+                                border: `1px solid ${isSyncedToday ? 'var(--accent-18)' : 'var(--line)'}`,
+                                color: isSyncedToday ? 'var(--accent)' : 'var(--t-3)',
+                                cursor: refreshing ? 'not-allowed' : 'pointer',
+                            }}
+                        >
+                            {refreshing ? (
+                                <span style={{
+                                    width: 13, height: 13,
+                                    border: '2px solid var(--accent-18)', borderTopColor: 'var(--accent)',
+                                    borderRadius: '50%', display: 'block',
+                                    animation: 'spin .7s linear infinite',
+                                }} />
+                            ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                    <path d="M21 3v5h-5"/>
+                                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                    <path d="M8 16H3v5"/>
+                                </svg>
+                            )}
+                        </button>
                         {[...availableYears.slice(0,2)].map(y => (
                             <button key={y}
                                 onClick={() => setFilterYear(y)}
@@ -208,6 +268,45 @@ export default function DashboardPage() {
                         <Sparkline data={sparkValues} />
                     </div>
                 </div>
+
+                {/* Mobile: Bảng lỗi đồng bộ */}
+                {refreshErrors.length > 0 && (
+                    <div style={{
+                        marginBottom: 12, padding: '10px 12px', borderRadius: 12,
+                        background: 'rgba(255, 80, 80, 0.07)', border: '1px solid rgba(255,80,80,0.18)',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5050" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#ff5050', letterSpacing: '0.04em' }}>
+                                Cần nhập giá thủ công:
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                            {refreshErrors.map((err, i) => {
+                                const symbol = err.split(':')[0].trim()
+                                return (
+                                    <span
+                                        key={i}
+                                        onClick={() => router.push(`/portfolio/${symbol}`)}
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                                            padding: '3px 8px', borderRadius: 6, fontSize: 11.5,
+                                            fontWeight: 700, fontFamily: 'monospace',
+                                            background: 'rgba(255,80,80,0.12)', color: '#ff8080',
+                                            border: '1px solid rgba(255,80,80,0.2)',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {symbol}
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                    </span>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Mobile: Phân bổ tài sản */}
                 <div style={{ marginBottom: 4 }}>
@@ -488,23 +587,86 @@ export default function DashboardPage() {
                         </button>
                         <button
                             className="btn btn-ghost"
-                            style={{ justifyContent: 'space-between', padding: '12px 14px', width: '100%' }}
-                            onClick={() => router.push('/analysis')}
+                            style={{ justifyContent: 'space-between', padding: '12px 14px', width: '100%', opacity: refreshing ? 0.6 : 1 }}
+                            onClick={handleRefreshPrices}
+                            disabled={refreshing}
                         >
                             <span className="row" style={{ gap: 8 }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                                Phân tích chi tiết
+                                {refreshing ? (
+                                    <span style={{
+                                        width: 14, height: 14, border: '2px solid var(--line)',
+                                        borderTopColor: 'var(--accent)', borderRadius: '50%',
+                                        display: 'inline-block', animation: 'spin .7s linear infinite', flexShrink: 0,
+                                    }} />
+                                ) : (
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                        <path d="M21 3v5h-5"/>
+                                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                        <path d="M8 16H3v5"/>
+                                    </svg>
+                                )}
+                                {refreshing ? 'Đang cập nhật...' : 'Cập nhật giá thị trường'}
                             </span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                            {!refreshing && (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                            )}
                         </button>
                     </div>
 
                     <div style={{ flex: 1 }} />
+
+                    {/* ── Bảng lỗi: mã cần đồng bộ thủ công ── */}
+                    {refreshErrors.length > 0 && (
+                        <div style={{
+                            marginTop: 10, padding: '10px 12px', borderRadius: 10,
+                            background: 'rgba(255, 80, 80, 0.07)', border: '1px solid rgba(255,80,80,0.18)',
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5050" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: '#ff5050', letterSpacing: '0.04em' }}>
+                                    Cần nhập giá thủ công:
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                {refreshErrors.map((err, i) => {
+                                    const symbol = err.split(':')[0].trim()
+                                    return (
+                                        <span
+                                            key={i}
+                                            onClick={() => router.push(`/portfolio/${symbol}`)}
+                                            style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                padding: '3px 8px', borderRadius: 6, fontSize: 11.5,
+                                                fontWeight: 700, fontFamily: 'monospace',
+                                                background: 'rgba(255,80,80,0.12)', color: '#ff8080',
+                                                border: '1px solid rgba(255,80,80,0.2)',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {symbol}
+                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                        </span>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="row" style={{ gap: 8, marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
-                        <span className="badge green">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            Đồng bộ
-                        </span>
+                        {isSyncedToday ? (
+                            <span className="badge green">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Đồng bộ
+                            </span>
+                        ) : (
+                            <span className="badge muted" style={{ background: 'var(--surface-2)', color: 'var(--t-3)', border: '1px solid var(--line)' }}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                {daysSinceUpdate === null ? 'Chưa có dữ liệu' : daysSinceUpdate === 0 ? 'Hôm nay' : `${daysSinceUpdate} ngày trước`}
+                            </span>
+                        )}
                         <span className="muted" style={{ fontSize: 11.5 }}>cập nhật mới nhất {lastUpdate}</span>
                     </div>
                 </div>

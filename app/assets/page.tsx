@@ -54,6 +54,8 @@ export default function AssetsPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterCat, setFilterCat]   = useState('all')
     const [loading, setLoading]       = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
+    const [refreshMsg, setRefreshMsg] = useState<{ text: string; ok: boolean } | null>(null)
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/login')
@@ -62,6 +64,25 @@ export default function AssetsPage() {
     useEffect(() => {
         if (user) loadData()
     }, [user])
+
+    const handleRefreshPrices = async () => {
+        setRefreshing(true)
+        setRefreshMsg(null)
+        try {
+            const res = await fetch('/api/refresh-prices', { method: 'POST' })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Lỗi không xác định')
+
+            const errNote = data.errors?.length > 0 ? ` (${data.errors.length} mã lỗi)` : ''
+            setRefreshMsg({ text: `Đã cập nhật ${data.updated} mã${errNote}`, ok: true })
+            await loadData() // Reload portfolio
+        } catch (err: any) {
+            setRefreshMsg({ text: err.message || 'Cập nhật thất bại', ok: false })
+        } finally {
+            setRefreshing(false)
+            setTimeout(() => setRefreshMsg(null), 4000)
+        }
+    }
 
     const loadData = async () => {
         try {
@@ -143,9 +164,59 @@ export default function AssetsPage() {
                         <span style={{ fontSize: 13, marginLeft: 6 }}>({totalPct >= 0 ? '+' : ''}{totalPct.toFixed(2)}%)</span>
                     </div>
                 </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                     <span className="badge muted">{activeCount} đang nắm</span>
                     {closedCount > 0 && <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--t-3)', border: '1px solid var(--line)' }}>{closedCount} tất toán</span>}
+
+                    {/* Refresh Prices Button */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {refreshMsg && (
+                            <span style={{
+                                fontSize: 12, fontWeight: 600,
+                                color: refreshMsg.ok ? 'var(--accent)' : 'var(--neg)',
+                                transition: 'opacity .3s',
+                            }}>
+                                {refreshMsg.text}
+                            </span>
+                        )}
+                        <button
+                            onClick={handleRefreshPrices}
+                            disabled={refreshing}
+                            title="Cập nhật giá thị trường từ TCBS"
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                padding: '6px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 600,
+                                background: refreshing ? 'var(--surface-3)' : 'var(--accent-12)',
+                                color: refreshing ? 'var(--t-3)' : 'var(--accent)',
+                                border: '1px solid',
+                                borderColor: refreshing ? 'var(--line)' : 'var(--accent-18)',
+                                cursor: refreshing ? 'not-allowed' : 'pointer',
+                                transition: 'background .15s, color .15s',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {refreshing ? (
+                                <>
+                                    <span style={{
+                                        width: 12, height: 12, border: '2px solid var(--accent-18)',
+                                        borderTopColor: 'var(--accent)', borderRadius: '50%',
+                                        display: 'inline-block', animation: 'spin .7s linear infinite', flexShrink: 0,
+                                    }} />
+                                    Đang cập nhật...
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                        <path d="M21 3v5h-5"/>
+                                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                        <path d="M8 16H3v5"/>
+                                    </svg>
+                                    Cập nhật giá
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
 
