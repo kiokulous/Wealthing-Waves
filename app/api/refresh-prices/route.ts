@@ -10,14 +10,18 @@ async function fetchTCBSPrice(symbol: string): Promise<number | null> {
             headers: { 'Accept': 'application/json' },
             cache: 'no-store',
         })
+        const text = await res.text()
+        console.log(`[TCBS][${symbol}] status=${res.status} body=${text.slice(0, 300)}`)
         if (!res.ok) return null
-        const json = await res.json()
+        const json = JSON.parse(text)
 
         // TCBS trả về giá x1000 (VD: 25.5 = 25,500 VNĐ)
         const price = json?.data?.[0]?.p
+        console.log(`[TCBS][${symbol}] parsed price field=`, price)
         if (price == null) return null
         return price * 1000
-    } catch {
+    } catch (e) {
+        console.error(`[TCBS][${symbol}] error:`, e)
         return null
     }
 }
