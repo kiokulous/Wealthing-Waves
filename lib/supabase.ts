@@ -33,20 +33,23 @@ export type Database = {
                 Row: Transaction
                 Insert: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>
                 Update: Partial<Omit<Transaction, 'id' | 'created_at' | 'updated_at'>>
+                Relationships: []
             }
             market_prices: {
                 Row: MarketPrice
                 Insert: Omit<MarketPrice, 'id' | 'created_at' | 'updated_at'>
                 Update: Partial<Omit<MarketPrice, 'id' | 'created_at' | 'updated_at'>>
+                Relationships: []
             }
         }
+        Views: Record<string, never>
+        Functions: Record<string, never>
+        Enums: Record<string, never>
+        CompositeTypes: Record<string, never>
     }
 }
 
-// Singleton pattern to prevent multiple instances
-let supabase: ReturnType<typeof initSupabase> | null = null
-
-function initSupabase() {
+export const createClient = () => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -61,12 +64,6 @@ function initSupabase() {
             autoRefreshToken: true,
         }
     })
-}
-
-export const createClient = () => {
-    if (supabase) return supabase
-    supabase = initSupabase()
-    return supabase
 }
 
 // Helper to get the current user

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 // ── TCBS public API (no key required) ────────────────────────────────────────
 // Returns latest price for a VN stock symbol (HOSE/HNX/UPCOM)
@@ -34,9 +34,9 @@ async function fetchCCQPrice(symbol: string): Promise<number | null> {
 
 export async function POST(req: NextRequest) {
     try {
-        const supabase = createClient()
+        const supabase = await createSupabaseServerClient()
 
-        // Xác thực user
+        // Xác thực user (đọc session từ cookie)
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
