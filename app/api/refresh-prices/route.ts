@@ -2,26 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase'
 
-// ── TCBS public API (no key required) ────────────────────────────────────────
-async function fetchTCBSPrice(symbol: string): Promise<number | null> {
+// ── VNDirect public API (no key required) ────────────────────────────────────
+// Endpoint: https://finfo-api.vndirect.com.vn/v4/stock_prices
+// closePriceAdjusted là giá đóng cửa đã điều chỉnh (VNĐ)
+async function fetchVNDirectPrice(symbol: string): Promise<number | null> {
     try {
-        const url = `https://apipubaws.tcbs.com.vn/stock-insight/v1/stock/second-data?ticker=${symbol}&type=stock`
+        const url = `https://finfo-api.vndirect.com.vn/v4/stock_prices?sort=date:desc&q=code:${symbol}&size=1`
         const res = await fetch(url, {
-            headers: { 'Accept': 'application/json' },
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0',
+            },
             cache: 'no-store',
         })
         const text = await res.text()
-        console.log(`[TCBS][${symbol}] status=${res.status} body=${text.slice(0, 300)}`)
+        console.log(`[VNDirect][${symbol}] status=${res.status} body=${text.slice(0, 300)}`)
         if (!res.ok) return null
         const json = JSON.parse(text)
 
-        // TCBS trả về giá x1000 (VD: 25.5 = 25,500 VNĐ)
-        const price = json?.data?.[0]?.p
-        console.log(`[TCBS][${symbol}] parsed price field=`, price)
+        // Response: { data: [{ close: 88500, ... }] }
+        const item = json?.data?.[0]
+        console.log(`[VNDirect][${symbol}] item=`, JSON.stringify(item))
+        const price = item?.close ?? item?.closePriceAdjusted ?? item?.matchPrice
         if (price == null) return null
-        return price * 1000
+        return Number(price)
     } catch (e) {
-        console.error(`[TCBS][${symbol}] error:`, e)
+        console.error(`[VNDirect][${symbol}] error:`, e)
         return null
     }
 }
@@ -80,7 +86,7 @@ export async function POST(req: NextRequest) {
                 continue
             }
 
-            const price = await fetchTCBSPrice(holding.symbol)
+            const price = await fetchVNDirectPrice(holding.symbol)
 
             if (price == null || price <= 0) {
                 results.push({ symbol: holding.symbol, status: 'error', reason: 'Không lấy được giá từ TCBS' })
