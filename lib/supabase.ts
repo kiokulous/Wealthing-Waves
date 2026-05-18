@@ -49,7 +49,12 @@ export type Database = {
     }
 }
 
-export const createClient = () => {
+type SupabaseClient = ReturnType<typeof createSupabaseClient<Database>>
+let _instance: SupabaseClient | null = null
+
+export const createClient = (): SupabaseClient => {
+    if (_instance) return _instance
+
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -58,12 +63,13 @@ export const createClient = () => {
         throw new Error("Missing Supabase credentials in .env.local")
     }
 
-    return createSupabaseClient<Database>(url, key, {
+    _instance = createSupabaseClient<Database>(url, key, {
         auth: {
             persistSession: true,
             autoRefreshToken: true,
         }
     })
+    return _instance
 }
 
 // Helper to get the current user
