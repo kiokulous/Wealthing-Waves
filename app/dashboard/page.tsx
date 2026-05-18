@@ -5,6 +5,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio, calculatePortfolioHistory } from '@/lib/api/portfolio'
+import { fetchMarketPrices } from '@/lib/api/market-prices'
 import CategoryIcon from '@/components/CategoryIcon'
 import type { Transaction, MarketPrice } from '@/lib/supabase'
 import type { PortfolioSummary } from '@/lib/api/portfolio'
@@ -112,17 +113,50 @@ export default function DashboardPage() {
         setRefreshing(true)
         setRefreshErrors([])
         try {
-            const res = await fetch('/api/refresh-prices', {
+            // 1. Tính danh sách mã đang nắm giữ từ transactions đã load
+            const holdingsMap = new Map<string, { symbol: string; category: string; quantity: number }>()
+            for (const txn of transactions) {
+                const h = holdingsMap.get(txn.symbol) ?? { symbol: txn.symbol, category: txn.category, quantity: 0 }
+                if (txn.type === 'Mua') h.quantity += txn.quantity
+                else if (txn.type === 'Chốt' || txn.type === 'Bán') h.quantity -= txn.quantity
+                holdingsMap.set(txn.symbol, h)
+            }
+            const activeHoldings = Array.from(holdingsMap.values()).filter(h => h.quantity > 0)
+
+            if (activeHoldings.length === 0) return
+
+            // 2. Browser fetch giá thẳng từ VNDirect (không bị block)
+            const fetchResults = await fetchMarketPrices(activeHoldings)
+
+            const errors = fetchResults
+                .filter(r => r.price == null && r.category !== 'Tiết kiệm')
+                .map(r => `${r.symbol}: ${r.error}`)
+            if (errors.length) setRefreshErrors(errors)
+
+            const pricesToSave = fetchResults.filter(r => r.price != null)
+            if (pricesToSave.length === 0) {
+                setRefreshErrors(prev => [...prev, 'Không lấy được giá nào — VNDirect có thể đang bảo trì'])
+                return
+            }
+
+            // 3. Gửi lên server để lưu DB
+            const res = await fetch('/api/save-prices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user?.id }),
+                body: JSON.stringify({
+                    userId: user?.id,
+                    prices: pricesToSave.map(r => ({ symbol: r.symbol, category: r.category, price: r.price })),
+                }),
             })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || 'Lỗi không xác định')
-            if (data.errors?.length) setRefreshErrors(data.errors)
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.error || 'Lưu giá thất bại')
+            }
+
+            // 4. Reload portfolio
             await loadData()
         } catch (err: any) {
-            setRefreshErrors([err.message || 'Cập nhật thất bại'])
+            setRefreshErrors(prev => [...prev, err.message || 'Cập nhật thất bại'])
         } finally {
             setRefreshing(false)
         }
