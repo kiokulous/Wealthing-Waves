@@ -185,6 +185,28 @@ export default function DashboardPage() {
     const greeting   = hour < 12 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
     const name       = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Wave Rider'
     const today      = new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+    // Random sub-greeting — hài hước, thay đổi mỗi lần load
+    const GREETINGS_POS = [
+        `Danh mục đang xanh mướt 🌿 Tiếp tục cưỡi sóng đi!`,
+        `Số dương là ngôn ngữ của người chiến thắng 💸`,
+        `Danh mục đang bơi ngược dòng thị trường — theo chiều tốt 🏄`,
+        `Tiền đang đẻ ra tiền. Cứ thế mà bay 🚀`,
+        `Chill thôi, portfolio đang tự làm việc thay bạn ☕`,
+        `${portfolio.totalProfitLossPercent.toFixed(1)}% — không tệ cho một người "chỉ thử xem" 😏`,
+        `Thị trường gặp khó, bạn vẫn xanh. Flex nhẹ đi! 💪`,
+    ]
+    const GREETINGS_NEG = [
+        `Thị trường đang test tâm lý bạn. Giữ vững nào 🧘`,
+        `Drawdown là học phí. Hôm nay học bài gì vậy? 📚`,
+        `Đỏ hôm nay, xanh ngày mai — đó gọi là đầu tư 🔄`,
+        `Thị trường không ngủ, nhưng bạn nên ngủ ngon 😴`,
+        `Mọi danh mục huyền thoại đều từng trải qua ngày này 🗿`,
+        `${Math.abs(portfolio.totalProfitLossPercent).toFixed(1)}% âm — nhưng bạn vẫn còn trong game 🎯`,
+    ]
+    const greetingPool = isProfit ? GREETINGS_POS : GREETINGS_NEG
+    // dùng giờ hiện tại làm seed để ổn định trong session, đổi mỗi giờ
+    const subGreeting  = greetingPool[new Date().getHours() % greetingPool.length]
     const activeItems = portfolio.items.filter(i => i.quantity > 0).length
     const lastUpdateDate = marketPrices.length > 0
         ? new Date(Math.max(...marketPrices.map(p => new Date(p.date).getTime())))
@@ -264,26 +286,21 @@ export default function DashboardPage() {
                                 </svg>
                             )}
                         </button>
-                        {[...availableYears.slice(0,2)].map(y => (
-                            <button key={y}
-                                onClick={() => setFilterYear(y)}
-                                style={{
-                                    padding: '6px 12px', borderRadius: 20, fontSize: 12.5, fontWeight: 600,
-                                    border: `1px solid ${filterYear === y ? 'var(--accent)' : 'var(--line)'}`,
-                                    background: filterYear === y ? 'var(--accent-12)' : 'var(--surface-2)',
-                                    color: filterYear === y ? 'var(--accent)' : 'var(--t-2)',
-                                }}
-                            >{y}</button>
-                        ))}
-                        <button
-                            onClick={() => setFilterYear('all')}
+                        <select
+                            value={filterYear}
+                            onChange={e => setFilterYear(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                             style={{
-                                padding: '6px 12px', borderRadius: 20, fontSize: 12.5, fontWeight: 600,
-                                border: `1px solid ${filterYear === 'all' ? 'var(--accent)' : 'var(--line)'}`,
-                                background: filterYear === 'all' ? 'var(--accent-12)' : 'var(--surface-2)',
-                                color: filterYear === 'all' ? 'var(--accent)' : 'var(--t-2)',
+                                padding: '6px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 600,
+                                border: `1px solid ${filterYear !== 'all' ? 'var(--accent-30)' : 'var(--line)'}`,
+                                background: filterYear !== 'all' ? 'var(--accent-12)' : 'var(--surface-2)',
+                                color: filterYear !== 'all' ? 'var(--accent)' : 'var(--t-2)',
+                                appearance: 'none', outline: 'none', cursor: 'pointer',
+                                colorScheme: 'dark',
                             }}
-                        >Toàn bộ</button>
+                        >
+                            <option value="all">Toàn bộ</option>
+                            {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
                     </div>
                 </div>
 
@@ -458,31 +475,50 @@ export default function DashboardPage() {
                         <span style={{ marginLeft: 10, fontSize: 20 }}>👋</span>
                     </div>
                     <div style={{ color: 'var(--t-3)', fontSize: 13, marginTop: 4 }}>
-                        Hôm nay {today} · Danh mục đang sinh lời{' '}
-                        <span style={{ color: isProfit ? 'var(--accent)' : 'var(--neg)', fontWeight: 600 }}>
-                            {isProfit ? '+' : ''}{portfolio.totalProfitLossPercent.toFixed(1)}%
-                        </span>{' '}so với tháng trước.
+                        {today} · {subGreeting}
                     </div>
                 </div>
 
-                <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
-                    {/* Year filter */}
-                    <div className="segmented">
-                        <button
-                            className={filterYear === 'all' ? 'on' : ''}
-                            onClick={() => setFilterYear('all')}
+                <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+                    {/* Year filter — dropdown scales with any number of years */}
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <svg
+                            width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="var(--t-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ position: 'absolute', left: 11, pointerEvents: 'none', zIndex: 1 }}
                         >
-                            Toàn bộ
-                        </button>
-                        {availableYears.map(y => (
-                            <button
-                                key={y}
-                                className={filterYear === y ? 'on' : ''}
-                                onClick={() => setFilterYear(y)}
-                            >
-                                {y}
-                            </button>
-                        ))}
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <select
+                            value={filterYear}
+                            onChange={e => setFilterYear(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                            style={{
+                                paddingLeft: 32, paddingRight: 28, height: 36,
+                                background: 'var(--surface-2)',
+                                border: `1px solid ${filterYear !== 'all' ? 'var(--accent-30)' : 'var(--line)'}`,
+                                borderRadius: 10,
+                                color: filterYear !== 'all' ? 'var(--accent)' : 'var(--t-1)',
+                                fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+                                appearance: 'none', outline: 'none', cursor: 'pointer',
+                                colorScheme: 'dark',
+                                boxShadow: filterYear !== 'all' ? '0 0 0 3px var(--accent-12)' : 'none',
+                                transition: 'border-color .15s, box-shadow .15s',
+                            }}
+                        >
+                            <option value="all">Toàn bộ</option>
+                            {availableYears.map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                        <svg
+                            width="11" height="11" viewBox="0 0 24 24" fill="none"
+                            stroke="var(--t-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ position: 'absolute', right: 9, pointerEvents: 'none' }}
+                        >
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -542,9 +578,10 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className={`value-lg mono num ${isProfit ? 'delta pos' : 'delta neg'}`}
-                        style={{ color: isProfit ? 'var(--accent)' : 'var(--neg)', background: 'transparent', padding: 0 }}>
-                        {isProfit ? '+ ' : '- '}{fmtFull(Math.abs(portfolio.totalProfitLoss))} đ
+                    <div className="value-xl mono num"
+                        style={{ color: isProfit ? 'var(--accent)' : 'var(--neg)', marginTop: 4, marginBottom: 2, fontSize: 28, letterSpacing: '-0.02em' }}>
+                        {isProfit ? '+ ' : '- '}{fmtFull(Math.abs(portfolio.totalProfitLoss))}
+                        <span style={{ color: isProfit ? 'rgba(0,200,150,0.6)' : 'rgba(255,90,110,0.6)', fontSize: 18, fontWeight: 500 }}> đ</span>
                     </div>
                     <div className="row" style={{ gap: 8, marginTop: 6 }}>
                         <span className={`delta ${isProfit ? 'pos' : 'neg'}`}>
@@ -557,7 +594,9 @@ export default function DashboardPage() {
 
                     <div className="row between" style={{ marginBottom: 8 }}>
                         <span className="label-cap">Vốn vs Lãi/Lỗ</span>
-                        <span className="muted" style={{ fontSize: 11 }}>Hàng tháng</span>
+                        <span className="muted" style={{ fontSize: 11 }}>
+                            {filterYear === 'all' ? 'Toàn bộ' : filterYear}
+                        </span>
                     </div>
                     <div className="col" style={{ gap: 10 }}>
                         <div className="bar-row">

@@ -487,7 +487,7 @@ export default function AnalysisPage() {
                 {bcgData.length === 0 ? (
                     <p className="muted" style={{ fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Chưa có dữ liệu danh mục</p>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
+                    <div className="bcg-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
 
                         {/* ── Top row: High growth ── */}
                         {/* ⭐ Đáng chú ý — high growth, low weight */}
@@ -604,7 +604,12 @@ export default function AnalysisPage() {
                 </div>
             </div>
 
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <style>{`
+                @keyframes spin{to{transform:rotate(360deg)}}
+                @media (max-width: 767px) {
+                    .bcg-grid { grid-template-columns: 1fr !important; }
+                }
+            `}</style>
         </div>
     )
 }

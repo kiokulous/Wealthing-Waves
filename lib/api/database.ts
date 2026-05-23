@@ -166,6 +166,29 @@ export async function deleteTransaction(id: string): Promise<void> {
     }
 }
 
+/**
+ * Delete ALL transactions belonging to the currently authenticated user.
+ * Safe: always scoped to user_id — never touches other users' data.
+ */
+export async function deleteAllMyTransactions(): Promise<number> {
+    const supabase = createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { error, count } = await supabase
+        .from('transactions')
+        .delete({ count: 'exact' })
+        .eq('user_id', user.id)
+
+    if (error) {
+        console.error('Error deleting all transactions:', error)
+        throw new Error(error.message)
+    }
+
+    return count ?? 0
+}
+
 // ================================================
 // MARKET PRICES API
 // ================================================

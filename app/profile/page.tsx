@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { createClient } from '@/lib/supabase'
-import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
+import { getAllTransactions, getAllMarketPrices, deleteAllMyTransactions } from '@/lib/api/database'
 import { calculatePortfolio } from '@/lib/api/portfolio'
-import { Save, X, Loader2, LogOut, ShieldCheck, UserCircle, TrendingUp, Wallet, Calendar } from 'lucide-react'
+import { Save, X, Loader2, LogOut, ShieldCheck, UserCircle, TrendingUp, Wallet, Calendar, Trash2, AlertTriangle } from 'lucide-react'
 import { getUserLevel } from '@/lib/userLevel'
 
 export default function ProfilePage() {
@@ -20,6 +20,11 @@ export default function ProfilePage() {
     const [openSection,     setOpenSection]     = useState<'none' | 'profile' | 'security'>('none')
     const [isSaving,        setIsSaving]        = useState(false)
     const [msg,             setMsg]             = useState<{ text: string; ok: boolean } | null>(null)
+
+    // Delete-all flow
+    const [deleteStep,      setDeleteStep]      = useState<'idle' | 'confirm' | 'deleting'>('idle')
+    const [deleteConfirmText, setDeleteConfirmText] = useState('')
+    const DELETE_PHRASE = 'XOÁ TẤT CẢ'
 
     // Stats
     const [totalValue,      setTotalValue]      = useState(0)
@@ -74,6 +79,22 @@ export default function ProfilePage() {
         } catch (err: any) {
             setMsg({ text: err.message || 'Có lỗi xảy ra', ok: false })
         } finally { setIsSaving(false) }
+    }
+
+    const handleDeleteAllTransactions = async () => {
+        if (deleteConfirmText.trim().toUpperCase() !== DELETE_PHRASE) return
+        setDeleteStep('deleting')
+        try {
+            const deleted = await deleteAllMyTransactions()
+            setMsg({ text: `Đã xoá ${deleted} giao dịch. Lịch sử của bạn đã được làm sạch.`, ok: true })
+            setDeleteStep('idle')
+            setDeleteConfirmText('')
+            // Reload stats
+            await loadStats()
+        } catch (err: any) {
+            setMsg({ text: err.message || 'Không thể xoá. Vui lòng thử lại.', ok: false })
+            setDeleteStep('idle')
+        }
     }
 
     const canChangePassword =
@@ -374,6 +395,108 @@ export default function ProfilePage() {
                             </div>
                         </SectionCard>
                     )}
+
+                    {/* ── Danger Zone ── */}
+                    <div style={{
+                        background: 'linear-gradient(180deg, rgba(255,90,110,0.03), transparent), var(--surface-1)',
+                        border: '1px solid rgba(255,90,110,0.2)',
+                        borderRadius: 'var(--r-md)',
+                        boxShadow: 'var(--sh-card)',
+                        overflow: 'hidden',
+                    }}>
+                        {/* Header */}
+                        <div style={{ padding: '16px 20px', borderBottom: deleteStep === 'confirm' ? '1px solid rgba(255,90,110,0.15)' : 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--neg-12)', color: 'var(--neg)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                                    <AlertTriangle className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--neg)' }}>Vùng nguy hiểm</p>
+                                    <p style={{ fontSize: 11, color: 'var(--t-3)', marginTop: 2 }}>Các hành động không thể hoàn tác</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Delete row */}
+                        <div style={{ padding: '14px 20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                                <div>
+                                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-1)' }}>Xoá toàn bộ lịch sử giao dịch</p>
+                                    <p style={{ fontSize: 11.5, color: 'var(--t-3)', marginTop: 2 }}>
+                                        Xoá vĩnh viễn {txnCount > 0 ? `${txnCount} giao dịch` : 'tất cả giao dịch'} của bạn. Không thể hoàn tác.
+                                    </p>
+                                </div>
+                                {deleteStep === 'idle' && (
+                                    <button
+                                        onClick={() => { setDeleteStep('confirm'); setDeleteConfirmText('') }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            padding: '8px 14px', borderRadius: 9, flexShrink: 0,
+                                            background: 'var(--neg-12)', border: '1px solid rgba(255,90,110,0.25)',
+                                            color: 'var(--neg)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                                        }}
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Xoá lịch sử
+                                    </button>
+                                )}
+                                {deleteStep === 'deleting' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--neg)', fontSize: 12.5 }}>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Đang xoá...
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Step 2: Confirmation input */}
+                            {deleteStep === 'confirm' && (
+                                <div style={{ marginTop: 14, padding: 14, borderRadius: 10, background: 'rgba(255,90,110,0.06)', border: '1px solid rgba(255,90,110,0.18)' }}>
+                                    <p style={{ fontSize: 12, color: 'var(--t-2)', marginBottom: 10, lineHeight: 1.5 }}>
+                                        Hành động này sẽ xoá vĩnh viễn toàn bộ dữ liệu giao dịch của bạn và <b>không thể hoàn tác</b>.<br />
+                                        Để xác nhận, hãy gõ chính xác: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--neg)', letterSpacing: '0.05em' }}>{DELETE_PHRASE}</span>
+                                    </p>
+                                    <input
+                                        type="text"
+                                        value={deleteConfirmText}
+                                        onChange={e => setDeleteConfirmText(e.target.value)}
+                                        placeholder={DELETE_PHRASE}
+                                        autoFocus
+                                        style={{
+                                            width: '100%', padding: '9px 12px', borderRadius: 9,
+                                            background: 'var(--surface-2)',
+                                            border: `1px solid ${deleteConfirmText.trim().toUpperCase() === DELETE_PHRASE ? 'var(--neg)' : 'var(--line)'}`,
+                                            color: 'var(--t-1)', fontFamily: 'monospace', fontSize: 13,
+                                            outline: 'none', letterSpacing: '0.06em',
+                                            marginBottom: 10,
+                                        }}
+                                    />
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button
+                                            onClick={() => { setDeleteStep('idle'); setDeleteConfirmText('') }}
+                                            style={{ flex: 1, padding: '8px 0', borderRadius: 9, background: 'var(--surface-2)', border: '1px solid var(--line)', color: 'var(--t-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                                        >
+                                            Huỷ
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteAllTransactions}
+                                            disabled={deleteConfirmText.trim().toUpperCase() !== DELETE_PHRASE}
+                                            style={{
+                                                flex: 2, padding: '8px 0', borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                background: deleteConfirmText.trim().toUpperCase() === DELETE_PHRASE ? 'var(--neg)' : 'rgba(255,90,110,0.15)',
+                                                border: '1px solid rgba(255,90,110,0.3)',
+                                                color: deleteConfirmText.trim().toUpperCase() === DELETE_PHRASE ? '#fff' : 'rgba(255,90,110,0.4)',
+                                                transition: 'all 0.15s',
+                                            }}
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            Xác nhận xoá tất cả
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Sign out */}
                     <button
