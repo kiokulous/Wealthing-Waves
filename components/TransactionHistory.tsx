@@ -145,11 +145,11 @@ export default function TransactionHistory() {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ borderBottom: '1px solid var(--line)' }}>
-                                    {['Ngày', 'Mã', 'Loại', 'SL', 'Giá', 'Phí', 'Tổng', 'Thao tác'].map((col, i) => (
+                                    {['Ngày', 'Mã', 'Loại', 'SL', 'Giá khớp', 'Phí', 'Tổng tiền', 'Thao tác'].map((col, i) => (
                                         <th key={col} style={{
-                                            padding: '10px 16px', fontSize: 10.5, fontWeight: 600,
-                                            letterSpacing: '0.1em', textTransform: 'uppercase',
-                                            color: 'var(--t-4)', textAlign: i >= 3 ? 'right' : 'left',
+                                            padding: '10px 16px', fontSize: 10.5, fontWeight: 700,
+                                            letterSpacing: '0.12em', textTransform: 'uppercase',
+                                            color: 'var(--t-3)', textAlign: i >= 3 ? 'right' : 'left',
                                             whiteSpace: 'nowrap', background: 'var(--surface-2)',
                                         }}>
                                             {col}
@@ -170,17 +170,17 @@ export default function TransactionHistory() {
                                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)'}
                                     >
                                         {/* Ngày */}
-                                        <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--t-2)', whiteSpace: 'nowrap' }}>
+                                        <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--t-2)', whiteSpace: 'nowrap' }}>
                                             {fmtDate(tx.date)}
                                         </td>
                                         {/* Mã */}
-                                        <td style={{ padding: '12px 16px' }}>
-                                            <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-1)', display: 'block' }}>{tx.symbol}</span>
+                                        <td style={{ padding: '11px 16px' }}>
+                                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t-1)', display: 'block', letterSpacing: '0.04em', fontFamily: 'monospace' }}>{tx.symbol}</span>
                                             <span style={{ fontSize: 11, color: 'var(--t-4)', display: 'block', marginTop: 1 }}>{tx.category}</span>
                                         </td>
                                         {/* Loại */}
-                                        <td style={{ padding: '12px 16px' }}>
-                                            <span className={tx.type === 'Mua' ? 'badge green' : 'badge red'} style={{ fontSize: 11 }}>
+                                        <td style={{ padding: '11px 16px' }}>
+                                            <span className={tx.type === 'Mua' ? 'badge green' : 'badge red'} style={{ fontSize: 11.5 }}>
                                                 {tx.type === 'Mua'
                                                     ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
                                                     : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
@@ -189,20 +189,22 @@ export default function TransactionHistory() {
                                             </span>
                                         </td>
                                         {/* SL */}
-                                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, fontWeight: 600, color: 'var(--t-1)', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, monospace' }}>
-                                            {fmt(tx.quantity)}
+                                        <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+                                            <span className="num" style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-1)' }}>{fmt(tx.quantity)}</span>
                                         </td>
                                         {/* Giá */}
-                                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, color: 'var(--t-2)', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, monospace' }}>
-                                            {fmt(tx.price)}
+                                        <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+                                            <span className="num" style={{ fontSize: 13, color: 'var(--t-2)' }}>{fmt(tx.price)}</span>
                                         </td>
                                         {/* Phí */}
-                                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, color: 'var(--t-4)', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, monospace' }}>
-                                            {tx.fee > 0 ? fmt(tx.fee) : <span style={{ color: 'var(--t-4)' }}>—</span>}
+                                        <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+                                            <span className="num" style={{ fontSize: 13, color: 'var(--t-4)' }}>
+                                                {tx.fee > 0 ? fmt(tx.fee) : '—'}
+                                            </span>
                                         </td>
                                         {/* Tổng */}
-                                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13.5, fontWeight: 700, color: tx.type === 'Mua' ? 'var(--accent)' : 'var(--neg)', fontVariantNumeric: 'tabular-nums', fontFamily: 'ui-monospace, monospace' }}>
-                                            {fmt(tx.total_money)}
+                                        <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+                                            <span className="num" style={{ fontSize: 13, fontWeight: 700, color: tx.type === 'Mua' ? 'var(--accent)' : 'var(--neg)' }}>{fmt(tx.total_money)}</span>
                                         </td>
                                         {/* Actions */}
                                         <td style={{ padding: '12px 16px', textAlign: 'right' }}>

@@ -29,6 +29,101 @@ function fmtShort(v: number) {
     return new Intl.NumberFormat('vi-VN').format(Math.round(v))
 }
 
+// ─── BCG Cell ────────────────────────────────────────────────────────────────
+type BcgItem = { symbol: string; category: string; weight: number; growth: number; value: number; profitLoss: number }
+
+function BcgCell({ label, icon, desc, items, accentColor, borderColor, bgColor, cornerHint, medianGrowth, medianWeight }: {
+    quadrant: string
+    label: string
+    icon: string
+    desc: string
+    items: BcgItem[]
+    accentColor: string
+    borderColor: string
+    bgColor: string
+    cornerHint: string
+    medianGrowth: number
+    medianWeight: number
+}) {
+    return (
+        <div style={{
+            border: `1px solid ${borderColor}`,
+            borderRadius: 14,
+            background: bgColor,
+            padding: '16px 18px',
+            minHeight: 120,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+        }}>
+            {/* Cell header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>
+                    <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: accentColor }}>{label}</div>
+                        <div style={{ fontSize: 11, color: 'var(--t-3)', marginTop: 1 }}>{desc}</div>
+                    </div>
+                </div>
+                <span style={{
+                    fontSize: 10.5, fontWeight: 600, letterSpacing: '0.08em',
+                    color: accentColor, background: bgColor,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: 6, padding: '2px 7px', whiteSpace: 'nowrap',
+                }}>
+                    {items.length} mã
+                </span>
+            </div>
+
+            {/* Items list */}
+            {items.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--t-4)', fontStyle: 'italic', paddingLeft: 2 }}>—</div>
+            ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {items.map(item => {
+                        const isPos = item.growth >= 0
+                        return (
+                            <div key={item.symbol} style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                gap: 8, padding: '6px 10px',
+                                background: 'rgba(0,0,0,0.15)',
+                                borderRadius: 9,
+                                border: '1px solid rgba(255,255,255,0.04)',
+                            }}>
+                                {/* Symbol + category */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                    <span style={{
+                                        fontSize: 12.5, fontWeight: 700, color: 'var(--t-1)',
+                                        fontFamily: 'monospace', letterSpacing: '0.04em',
+                                        flexShrink: 0,
+                                    }}>{item.symbol}</span>
+                                    <span style={{
+                                        fontSize: 10.5, color: 'var(--t-4)',
+                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                    }}>{item.category}</span>
+                                </div>
+                                {/* Stats */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                                    <span style={{ fontSize: 11, color: 'var(--t-3)' }} className="num mono">
+                                        {item.weight.toFixed(1)}%
+                                    </span>
+                                    <span style={{
+                                        fontSize: 12, fontWeight: 700,
+                                        color: isPos ? 'var(--accent)' : 'var(--neg)',
+                                        minWidth: 52, textAlign: 'right',
+                                    }} className="num mono">
+                                        {isPos ? '+' : ''}{item.growth.toFixed(1)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
+        </div>
+    )
+}
+
 // ─── Donut SVG ───────────────────────────────────────────────────────────────
 function Donut({ data }: { data: { name: string; pct: number; color: string }[] }) {
     const R = 62, CX = 76, CY = 76, STROKE = 18, GAP = 3
@@ -144,6 +239,44 @@ export default function AnalysisPage() {
         .slice(0, 10)
 
     const rankMax = Math.max(...rankingData.map(i => Math.abs(i.profitLossPercent)), 1)
+
+    // ── BCG Matrix data ──────────────────────────────────────────────────────
+    // Only active holdings (currentValue > 0) are eligible
+    const bcgItems = portfolio.items.filter(i => i.currentValue > 0 && i.invested > 0)
+
+    // X-axis: portfolio weight (%) = currentValue / totalCurrentValue * 100
+    // Y-axis: profitLossPercent
+    const bcgData = bcgItems.map(i => ({
+        symbol:   i.symbol,
+        category: i.category,
+        weight:   total > 0 ? (i.currentValue / total) * 100 : 0,
+        growth:   i.profitLossPercent,
+        value:    i.currentValue,
+        profitLoss: i.profitLoss,
+    }))
+
+    // Median helpers
+    const median = (arr: number[]) => {
+        if (arr.length === 0) return 0
+        const sorted = [...arr].sort((a, b) => a - b)
+        const mid = Math.floor(sorted.length / 2)
+        return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+    }
+    const medianWeight = median(bcgData.map(d => d.weight))
+    const medianGrowth = median(bcgData.map(d => d.growth))
+
+    // Classify into 4 quadrants
+    // High growth + Low weight  → ⭐ Đáng chú ý  (Star)
+    // High growth + High weight → 💰 Tích luỹ    (Cash Cow)
+    // Low growth  + Low weight  → ❓ Quan sát     (Question Mark)
+    // Low growth  + High weight → 🐕 Thoái vốn   (Dog)
+    type BcgQuadrant = 'star' | 'cow' | 'watch' | 'exit'
+    const bcgQuadrants: Record<BcgQuadrant, typeof bcgData> = {
+        star:  bcgData.filter(d => d.growth >= medianGrowth && d.weight <  medianWeight),
+        cow:   bcgData.filter(d => d.growth >= medianGrowth && d.weight >= medianWeight),
+        watch: bcgData.filter(d => d.growth <  medianGrowth && d.weight <  medianWeight),
+        exit:  bcgData.filter(d => d.growth <  medianGrowth && d.weight >= medianWeight),
+    }
 
     const posCount = rankingData.filter(i => i.profitLossPercent >= 0).length
     const negCount = rankingData.filter(i => i.profitLossPercent < 0).length
@@ -328,6 +461,101 @@ export default function AnalysisPage() {
                     <button className="btn btn-ghost" style={{ fontSize: 12.5 }}>
                         ↓ Tải bảng xếp hạng
                     </button>
+                </div>
+            </div>
+
+            {/* ── BCG Matrix ── */}
+            <div className="card" style={{ padding: 22, marginBottom: 18 }}>
+                <div className="card-head">
+                    <div className="left">
+                        <div className="ico-box alt">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+                        </div>
+                        <div>
+                            <div className="title">Ma trận BCG Danh mục</div>
+                            <div className="desc">
+                                Phân loại theo Tỷ trọng (ngang) · Tốc độ tăng trưởng (dọc)
+                                <span className="mono num" style={{ marginLeft: 8, color: 'var(--t-4)' }}>
+                                    ngưỡng X: {medianWeight.toFixed(1)}% · Y: {medianGrowth.toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <span className="badge muted">{bcgData.length} mã</span>
+                </div>
+
+                {bcgData.length === 0 ? (
+                    <p className="muted" style={{ fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Chưa có dữ liệu danh mục</p>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
+
+                        {/* ── Top row: High growth ── */}
+                        {/* ⭐ Đáng chú ý — high growth, low weight */}
+                        <BcgCell
+                            quadrant="star"
+                            label="Đáng chú ý"
+                            icon="⭐"
+                            desc={`Tăng trưởng cao · Tỷ trọng thấp`}
+                            items={bcgQuadrants.star}
+                            accentColor="var(--accent)"
+                            borderColor="var(--accent-18)"
+                            bgColor="var(--accent-12)"
+                            cornerHint="▲ Tăng trưởng cao"
+                            medianGrowth={medianGrowth}
+                            medianWeight={medianWeight}
+                        />
+                        {/* 💰 Tích luỹ — high growth, high weight */}
+                        <BcgCell
+                            quadrant="cow"
+                            label="Tích luỹ"
+                            icon="💰"
+                            desc={`Tăng trưởng cao · Tỷ trọng lớn`}
+                            items={bcgQuadrants.cow}
+                            accentColor="#ffb547"
+                            borderColor="rgba(255,181,71,0.2)"
+                            bgColor="rgba(255,181,71,0.08)"
+                            cornerHint="▲ Tăng trưởng cao"
+                            medianGrowth={medianGrowth}
+                            medianWeight={medianWeight}
+                        />
+                        {/* ── Bottom row: Low growth ── */}
+                        {/* ❓ Quan sát — low growth, low weight */}
+                        <BcgCell
+                            quadrant="watch"
+                            label="Quan sát"
+                            icon="🔎"
+                            desc={`Tăng trưởng thấp · Tỷ trọng nhỏ`}
+                            items={bcgQuadrants.watch}
+                            accentColor="#6ea8ff"
+                            borderColor="rgba(110,168,255,0.2)"
+                            bgColor="rgba(110,168,255,0.06)"
+                            cornerHint="▼ Tăng trưởng thấp"
+                            medianGrowth={medianGrowth}
+                            medianWeight={medianWeight}
+                        />
+                        {/* 🚨 Thoái vốn — low growth, high weight */}
+                        <BcgCell
+                            quadrant="exit"
+                            label="Thoái vốn"
+                            icon="🚨"
+                            desc={`Tăng trưởng thấp · Tỷ trọng lớn`}
+                            items={bcgQuadrants.exit}
+                            accentColor="var(--neg)"
+                            borderColor="rgba(255,90,110,0.2)"
+                            bgColor="var(--neg-12)"
+                            cornerHint="▼ Tăng trưởng thấp"
+                            medianGrowth={medianGrowth}
+                            medianWeight={medianWeight}
+                        />
+                    </div>
+                )}
+
+                <div className="divider" />
+                <div className="row" style={{ gap: 20, fontSize: 11.5, color: 'var(--t-3)', flexWrap: 'wrap' }}>
+                    <span>⭐ <b style={{ color: 'var(--t-2)' }}>Đáng chú ý</b> — tiềm năng cao, cân nhắc tăng tỷ trọng</span>
+                    <span>💰 <b style={{ color: 'var(--t-2)' }}>Tích luỹ</b> — trụ cột, duy trì vị thế</span>
+                    <span>🔎 <b style={{ color: 'var(--t-2)' }}>Quan sát</b> — cần theo dõi thêm</span>
+                    <span>🚨 <b style={{ color: 'var(--t-2)' }}>Thoái vốn</b> — hiệu suất kém, xem xét cắt giảm</span>
                 </div>
             </div>
 

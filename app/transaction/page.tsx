@@ -26,7 +26,7 @@ export default function TransactionPage() {
         qty: '',
         price: '',
         total_money: '',
-        fee: '0',
+        fee: '',
         // price-update extras
         session: 'EOD',
         source: 'Nhập tay',
@@ -41,20 +41,41 @@ export default function TransactionPage() {
         setError('')
     }, [mode])
 
-    // Auto-calc price from total + qty + fee
+    // Auto-calc fee = total_money - (qty × price)
     useEffect(() => {
-        const qty   = parseFloat(formData.qty)   || 0
-        const total = parseFloat(formData.total_money) || 0
-        const fee   = parseFloat(formData.fee)   || 0
-        if (qty > 0 && total > 0) {
-            const derived = formData.type === 'Mua'
-                ? (total - fee) / qty
-                : (total + fee) / qty
-            if (derived > 0) {
-                setFormData(prev => ({ ...prev, price: Math.round(derived).toString() }))
-            }
+        const qty   = parseFloat(formData.qty)        || 0
+        const price = parseFloat(formData.price)      || 0
+        const total = parseFloat(formData.total_money)|| 0
+        if (qty > 0 && price > 0 && total > 0) {
+            const derived = total - qty * price
+            setFormData(prev => ({ ...prev, fee: Math.round(derived).toString() }))
+        } else {
+            setFormData(prev => ({ ...prev, fee: '' }))
         }
-    }, [formData.total_money, formData.qty, formData.fee, formData.type])
+    }, [formData.total_money, formData.qty, formData.price])
+
+    const handleExportCSV = async () => {
+        try {
+            const { getAllTransactions } = await import('@/lib/api/database')
+            const data = await getAllTransactions()
+            if (data.length === 0) { alert('Chưa có giao dịch nào để xuất.'); return }
+            const headers = ['Ngày', 'Loại', 'Phân loại', 'Mã', 'Số lượng', 'Giá khớp lệnh', 'Phí & Thuế', 'Tổng tiền giao dịch']
+            const rows = data.map(t => [
+                t.date, t.type, t.category, t.symbol,
+                t.quantity, t.price, t.fee, t.total_money,
+            ])
+            const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `giao-dich-${new Date().toISOString().split('T')[0]}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+        } catch (err: any) {
+            alert('Không thể xuất CSV: ' + err.message)
+        }
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target
@@ -97,7 +118,7 @@ export default function TransactionPage() {
                 setSuccess('Giá thị trường đã được cập nhật!')
             }
 
-            setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '0' }))
+            setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '' }))
         } catch (err: any) {
             setError(err.message || 'Có lỗi xảy ra trong quá trình xử lý')
         } finally {
@@ -129,11 +150,8 @@ export default function TransactionPage() {
                     <div className="h-sub">Đồng bộ giao dịch mới nhất và giá thị trường vào danh mục của bạn.</div>
                 </div>
                 <div className="row" style={{ gap: 8 }}>
-                    <button className="btn btn-ghost" style={{ fontSize: 13 }}>
-                        ↓ Tải mẫu CSV
-                    </button>
-                    <button className="btn btn-ghost" style={{ fontSize: 13 }}>
-                        ↑ Nhập từ file
+                    <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={handleExportCSV}>
+                        ↓ Xuất CSV
                     </button>
                 </div>
             </div>
@@ -273,19 +291,24 @@ export default function TransactionPage() {
                                     <span className="hint">Số đơn vị / cổ phiếu</span>
                                 </div>
                                 <div className="field mono">
-                                    <label>Giá cơ sở (đ)</label>
-                                    <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0" readOnly style={{ color: 'var(--t-3)' }} />
+                                    <label>Giá khớp lệnh (đ)</label>
+                                    <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0" />
                                     <span className="hint">Đơn giá tại thời điểm khớp</span>
                                 </div>
                                 <div className="field mono">
                                     <label>Phí &amp; thuế (đ)</label>
-                                    <input type="number" step="1" name="fee" value={formData.fee} onChange={handleChange} placeholder="0" />
+                                    <input
+                                        type="number" name="fee"
+                                        value={formData.fee} readOnly
+                                        placeholder="Tự động tính"
+                                        style={{ color: 'var(--t-3)', cursor: 'not-allowed', background: 'var(--surface-1)' }}
+                                    />
                                     <span className="hint">Tự động tính theo broker</span>
                                 </div>
                                 <div className="field mono">
-                                    <label>Tổng năng lượng (VNĐ)</label>
+                                    <label>Tổng tiền giao dịch (VNĐ)</label>
                                     <input type="number" step="1" name="total_money" value={formData.total_money} onChange={handleChange} placeholder="0" required style={{ background: 'var(--surface-3)', color: 'var(--accent)', fontWeight: 700 }} />
-                                    <span className="hint" style={{ color: 'var(--accent)' }}>Tự tính từ các trường trên</span>
+                                    <span className="hint" style={{ color: 'var(--accent)' }}>Tổng tiền thực tế giao dịch</span>
                                 </div>
                             </div>
                         </>
@@ -332,7 +355,7 @@ export default function TransactionPage() {
                             </span>
                         </div>
                         <div className="row" style={{ gap: 8 }}>
-                            <button type="button" className="btn btn-ghost" onClick={() => setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '0' }))}>
+                            <button type="button" className="btn btn-ghost" onClick={() => setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '' }))}>
                                 Hủy
                             </button>
                             <button type="submit" className="btn btn-primary" disabled={loading} style={{ minWidth: 160 }}>
