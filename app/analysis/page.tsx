@@ -32,7 +32,7 @@ function fmtShort(v: number) {
 // ─── BCG Cell ────────────────────────────────────────────────────────────────
 type BcgItem = { symbol: string; category: string; weight: number; growth: number; value: number; profitLoss: number }
 
-function BcgCell({ label, icon, desc, items, accentColor, borderColor, bgColor, cornerHint, medianGrowth, medianWeight }: {
+function BcgCell({ label, icon, desc, items, accentColor, borderColor, bgColor }: {
     quadrant: string
     label: string
     icon: string
