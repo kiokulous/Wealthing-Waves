@@ -289,6 +289,7 @@ Period Profit = EndValue − StartValue + PeriodSelling − PeriodBuying
 | `getLatestPrice(symbol)` | Most recent price for symbol |
 | `addMarketPrice(data)` | Check-then-update-or-insert (avoids upsert constraint issues) |
 | `deleteMarketPrice(id)` | Delete by id |
+| `deleteAllMyTransactions()` | Bulk delete ALL transactions for current user — always scoped to `user_id` |
 
 ---
 
@@ -326,11 +327,11 @@ Supabase client is a **singleton** (module-level cache) — safe for concurrent 
 | `/` | `app/page.tsx` | Index redirect |
 | `/login` | `app/login/page.tsx` | Auth page (login + signup) |
 | `/auth/callback` | `app/auth/callback/route.ts` | OAuth callback (API route) |
-| `/dashboard` | `app/dashboard/page.tsx` | Portfolio overview, balance chart, category breakdown |
+| `/dashboard` | `app/dashboard/page.tsx` | Portfolio overview, balance chart, category breakdown, year filter dropdown |
 | `/assets` | `app/assets/page.tsx` | Asset list by symbol with current values |
-| `/analysis` | `app/analysis/page.tsx` | Period performance analysis (YTD/MTD/custom) |
+| `/analysis` | `app/analysis/page.tsx` | Period performance + BCG Matrix (4-quadrant portfolio classification) |
 | `/transaction` | `app/transaction/page.tsx` | Add transaction + update market price forms |
-| `/profile` | `app/profile/page.tsx` | User profile, account stats, sign out |
+| `/profile` | `app/profile/page.tsx` | User profile, account stats, sign out, "Vùng nguy hiểm" (delete all transactions) |
 | `/portfolio/[symbol]` | `app/portfolio/[symbol]/page.tsx` | Symbol detail: P&L, price history, transaction list |
 
 ---
@@ -411,4 +412,4 @@ For Google OAuth redirect configuration, see [`google-auth-setup.md`](./google-a
 
 ---
 
-*Last updated: 2026-05-17*
+*Last updated: 2026-05-23*

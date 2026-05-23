@@ -106,6 +106,55 @@ Nếu không có height → chart render 0px. Không dùng `height="100%"` mà k
 
 ---
 
+### 10. ESLint — Chỉ dùng `next/core-web-vitals`
+
+Project **không có** `@typescript-eslint/eslint-plugin` được cài. Dùng bất kỳ rule `@typescript-eslint/*` nào trong `.eslintrc.json` sẽ gây lỗi build Vercel trên **toàn bộ file**.
+
+Config đúng (`.eslintrc.json`):
+```json
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "no-unused-vars": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/display-name": "off"
+  }
+}
+```
+
+Không thêm `@typescript-eslint/no-unused-vars` hay bất kỳ `@typescript-eslint/*` rule nào.
+
+---
+
+### 11. Fee Calculation — Chiều ngược lại với ban đầu
+
+**Logic hiện tại (đúng):** User nhập `qty`, `price`, `total_money` → `fee` được tính tự động và **readonly**:
+```
+fee = total_money - (qty × price)
+```
+
+**Logic cũ (sai):** App từng tự tính `price` từ `total_money + fee + qty`. Đã đổi ngược lại.
+
+Áp dụng trong cả `transaction/page.tsx` (form thêm mới) và `EditTransactionModal.tsx` (form chỉnh sửa).
+
+---
+
+### 12. Dark Theme Modals — Không dùng Tailwind `dark:` prefix
+
+Các modal (`EditTransactionModal`, `EditMarketPriceModal`) dùng inline styles với CSS variables thay vì Tailwind `dark:` classes. Lý do: app chỉ có 1 dark theme duy nhất, dùng `dark:` là dư thừa và dễ gây inconsistency.
+
+Pattern chuẩn cho modal:
+```tsx
+style={{
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.012), transparent), var(--surface-1)',
+    border: '1px solid var(--line-2)',
+    borderRadius: 'var(--r-xl)',
+    boxShadow: 'var(--sh-pop)',
+}}
+```
+
+---
+
 ## Removed / Deprecated
 
 Các files sau đã bị xóa khỏi codebase (tháng 5/2026):
@@ -145,4 +194,4 @@ Prototype UI HTML gốc được giữ tại `docs/prototype-ui.html` làm tham 
 
 ---
 
-*Last updated: 2026-05-17*
+*Last updated: 2026-05-23*

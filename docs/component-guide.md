@@ -123,14 +123,16 @@ Hiển thị danh sách giao dịch, sortable by date. Mỗi row có edit + dele
 
 ```tsx
 <EditTransactionModal
+    open={showModal}
     transaction={selectedTxn}
-    isOpen={showModal}
-    onClose={() => setShowModal(false)}
-    onSave={(updated) => { /* call updateTransaction() */ }}
+    onCancel={() => setShowModal(false)}
+    onSave={async (id, updates) => { await updateTransaction(id, updates) }}
 />
 ```
 
-Form đầy đủ — date, type, category, symbol, quantity, price, fee, total_money.
+Form đầy đủ — date, type (Mua/Chốt toggle), category, symbol, quantity, giá khớp lệnh, tổng tiền giao dịch, phí & thuế (readonly — auto-calc: `total_money - qty × price`).
+
+**Dark theme:** dùng CSS variables (`var(--surface-1)`, `.input-bento`, `.btn-primary`). Không dùng Tailwind `dark:` prefix. Mobile-responsive qua `.mob-form-row` + `.mob-form-footer`.
 
 ---
 
@@ -140,12 +142,14 @@ Form đầy đủ — date, type, category, symbol, quantity, price, fee, total_
 
 ```tsx
 <EditMarketPriceModal
-    price={selectedPrice}
-    isOpen={showModal}
-    onClose={() => setShowModal(false)}
-    onSave={(updated) => { /* call updateMarketPrice() */ }}
+    open={showModal}
+    marketPrice={selectedPrice}
+    onCancel={() => setShowModal(false)}
+    onSave={async (data) => { await addMarketPrice(data) }}
 />
 ```
+
+Fields: date, symbol, category, price (hero input — large teal font, `var(--accent)`). Same dark theme styling as EditTransactionModal.
 
 ---
 
@@ -221,4 +225,4 @@ export default function YourComponent({ className }: Props) {
 
 ---
 
-*Last updated: 2026-05-17*
+*Last updated: 2026-05-23*
