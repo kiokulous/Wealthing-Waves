@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X, Trash2 } from 'lucide-react'
 
 interface DeleteConfirmDialogProps {
     open: boolean
@@ -23,63 +23,105 @@ export default function DeleteConfirmDialog({
     if (!open) return null
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
                 onClick={!loading ? onCancel : undefined}
             />
 
             {/* Dialog Card */}
-            <div className="relative bg-white dark:bg-[#1A1A1A] rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 max-w-md w-full p-8 animate-in zoom-in-95 duration-200">
+            <div style={{
+                position: 'relative',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.012), transparent), var(--surface-1)',
+                border: '1px solid var(--line-2)',
+                borderRadius: 'var(--r-xl)',
+                boxShadow: 'var(--sh-pop)',
+                maxWidth: 400,
+                width: '100%',
+                padding: '32px 28px 24px',
+                textAlign: 'center',
+            }}>
                 {/* Close Button */}
                 <button
                     onClick={onCancel}
                     disabled={loading}
-                    className="absolute top-4 right-4 p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50"
+                    style={{
+                        position: 'absolute', top: 14, right: 14,
+                        display: 'grid', placeItems: 'center',
+                        width: 30, height: 30,
+                        borderRadius: 8,
+                        background: 'var(--surface-3)',
+                        border: '1px solid var(--line)',
+                        color: 'var(--t-3)',
+                        cursor: 'pointer',
+                    }}
                 >
-                    <X className="w-4 h-4" />
+                    <X size={14} />
                 </button>
 
                 {/* Warning Icon */}
-                <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
-                        <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
-                    </div>
+                <div style={{
+                    width: 56, height: 56, borderRadius: '50%',
+                    background: 'var(--neg-12)',
+                    border: '1px solid rgba(255,90,110,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 20px',
+                }}>
+                    <AlertTriangle size={24} style={{ color: 'var(--neg)' }} />
                 </div>
 
                 {/* Content */}
-                <div className="text-center mb-8">
-                    <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">
+                <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--t-1)', marginBottom: 8, letterSpacing: '-0.01em' }}>
                         {title}
-                    </h3>
-                    <p className="text-sm text-[var(--text-muted)] font-medium">
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--t-3)', lineHeight: 1.5 }}>
                         {message}
-                    </p>
+                    </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div style={{ display: 'flex', gap: 10 }}>
                     <button
                         onClick={onCancel}
                         disabled={loading}
-                        className="flex-1 px-6 py-3 rounded-2xl border-2 border-slate-200 dark:border-white/10 text-[var(--foreground)] font-bold text-sm hover:border-slate-300 dark:hover:border-white/20 transition-all disabled:opacity-50"
+                        className="btn btn-ghost"
+                        style={{ flex: 1 }}
                     >
                         Hủy
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className="flex-1 px-6 py-3 rounded-2xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="btn"
+                        style={{
+                            flex: 1,
+                            background: 'var(--neg)',
+                            color: '#fff',
+                            boxShadow: '0 8px 24px -10px rgba(255,90,110,0.4)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        }}
                     >
                         {loading ? (
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div style={{
+                                width: 16, height: 16,
+                                border: '2px solid rgba(255,255,255,0.3)',
+                                borderTopColor: '#fff',
+                                borderRadius: '50%',
+                                animation: 'spin 0.7s linear infinite',
+                            }} />
                         ) : (
-                            'Xóa'
+                            <>
+                                <Trash2 size={14} />
+                                Xóa
+                            </>
                         )}
                     </button>
                 </div>
             </div>
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     )
 }

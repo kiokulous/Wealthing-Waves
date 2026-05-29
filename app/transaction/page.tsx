@@ -196,7 +196,7 @@ export default function TransactionPage() {
                     </div>
                     <span className="badge muted">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        Tự lưu nháp
+                        Chưa lưu
                     </span>
                 </div>
 
@@ -227,7 +227,7 @@ export default function TransactionPage() {
                         <div className="field">
                             <label>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                                Mã / Tín hiệu
+                                Mã tài sản
                             </label>
                             <input type="text" name="symbol" required value={formData.symbol} onChange={handleChange} placeholder="VNM, TCBS, VCBFTBF..." />
                         </div>
@@ -264,7 +264,7 @@ export default function TransactionPage() {
                                         }}
                                     >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                                        Cộng hưởng (Mua)
+                                        Mua vào
                                     </button>
                                     <button
                                         type="button"
@@ -278,7 +278,7 @@ export default function TransactionPage() {
                                         }}
                                     >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
-                                        Phát tán (Bán)
+                                        Chốt / Bán ra
                                     </button>
                                 </div>
                             </div>
@@ -365,7 +365,7 @@ export default function TransactionPage() {
                                         Đang lưu...
                                       </span>
                                     : <>
-                                        {mode === 'transaction' ? 'Phê duyệt tín hiệu' : 'Cập nhật toàn thị trường'}
+                                        {mode === 'transaction' ? 'Lưu giao dịch' : 'Lưu giá thị trường'}
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 6 }}><path d="m9 18 6-6-6-6"/></svg>
                                       </>
                                 }
