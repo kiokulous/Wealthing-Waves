@@ -21,7 +21,7 @@ export default function EditTransactionModal({
     const [error, setError] = useState('')
     const [formData, setFormData] = useState({
         date: '',
-        type: 'Mua' as 'Mua' | 'Chốt',
+        type: 'Mua' as 'Mua' | 'Chốt' | 'Bán' | 'Cổ tức CP',
         category: '',
         symbol: '',
         quantity: '',
@@ -35,7 +35,7 @@ export default function EditTransactionModal({
         if (transaction) {
             setFormData({
                 date: transaction.date,
-                type: (transaction.type === 'Bán' ? 'Chốt' : transaction.type) as 'Mua' | 'Chốt',
+                type: transaction.type as 'Mua' | 'Chốt' | 'Bán' | 'Cổ tức CP',
                 category: transaction.category,
                 symbol: transaction.symbol,
                 quantity: transaction.quantity.toString(),
@@ -75,9 +75,11 @@ export default function EditTransactionModal({
         setError('')
 
         try {
-            if (!formData.symbol || !formData.date || !formData.quantity || !formData.total_money) {
+            const isDividend = formData.type === 'Cổ tức CP'
+            if (!formData.symbol || !formData.date || !formData.quantity)
                 throw new Error('Vui lòng điền đầy đủ các trường bắt buộc')
-            }
+            if (!isDividend && !formData.total_money)
+                throw new Error('Vui lòng điền tổng tiền giao dịch')
 
             await onSave(transaction.id, {
                 date: formData.date,
@@ -85,9 +87,9 @@ export default function EditTransactionModal({
                 category: formData.category,
                 symbol: formData.symbol.toUpperCase(),
                 quantity: parseFloat(formData.quantity),
-                price: parseFloat(formData.price) || 0,
-                fee: parseFloat(formData.fee) || 0,
-                total_money: parseFloat(formData.total_money)
+                price: isDividend ? 0 : parseFloat(formData.price) || 0,
+                fee: isDividend ? 0 : parseFloat(formData.fee) || 0,
+                total_money: isDividend ? 0 : parseFloat(formData.total_money)
             })
 
             onCancel()
@@ -212,20 +214,15 @@ export default function EditTransactionModal({
                         {/* Type toggle */}
                         <div>
                             <div className="label-cap" style={{ marginBottom: 6 }}>Loại giao dịch</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                                 <button
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, type: 'Mua' }))}
                                     style={{
-                                        padding: '10px',
-                                        borderRadius: 10,
+                                        padding: '10px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s',
                                         border: formData.type === 'Mua' ? '1px solid var(--accent-30)' : '1px solid var(--line)',
                                         background: formData.type === 'Mua' ? 'var(--accent-12)' : 'var(--surface-2)',
                                         color: formData.type === 'Mua' ? 'var(--accent)' : 'var(--t-3)',
-                                        fontWeight: 700,
-                                        fontSize: 13,
-                                        cursor: 'pointer',
-                                        transition: 'all .15s',
                                     }}
                                 >
                                     Mua
@@ -234,74 +231,61 @@ export default function EditTransactionModal({
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, type: 'Chốt' }))}
                                     style={{
-                                        padding: '10px',
-                                        borderRadius: 10,
-                                        border: formData.type === 'Chốt' ? '1px solid rgba(255,90,110,0.3)' : '1px solid var(--line)',
-                                        background: formData.type === 'Chốt' ? 'var(--neg-12)' : 'var(--surface-2)',
-                                        color: formData.type === 'Chốt' ? 'var(--neg)' : 'var(--t-3)',
-                                        fontWeight: 700,
-                                        fontSize: 13,
-                                        cursor: 'pointer',
-                                        transition: 'all .15s',
+                                        padding: '10px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s',
+                                        border: (formData.type === 'Chốt' || formData.type === 'Bán') ? '1px solid rgba(255,90,110,0.3)' : '1px solid var(--line)',
+                                        background: (formData.type === 'Chốt' || formData.type === 'Bán') ? 'var(--neg-12)' : 'var(--surface-2)',
+                                        color: (formData.type === 'Chốt' || formData.type === 'Bán') ? 'var(--neg)' : 'var(--t-3)',
                                     }}
                                 >
                                     Chốt
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, type: 'Cổ tức CP', price: '0', total_money: '0', fee: '0' }))}
+                                    style={{
+                                        padding: '10px', borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all .15s',
+                                        border: formData.type === 'Cổ tức CP' ? '1px solid rgba(110,168,255,0.3)' : '1px solid var(--line)',
+                                        background: formData.type === 'Cổ tức CP' ? 'rgba(110,168,255,0.12)' : 'var(--surface-2)',
+                                        color: formData.type === 'Cổ tức CP' ? '#6ea8ff' : 'var(--t-3)',
+                                    }}
+                                >
+                                    Cổ tức CP
+                                </button>
                             </div>
                         </div>
 
-                        {/* Quantity + Price */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="mob-form-row">
-                            <div>
-                                <div className="label-cap" style={{ marginBottom: 6 }}>Số lượng</div>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    name="quantity"
-                                    value={formData.quantity}
-                                    onChange={handleChange}
-                                    className="input-bento num"
-                                />
-                            </div>
-                            <div>
-                                <div className="label-cap" style={{ marginBottom: 6 }}>Giá khớp lệnh</div>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    name="price"
-                                    value={formData.price}
-                                    onChange={handleChange}
-                                    className="input-bento num"
-                                />
-                            </div>
+                        {/* Quantity — luôn hiện */}
+                        <div>
+                            <div className="label-cap" style={{ marginBottom: 6 }}>Số lượng</div>
+                            <input
+                                type="number" step="0.01" name="quantity"
+                                value={formData.quantity} onChange={handleChange}
+                                className="input-bento num"
+                            />
+                            {formData.type === 'Cổ tức CP' && (
+                                <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(110,168,255,0.08)', border: '1px solid rgba(110,168,255,0.2)', fontSize: 12, color: '#6ea8ff' }}>
+                                    💡 Cổ tức CP không tốn tiền mặt — giá mua TB sẽ tự động giảm.
+                                </div>
+                            )}
                         </div>
 
-                        {/* Total + Fee */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="mob-form-row">
-                            <div>
-                                <div className="label-cap" style={{ marginBottom: 6 }}>Tổng tiền giao dịch</div>
-                                <input
-                                    type="number"
-                                    step="1"
-                                    name="total_money"
-                                    value={formData.total_money}
-                                    onChange={handleChange}
-                                    className="input-bento num"
-                                />
+                        {/* Giá + Tổng tiền + Phí — ẩn khi Cổ tức CP */}
+                        {formData.type !== 'Cổ tức CP' && (<>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }} className="mob-form-row">
+                                <div>
+                                    <div className="label-cap" style={{ marginBottom: 6 }}>Giá khớp lệnh</div>
+                                    <input type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} className="input-bento num" />
+                                </div>
+                                <div>
+                                    <div className="label-cap" style={{ marginBottom: 6 }}>Tổng tiền giao dịch</div>
+                                    <input type="number" step="1" name="total_money" value={formData.total_money} onChange={handleChange} className="input-bento num" />
+                                </div>
                             </div>
                             <div>
                                 <div className="label-cap" style={{ marginBottom: 6 }}>Phí &amp; Thuế <span style={{ color: 'var(--t-4)', fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(tự tính)</span></div>
-                                <input
-                                    type="number"
-                                    step="1"
-                                    name="fee"
-                                    value={formData.fee}
-                                    readOnly
-                                    className="input-bento num"
-                                    style={{ color: 'var(--t-3)', cursor: 'default' }}
-                                />
+                                <input type="number" step="1" name="fee" value={formData.fee} readOnly className="input-bento num" style={{ color: 'var(--t-3)', cursor: 'default' }} />
                             </div>
-                        </div>
+                        </>)}
 
                     </div>
 
