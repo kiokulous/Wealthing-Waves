@@ -7,7 +7,7 @@ import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio } from '@/lib/api/portfolio'
 import {
     LayoutDashboard, ArrowDownUp, BarChart3,
-    Settings, LogOut,
+    Settings, LogOut, Zap,
 } from 'lucide-react'
 import { getUserLevel } from '@/lib/userLevel'
 
@@ -167,6 +167,34 @@ export default function AppSidebar() {
                                     {txnCount} GD
                                 </span>
                             )}
+                        </button>
+                    )
+                })()}
+
+                {/* Tín hiệu */}
+                {(() => {
+                    const active = isActive('/signals')
+                    return (
+                        <button
+                            onClick={() => router.push('/signals')}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '9px 10px', borderRadius: 10,
+                                color: active ? 'var(--t-1)' : 'var(--t-2)',
+                                fontWeight: 500, fontSize: 13.5,
+                                border: `1px solid ${active ? 'rgba(0,200,150,0.18)' : 'transparent'}`,
+                                background: active
+                                    ? 'linear-gradient(180deg, rgba(0,200,150,0.10), rgba(0,200,150,0.04))'
+                                    : 'transparent',
+                                boxShadow: active ? '0 0 0 1px rgba(0,200,150,0.06) inset, 0 8px 22px -16px rgba(0,200,150,0.5)' : 'none',
+                                cursor: 'pointer', transition: 'all .15s ease', textAlign: 'left',
+                                width: '100%',
+                            }}
+                            onMouseEnter={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-1)'; el.style.background = 'rgba(255,255,255,0.03)' } }}
+                            onMouseLeave={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--t-2)'; el.style.background = 'transparent' } }}
+                        >
+                            <Zap size={18} style={{ color: active ? 'var(--accent)' : 'currentColor', opacity: active ? 1 : 0.85, flexShrink: 0 }} />
+                            <span style={{ flex: 1 }}>Tín hiệu</span>
                         </button>
                     )
                 })()}

@@ -30,6 +30,7 @@ export default function TransactionPage() {
         // price-update extras
         session: 'EOD',
         source: 'Nhập tay',
+        volume: '',
     })
 
     useEffect(() => {
@@ -114,6 +115,9 @@ export default function TransactionPage() {
                     category: formData.category,
                     symbol: formData.symbol.toUpperCase(),
                     price: parseFloat(formData.price),
+                    volume: formData.category === 'Cổ phiếu' && formData.volume
+                        ? parseInt(formData.volume)
+                        : null,
                 })
                 setSuccess('Giá thị trường đã được cập nhật!')
             }
@@ -321,6 +325,13 @@ export default function TransactionPage() {
                                 <label>Giá khớp (đ)</label>
                                 <input type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0" />
                             </div>
+                            {formData.category === 'Cổ phiếu' && (
+                                <div className="field mono">
+                                    <label>Khối lượng (KL)</label>
+                                    <input type="number" name="volume" value={formData.volume} onChange={handleChange} placeholder="VD: 6000000" />
+                                    <span className="hint">Tổng KL khớp lệnh trong phiên</span>
+                                </div>
+                            )}
                             <div className="field">
                                 <label>Phiên</label>
                                 <select name="session" value={formData.session} onChange={handleChange}>

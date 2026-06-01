@@ -22,8 +22,17 @@ export type MarketPrice = {
     category: string
     symbol: string
     price: number
+    volume: number | null
     created_at: string
     updated_at: string
+}
+
+export type Watchlist = {
+    id: string
+    user_id: string
+    symbol: string
+    category: string
+    created_at: string
 }
 
 export type Database = {
@@ -39,6 +48,12 @@ export type Database = {
                 Row: MarketPrice
                 Insert: Omit<MarketPrice, 'id' | 'created_at' | 'updated_at'>
                 Update: Partial<Omit<MarketPrice, 'id' | 'created_at' | 'updated_at'>>
+                Relationships: []
+            }
+            watchlist: {
+                Row: Watchlist
+                Insert: Omit<Watchlist, 'id' | 'created_at'>
+                Update: Partial<Omit<Watchlist, 'id' | 'created_at'>>
                 Relationships: []
             }
         }

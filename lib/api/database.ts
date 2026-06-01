@@ -1,5 +1,5 @@
 import { createClient } from '../supabase'
-import type { Transaction, MarketPrice } from '../supabase'
+import type { Transaction, MarketPrice, Watchlist } from '../supabase'
 
 // ================================================
 // TRANSACTIONS API
@@ -278,6 +278,7 @@ export async function addMarketPrice(marketPrice: {
     category: string
     symbol: string
     price: number
+    volume?: number | null
 }): Promise<MarketPrice> {
     const supabase = createClient()
 
@@ -310,6 +311,7 @@ export async function addMarketPrice(marketPrice: {
             .update({
                 category: marketPrice.category,
                 price: marketPrice.price,
+                ...(marketPrice.volume !== undefined ? { volume: marketPrice.volume } : {}),
             })
             .eq('id', existing.id)
             .select()
@@ -331,6 +333,7 @@ export async function addMarketPrice(marketPrice: {
                 category: marketPrice.category,
                 symbol: symbolUpper,
                 price: marketPrice.price,
+                volume: marketPrice.volume ?? null,
             })
             .select()
             .single()
@@ -359,4 +362,52 @@ export async function deleteMarketPrice(id: string): Promise<void> {
         console.error('Error deleting market price:', error)
         throw new Error(error.message)
     }
+}
+
+// ================================================
+// WATCHLIST API
+// ================================================
+
+export async function getWatchlist(): Promise<Watchlist[]> {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+        .from('watchlist')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+
+    if (error) throw new Error(error.message)
+    return data || []
+}
+
+export async function addToWatchlist(symbol: string, category: string): Promise<Watchlist> {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+        .from('watchlist')
+        .insert({ user_id: user.id, symbol: symbol.toUpperCase(), category })
+        .select()
+        .single()
+
+    if (error) throw new Error(error.message)
+    return data
+}
+
+export async function removeFromWatchlist(symbol: string): Promise<void> {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { error } = await supabase
+        .from('watchlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('symbol', symbol.toUpperCase())
+
+    if (error) throw new Error(error.message)
 }

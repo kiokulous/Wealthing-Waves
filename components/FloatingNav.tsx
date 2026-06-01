@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { LayoutDashboard, Plus, BarChart3, User } from 'lucide-react'
+import { LayoutDashboard, Plus, BarChart3, User, Zap } from 'lucide-react'
 
 export default function FloatingNav() {
     const router   = useRouter()
@@ -13,6 +13,7 @@ export default function FloatingNav() {
     const navItems = [
         { label: 'Tổng quan', icon: LayoutDashboard, path: '/dashboard' },
         { label: 'Nhập liệu', icon: Plus,            path: '/transaction' },
+        { label: 'Tín hiệu',  icon: Zap,             path: '/signals' },
         { label: 'Phân tích', icon: BarChart3,       path: '/analysis' },
         { label: 'Tài khoản', icon: User,            path: '/profile' },
     ]
