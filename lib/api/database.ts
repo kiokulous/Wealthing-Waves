@@ -85,7 +85,7 @@ export async function getTransactionsByYear(year: number): Promise<Transaction[]
  */
 export async function addTransaction(transaction: {
     date: string
-    type: 'Mua' | 'Chốt' | 'Bán'
+    type: 'Mua' | 'Chốt' | 'Bán' | 'Cổ tức CP'
     category: string
     symbol: string
     quantity: number

@@ -4,7 +4,7 @@ export type Transaction = {
     id: string
     user_id: string
     date: string
-    type: 'Mua' | 'Chốt' | 'Bán'
+    type: 'Mua' | 'Chốt' | 'Bán' | 'Cổ tức CP'
     category: string
     symbol: string
     quantity: number

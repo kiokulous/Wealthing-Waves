@@ -92,18 +92,21 @@ export default function TransactionPage() {
 
         try {
             if (mode === 'transaction') {
-                if (!formData.symbol || !formData.date || !formData.qty || !formData.total_money)
+                const isDividendType = formData.type === 'Cổ tức CP'
+                if (!formData.symbol || !formData.date || !formData.qty)
                     throw new Error('Vui lòng điền đầy đủ các trường bắt buộc')
+                if (!isDividendType && !formData.total_money)
+                    throw new Error('Vui lòng điền tổng tiền giao dịch')
 
                 await addTransaction({
                     date: formData.date,
-                    type: formData.type as 'Mua' | 'Chốt',
+                    type: formData.type as 'Mua' | 'Chốt' | 'Bán' | 'Cổ tức CP',
                     category: formData.category,
                     symbol: formData.symbol.toUpperCase(),
                     quantity: parseFloat(formData.qty),
-                    price: parseFloat(formData.price) || 0,
-                    fee: parseFloat(formData.fee) || 0,
-                    total_money: parseFloat(formData.total_money),
+                    price: isDividendType ? 0 : parseFloat(formData.price) || 0,
+                    fee: isDividendType ? 0 : parseFloat(formData.fee) || 0,
+                    total_money: isDividendType ? 0 : parseFloat(formData.total_money),
                 })
                 setSuccess('Giao dịch đã được lưu vào hệ thống!')
             } else {
@@ -132,7 +135,9 @@ export default function TransactionPage() {
 
     if (authLoading) return null
 
-    const isBuy = formData.type === 'Mua'
+    const isBuy      = formData.type === 'Mua'
+    const isSell     = formData.type === 'Chốt' || formData.type === 'Bán'
+    const isDividend = formData.type === 'Cổ tức CP'
 
     return (
         <div style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 60 }}>
@@ -276,45 +281,74 @@ export default function TransactionPage() {
                                         onClick={() => setFormData(prev => ({ ...prev, type: 'Chốt' }))}
                                         style={{
                                             flex: 1, padding: 14,
-                                            background: !isBuy ? 'var(--neg-12)' : 'var(--surface-2)',
-                                            border: !isBuy ? '1px solid rgba(255,90,110,0.3)' : '1px solid var(--line)',
-                                            color: !isBuy ? 'var(--neg)' : 'var(--t-2)',
+                                            background: isSell ? 'var(--neg-12)' : 'var(--surface-2)',
+                                            border: isSell ? '1px solid rgba(255,90,110,0.3)' : '1px solid var(--line)',
+                                            color: isSell ? 'var(--neg)' : 'var(--t-2)',
                                         }}
                                     >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
                                         Chốt / Bán ra
                                     </button>
+                                    <button
+                                        type="button"
+                                        className="btn"
+                                        onClick={() => setFormData(prev => ({ ...prev, type: 'Cổ tức CP', price: '0', total_money: '0', fee: '0' }))}
+                                        style={{
+                                            flex: 1, padding: 14,
+                                            background: isDividend ? 'rgba(110,168,255,0.12)' : 'var(--surface-2)',
+                                            border: isDividend ? '1px solid rgba(110,168,255,0.3)' : '1px solid var(--line)',
+                                            color: isDividend ? '#6ea8ff' : 'var(--t-2)',
+                                        }}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                                        Cổ tức CP
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* 4-col numeric fields */}
-                            <div className="mob-num-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-                                <div className="field mono">
-                                    <label>Số lượng</label>
-                                    <input type="number" step="0.01" name="qty" value={formData.qty} onChange={handleChange} placeholder="0,00" />
-                                    <span className="hint">Số đơn vị / cổ phiếu</span>
+                            {/* Numeric fields — layout thay đổi theo type */}
+                            {isDividend ? (
+                                /* Cổ tức CP: chỉ cần số lượng */
+                                <div style={{ marginBottom: 24 }}>
+                                    <div className="field mono" style={{ maxWidth: 240 }}>
+                                        <label>Số CP nhận được</label>
+                                        <input type="number" step="1" name="qty" value={formData.qty} onChange={handleChange} placeholder="0" autoFocus />
+                                        <span className="hint">Số cổ phiếu được chia thưởng</span>
+                                    </div>
+                                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'rgba(110,168,255,0.08)', border: '1px solid rgba(110,168,255,0.2)', fontSize: 12, color: '#6ea8ff' }}>
+                                        💡 Cổ tức CP không tốn tiền mặt — giá mua trung bình sẽ tự động giảm xuống sau khi lưu.
+                                    </div>
                                 </div>
-                                <div className="field mono">
-                                    <label>Giá khớp lệnh (đ)</label>
-                                    <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0" />
-                                    <span className="hint">Đơn giá tại thời điểm khớp</span>
+                            ) : (
+                                /* Mua / Chốt / Bán: 4 fields như cũ */
+                                <div className="mob-num-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+                                    <div className="field mono">
+                                        <label>Số lượng</label>
+                                        <input type="number" step="0.01" name="qty" value={formData.qty} onChange={handleChange} placeholder="0,00" />
+                                        <span className="hint">Số đơn vị / cổ phiếu</span>
+                                    </div>
+                                    <div className="field mono">
+                                        <label>Giá khớp lệnh (đ)</label>
+                                        <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0" />
+                                        <span className="hint">Đơn giá tại thời điểm khớp</span>
+                                    </div>
+                                    <div className="field mono">
+                                        <label>Phí &amp; thuế (đ)</label>
+                                        <input
+                                            type="number" name="fee"
+                                            value={formData.fee} readOnly
+                                            placeholder="Tự động tính"
+                                            style={{ color: 'var(--t-3)', cursor: 'not-allowed', background: 'var(--surface-1)' }}
+                                        />
+                                        <span className="hint">Tự động tính theo broker</span>
+                                    </div>
+                                    <div className="field mono">
+                                        <label>Tổng tiền giao dịch (VNĐ)</label>
+                                        <input type="number" step="1" name="total_money" value={formData.total_money} onChange={handleChange} placeholder="0" required style={{ background: 'var(--surface-3)', color: 'var(--accent)', fontWeight: 700 }} />
+                                        <span className="hint" style={{ color: 'var(--accent)' }}>Tổng tiền thực tế giao dịch</span>
+                                    </div>
                                 </div>
-                                <div className="field mono">
-                                    <label>Phí &amp; thuế (đ)</label>
-                                    <input
-                                        type="number" name="fee"
-                                        value={formData.fee} readOnly
-                                        placeholder="Tự động tính"
-                                        style={{ color: 'var(--t-3)', cursor: 'not-allowed', background: 'var(--surface-1)' }}
-                                    />
-                                    <span className="hint">Tự động tính theo broker</span>
-                                </div>
-                                <div className="field mono">
-                                    <label>Tổng tiền giao dịch (VNĐ)</label>
-                                    <input type="number" step="1" name="total_money" value={formData.total_money} onChange={handleChange} placeholder="0" required style={{ background: 'var(--surface-3)', color: 'var(--accent)', fontWeight: 700 }} />
-                                    <span className="hint" style={{ color: 'var(--accent)' }}>Tổng tiền thực tế giao dịch</span>
-                                </div>
-                            </div>
+                            )}
                         </>
                     )}
 

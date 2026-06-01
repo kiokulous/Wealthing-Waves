@@ -301,8 +301,16 @@ export default function SignalsPage() {
                 if (t.type === 'Mua') {
                     totalCost += t.price * t.quantity + (t.fee || 0)
                     totalQty  += t.quantity
+                } else if (t.type === 'Cổ tức CP') {
+                    // Thêm cp nhưng KHÔNG tăng cost basis → avgCost giảm
+                    totalQty += t.quantity
                 } else if (t.type === 'Chốt' || t.type === 'Bán') {
-                    totalQty  -= t.quantity
+                    // Proportional cost reduction khi bán
+                    if (totalQty > 0) {
+                        const avgCost = totalCost / totalQty
+                        totalCost -= avgCost * t.quantity
+                    }
+                    totalQty -= t.quantity
                 }
             }
             const holdingQty  = Math.max(0, totalQty)

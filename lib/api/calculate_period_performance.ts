@@ -25,8 +25,8 @@ export function calculatePeriodPerformance(
             startPortfolio.set(t.symbol, { qty: 0, value: 0 });
         }
         const item = startPortfolio.get(t.symbol)!;
-        if (t.type === 'Mua') item.qty += t.quantity;
-        else item.qty -= t.quantity;
+        if (t.type === 'Mua' || t.type === 'Cổ tức CP') item.qty += t.quantity;
+        else if (t.type === 'Chốt' || t.type === 'Bán') item.qty -= t.quantity;
     });
 
     // Calculate value at start date using price closest to startDate
@@ -83,10 +83,11 @@ export function calculatePeriodPerformance(
         const catFlow = categoryFlows.get(t.category)!;
 
         // Note: Use t.total_money for exact cash flow
+        // Cổ tức CP không phải cash flow — bỏ qua
         if (t.type === 'Mua') {
             totalBuying += t.total_money;
             catFlow.buying += t.total_money;
-        } else {
+        } else if (t.type === 'Chốt' || t.type === 'Bán') {
             totalSelling += t.total_money;
             catFlow.selling += t.total_money;
         }
@@ -109,7 +110,8 @@ export function calculatePeriodPerformance(
         let symSelling = 0;
         symbolTxns.forEach(t => {
             if (t.type === 'Mua') symBuying += t.total_money;
-            else symSelling += t.total_money;
+            else if (t.type === 'Chốt' || t.type === 'Bán') symSelling += t.total_money;
+            // Cổ tức CP: không tính vào cash flow
         });
 
         const profit = item.currentValue - startItem.value + symSelling - symBuying;

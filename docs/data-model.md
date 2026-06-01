@@ -86,13 +86,26 @@ type PortfolioSummary = {
 
 ## Transaction Types
 
-| Type | Vietnamese | Direction | Cash Impact |
-|---|---|---|---|
-| `Mua` | Mua vào (Buy) | +qty, +cost | Cash outflow |
-| `Bán` | Bán ra (Sell) | −qty, realize P&L | Cash inflow |
-| `Chốt` | Chốt lời/lỗ (Close) | −qty, realize P&L | Cash inflow |
+| Type | Vietnamese | Direction | Cash Impact | Cost Basis |
+|---|---|---|---|---|
+| `Mua` | Mua vào (Buy) | +qty, +cost | Cash outflow | Tăng |
+| `Bán` | Bán ra (Sell) | −qty, realize P&L | Cash inflow | Giảm proportional |
+| `Chốt` | Chốt lời/lỗ (Close) | −qty, realize P&L | Cash inflow | Giảm proportional |
+| `Cổ tức CP` | Stock dividend | +qty | **Không tốn tiền** | **Không đổi** → avgCost giảm |
 
 `Chốt` và `Bán` được xử lý giống nhau trong engine tính toán. Tên `Chốt` mang ý nghĩa ngữ nghĩa (đóng vị thế) còn `Bán` là bán một phần.
+
+**Cổ tức CP** là trường hợp đặc biệt: nhận thêm cổ phiếu mà không bỏ tiền ra (chia thưởng cổ phiếu). `total_money = 0`, `price = 0`, `fee = 0`. Chỉ `quantity` có giá trị.
+
+```
+Ví dụ: VIC
+Trước cổ tức: 100cp, invested = 20,000,000 → avgCost = 200,000đ/cp
+Nhận cổ tức:  40cp (Cổ tức CP, total_money = 0)
+Sau cổ tức:   140cp, invested = 20,000,000 → avgCost = 142,857đ/cp  ✅
+```
+
+Lưu ý: cổ tức **tiền mặt** được tự động tái đầu tư thành CP vẫn dùng type `Mua` (vì có dùng tiền mặt).
+
 
 ---
 
@@ -237,4 +250,4 @@ For each month-end date (oldest → newest):
 
 ---
 
-*Last updated: 2026-06-01*
+*Last updated: 2026-06-01 (thêm Cổ tức CP)*

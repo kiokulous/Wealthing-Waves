@@ -92,7 +92,10 @@ export function calculatePortfolio(
         const item = portfolio.get(key)!
         const value = txn.total_money // Now always positive after migration
 
-        if (txn.type === 'Mua') {
+        if (txn.type === 'Cổ tức CP') {
+            // Stock dividend: thêm cp nhưng KHÔNG tăng cost basis
+            item.quantity += txn.quantity
+        } else if (txn.type === 'Mua') {
             // Buy transaction
             item.quantity += txn.quantity
             item.invested += value
@@ -195,6 +198,7 @@ export function calculatePortfolio(
         } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
             cat.sold += value
         }
+        // Cổ tức CP: không tính vào invested hay sold
     })
 
     // Second pass: Add current values from items
@@ -281,7 +285,10 @@ export function calculateSymbolDetail(
         const txnDate = new Date(txn.date)
         if (!lastTxnDate || txnDate > lastTxnDate) lastTxnDate = txnDate
 
-        if (txn.type === 'Mua') {
+        if (txn.type === 'Cổ tức CP') {
+            // Stock dividend: thêm cp, KHÔNG tăng cost basis
+            quantity += txn.quantity
+        } else if (txn.type === 'Mua') {
             if (!firstBuyDate) {
                 firstBuyDate = txnDate
             }
@@ -385,7 +392,7 @@ export function calculatePortfolioHistory(
         const holdings = new Map<string, number>() // symbol -> quantity
         relevantTxns.forEach(txn => {
             const currentQty = holdings.get(txn.symbol) || 0
-            if (txn.type === 'Mua') {
+            if (txn.type === 'Mua' || txn.type === 'Cổ tức CP') {
                 holdings.set(txn.symbol, currentQty + txn.quantity)
             } else if (txn.type === 'Chốt' || txn.type === 'Bán') {
                 holdings.set(txn.symbol, Math.max(0, currentQty - txn.quantity))
