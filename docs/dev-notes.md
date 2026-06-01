@@ -155,6 +155,29 @@ style={{
 
 ---
 
+### 13. Volume — Chỉ áp dụng cho Cổ phiếu
+
+Cột `volume` trong bảng `market_prices` là nullable. Chỉ nhập và sử dụng với category `Cổ phiếu`. Các loại khác (Chứng chỉ quỹ, Vàng, Tiết kiệm) luôn để `null`.
+
+Form Price Update trong `transaction/page.tsx` chỉ hiện field "Khối lượng (KL)" khi `formData.category === 'Cổ phiếu'`. Signal engine trong `signals/page.tsx` dùng flag `useVolume = VOLUME_CATEGORIES.includes(category)` để quyết định có tính volume signals hay không.
+
+---
+
+### 14. Map Iteration — Dùng `Array.from()` thay vì `for...of` trực tiếp
+
+TypeScript target của project không hỗ trợ iterate `Map` trực tiếp bằng `for...of`:
+
+```typescript
+// ❌ Build fail trên Vercel
+for (const [k, v] of myMap) { ... }
+
+// ✅ Đúng
+for (const v of Array.from(myMap.values())) { ... }
+for (const [k, v] of Array.from(myMap.entries())) { ... }
+```
+
+---
+
 ## Removed / Deprecated
 
 Các files sau đã bị xóa khỏi codebase (tháng 5/2026):
@@ -194,4 +217,4 @@ Prototype UI HTML gốc được giữ tại `docs/prototype-ui.html` làm tham 
 
 ---
 
-*Last updated: 2026-05-23*
+*Last updated: 2026-06-01*

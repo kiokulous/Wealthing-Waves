@@ -104,6 +104,13 @@ export default function MarketPriceHistory() {
 
     const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n)
     const fmtDate = (d: string) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const fmtVol = (v: number | null) => {
+        if (v === null || v === 0) return '—'
+        if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + ' M'
+        if (v >= 1_000)     return (v / 1_000).toFixed(0) + ' K'
+        return v.toString()
+    }
+    const hasAnyVolume = paginated.some(p => p.category === 'Cổ phiếu')
 
     if (loading) {
         return (
@@ -192,7 +199,7 @@ export default function MarketPriceHistory() {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ background: 'var(--surface-2)' }}>
-                                    {['Ngày', 'Mã', 'Phân loại', 'Giá', 'Thao tác'].map((h, i) => (
+                                    {['Ngày', 'Mã', 'Phân loại', 'Giá', ...(hasAnyVolume ? ['Volume'] : []), 'Thao tác'].map((h, i, arr) => (
                                         <th key={h} style={{
                                             padding: '10px 16px', fontSize: 10.5, fontWeight: 700,
                                             letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -235,6 +242,17 @@ export default function MarketPriceHistory() {
                                                     {fmt(price.price)}
                                                 </span>
                                             </td>
+                                            {hasAnyVolume && (
+                                                <td style={{ padding: '11px 16px', textAlign: 'right' }}>
+                                                    {price.category === 'Cổ phiếu' ? (
+                                                        <span className="num" style={{ fontSize: 12.5, color: price.volume ? 'var(--t-2)' : 'var(--t-4)' }}>
+                                                            {fmtVol(price.volume)}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: 'var(--t-4)', fontSize: 12 }}>—</span>
+                                                    )}
+                                                </td>
+                                            )}
                                             <td style={{ padding: '11px 16px', textAlign: 'right' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
                                                     <button
@@ -316,6 +334,11 @@ export default function MarketPriceHistory() {
                                             <div className="num" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>
                                                 {fmt(price.price)}
                                             </div>
+                                            {price.category === 'Cổ phiếu' && (
+                                                <div style={{ fontSize: 11, color: price.volume ? 'var(--t-3)' : 'var(--t-4)', marginTop: 2 }}>
+                                                    KL: {fmtVol(price.volume)}
+                                                </div>
+                                            )}
                                             <div style={{ display: 'flex', gap: 4, marginTop: 6, justifyContent: 'flex-end' }}>
                                                 <button
                                                     onClick={() => setEditModal({ open: true, price })}

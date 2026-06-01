@@ -31,8 +31,17 @@ type MarketPrice = {
     category: string
     symbol: string
     price: number
+    volume: number | null   // Khối lượng khớp lệnh — chỉ dùng cho Cổ phiếu, null với các loại khác
     created_at: string
     updated_at: string
+}
+
+type Watchlist = {
+    id: string
+    user_id: string
+    symbol: string
+    category: string
+    created_at: string
 }
 ```
 
@@ -173,11 +182,40 @@ ROI = periodProfit / (startValue + periodBuying)
 
 ```
 1. SELECT id WHERE user_id=? AND symbol=? AND date=?
-2. If exists → UPDATE price, category
-3. If not    → INSERT new row
+2. If exists → UPDATE price, category, volume (nếu được truyền vào)
+3. If not    → INSERT new row (volume = null nếu không có)
 ```
 
 Với unique constraint `(user_id, symbol, date)` đã có trên production, có thể dùng upsert. Xem `docs/market-price-fix.md`.
+
+`volume` chỉ được lưu với category `Cổ phiếu`. Các loại khác (Chứng chỉ quỹ, Vàng, Tiết kiệm) luôn để `null`.
+
+---
+
+## Watchlist
+
+Bảng `watchlist` lưu danh sách mã chứng khoán user muốn theo dõi tín hiệu, độc lập với holdings.
+
+- RLS: mỗi user chỉ thấy và sửa watchlist của mình (`auth.uid() = user_id`)
+- Unique constraint: `(user_id, symbol)` — không trùng mã trong cùng 1 user
+- CRUD: `getWatchlist()`, `addToWatchlist(symbol, category)`, `removeFromWatchlist(symbol)` trong `lib/api/database.ts`
+
+SQL tạo bảng:
+```sql
+create table watchlist (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  symbol text not null,
+  category text not null default 'Cổ phiếu',
+  created_at timestamptz default now(),
+  unique(user_id, symbol)
+);
+alter table watchlist enable row level security;
+create policy "Users manage own watchlist"
+  on watchlist for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+```
 
 ---
 
@@ -199,4 +237,4 @@ For each month-end date (oldest → newest):
 
 ---
 
-*Last updated: 2026-05-17*
+*Last updated: 2026-06-01*

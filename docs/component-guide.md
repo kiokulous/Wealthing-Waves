@@ -35,8 +35,9 @@ CSS class `.app-grid` bị override trên mobile (globals.css):
 
 Nav links với active state dựa vào `usePathname()`. Hiển thị:
 - Logo + app name
-- 5 nav items (Dashboard, Assets, Analysis, Transaction, Profile)
-- Portfolio summary stats (total value, P&L%)
+- Nav items: Tổng quan, Nhập liệu, **Tín hiệu** (`/signals`), Phân tích, Cài đặt
+- Portfolio return % (màu xanh/cam/đỏ theo ngưỡng)
+- XP level card (dựa vào số transaction)
 - User avatar + display name + Sign out
 
 **Data fetching:** Tự fetch transactions + market prices để tính portfolio stats. Dùng `calculatePortfolio()`.
@@ -48,7 +49,7 @@ Nav links với active state dựa vào `usePathname()`. Hiển thị:
 **File:** `components/FloatingNav.tsx`  
 **Visible:** Mobile only (ẩn trên `md:`)
 
-Bottom navigation pill (glassmorphism style). 5 nav items cùng với AppSidebar.
+Bottom navigation pill (glassmorphism style). Nav items: Tổng quan, Nhập liệu, **Tín hiệu**, Phân tích, Tài khoản.
 
 ---
 
@@ -106,12 +107,15 @@ Hiển thị danh sách giao dịch, sortable by date. Mỗi row có edit + dele
 **File:** `components/MarketPriceHistory.tsx`
 
 ```tsx
-<MarketPriceHistory
-    prices={marketPrices}
-    onEdit={(price) => { /* open edit modal */ }}
-    onDelete={(id) => { /* delete logic */ }}
-/>
+<MarketPriceHistory />
 ```
+
+Hiển thị lịch sử đồng bộ giá với search, filter theo category, và pagination (20 items/trang).
+
+Cột hiển thị: **Ngày · Mã · Phân loại · Giá · Volume · Thao tác**
+
+- Cột **Volume** chỉ xuất hiện khi trang hiện tại có ít nhất 1 bản ghi Cổ phiếu. Hiển thị dạng rút gọn (`6.0 M`, `414 K`). Các loại tài sản khác (Quỹ, Vàng, Tiết kiệm) hiện `—`.
+- Mobile: volume hiện dạng nhỏ `KL: 6.0 M` bên dưới giá, chỉ với Cổ phiếu.
 
 ---
 
@@ -198,6 +202,35 @@ const { user, loading, signIn, signUp, signOut, signInWithGoogle } = useAuth()
 
 ---
 
+---
+
+## Pages
+
+### /signals — Trang Tín hiệu Giao dịch
+
+**File:** `app/signals/page.tsx`
+
+Trang phân tích và đề xuất hành động cho từng mã trong watchlist.
+
+**Tính năng:**
+- Quản lý watchlist: thêm/xóa mã, chọn category
+- Tính tín hiệu tự động từ lịch sử `market_prices`: MA5/MA20, momentum 5/10 phiên, P&L từ giá mua, volume (chỉ Cổ phiếu)
+- 4 loại tín hiệu: `BUY_MORE` 🟢, `HOLD` 🔵, `WATCH` 🟡, `CONSIDER_CUT` 🔴
+- Click vào hàng để xem chi tiết lý do phân tích + link TCBS
+- Summary strip đếm số mã theo từng tín hiệu
+
+**Signal engine** (`computeSignal(closes, avgBuyPrice, volumes, useVolume)`):
+- `closes[]`: mảng Close price, **newest first**
+- `volumes[]`: mảng volume, **newest first**, chỉ dùng khi `useVolume = true`
+- `useVolume`: `true` chỉ khi `category === 'Cổ phiếu'`
+- Score system: mỗi điều kiện cộng/trừ điểm → classify theo ngưỡng
+- Volume rules (chỉ Cổ phiếu): breakout xác nhận (+2), bull trap (−2), bán tháo (−2), điều chỉnh lành mạnh (+1)
+- Confidence: `cao` khi ≥20 phiên Close + ≥10 phiên volume; `trung bình` khi ≥10 phiên; `thấp` khi <10
+
+**Data sources:** `getWatchlist()`, `getAllMarketPrices()`, `getAllTransactions()` — tất cả client-side.
+
+---
+
 ## Adding a New Component
 
 1. Tạo file `components/YourComponent.tsx`
@@ -225,4 +258,4 @@ export default function YourComponent({ className }: Props) {
 
 ---
 
-*Last updated: 2026-05-23*
+*Last updated: 2026-06-01 (updated MarketPriceHistory volume column)*
