@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
             } else {
                 await supabase
                     .from('market_prices')
-                    .insert({ user_id: userId, date: today, category, symbol, price })
+                    .insert({ user_id: userId, date: today, category, symbol, price, volume: null })
             }
             saved++
         }
