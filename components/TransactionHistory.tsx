@@ -13,7 +13,7 @@ export default function TransactionHistory() {
     const [error, setError] = useState('')
 
     const [search, setSearch] = useState('')
-    const [filterType, setFilterType] = useState<'all' | 'Mua' | 'Chốt'>('all')
+    const [filterType, setFilterType] = useState<'all' | 'Mua' | 'Chốt' | 'Cổ tức CP'>('all')
     const [currentPage, setCurrentPage] = useState(1)
     const PER_PAGE = 20
 
@@ -108,7 +108,7 @@ export default function TransactionHistory() {
 
                         {/* Type filter pills */}
                         <div style={{ display: 'flex', background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 10, padding: 3, gap: 2 }}>
-                            {(['all', 'Mua', 'Chốt'] as const).map(t => (
+                            {(['all', 'Mua', 'Chốt', 'Cổ tức CP'] as const).map(t => (
                                 <button
                                     key={t}
                                     onClick={() => setFilterType(t)}
@@ -116,7 +116,7 @@ export default function TransactionHistory() {
                                         padding: '4px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
                                         background: filterType === t ? 'var(--surface-3)' : 'transparent',
                                         color: filterType === t
-                                            ? t === 'Mua' ? 'var(--accent)' : t === 'Chốt' ? 'var(--neg)' : 'var(--t-1)'
+                                            ? t === 'Mua' ? 'var(--accent)' : t === 'Chốt' ? 'var(--neg)' : t === 'Cổ tức CP' ? '#6ea8ff' : 'var(--t-1)'
                                             : 'var(--t-3)',
                                         transition: 'all .15s',
                                     }}
@@ -180,12 +180,17 @@ export default function TransactionHistory() {
                                         </td>
                                         {/* Loại */}
                                         <td style={{ padding: '11px 16px' }}>
-                                            <span className={tx.type === 'Mua' ? 'badge green' : 'badge red'} style={{ fontSize: 11.5 }}>
+                                            <span
+                                                className={tx.type === 'Mua' ? 'badge green' : tx.type === 'Cổ tức CP' ? 'badge' : 'badge red'}
+                                                style={{ fontSize: 11.5, ...(tx.type === 'Cổ tức CP' ? { background: 'rgba(110,168,255,0.12)', color: '#6ea8ff', border: 'none' } : {}) }}
+                                            >
                                                 {tx.type === 'Mua'
                                                     ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                                                    : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+                                                    : tx.type === 'Cổ tức CP'
+                                                        ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                                                        : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
                                                 }
-                                                {tx.type === 'Mua' ? 'Mua' : 'Chốt'}
+                                                {tx.type === 'Mua' ? 'Mua' : tx.type === 'Cổ tức CP' ? 'Cổ tức CP' : 'Chốt'}
                                             </span>
                                         </td>
                                         {/* SL */}
@@ -204,7 +209,7 @@ export default function TransactionHistory() {
                                         </td>
                                         {/* Tổng */}
                                         <td style={{ padding: '11px 16px', textAlign: 'right' }}>
-                                            <span className="num" style={{ fontSize: 13, fontWeight: 700, color: tx.type === 'Mua' ? 'var(--accent)' : 'var(--neg)' }}>{fmt(tx.total_money)}</span>
+                                            <span className="num" style={{ fontSize: 13, fontWeight: 700, color: tx.type === 'Mua' ? 'var(--accent)' : tx.type === 'Cổ tức CP' ? '#6ea8ff' : 'var(--neg)' }}>{tx.type === 'Cổ tức CP' ? '—' : fmt(tx.total_money)}</span>
                                         </td>
                                         {/* Actions */}
                                         <td style={{ padding: '12px 16px', textAlign: 'right' }}>
