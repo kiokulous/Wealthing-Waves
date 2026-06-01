@@ -343,7 +343,7 @@ export default function SignalsPage() {
     // ── Signal summary counts ───────────────────────────────────────────────
     const counts = React.useMemo(() => {
         let buy = 0, hold = 0, watch = 0, cut = 0
-        for (const [, v] of signalMap) {
+        for (const v of Array.from(signalMap.values())) {
             if (v.signal.signal === 'BUY_MORE')     buy++
             else if (v.signal.signal === 'HOLD')    hold++
             else if (v.signal.signal === 'WATCH')   watch++
