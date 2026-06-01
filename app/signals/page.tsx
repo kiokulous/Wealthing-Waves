@@ -383,6 +383,20 @@ export default function SignalsPage() {
                 <div className="h-sub">
                     Phân tích xu hướng và đưa ra gợi ý hành động dựa trên lịch sử giá của bạn.
                 </div>
+                {/* Disclaimer */}
+                <div style={{
+                    marginTop: 12,
+                    padding: '10px 14px',
+                    borderRadius: 9,
+                    background: 'rgba(255,181,71,0.07)',
+                    border: '1px solid rgba(255,181,71,0.2)',
+                    display: 'flex', alignItems: 'flex-start', gap: 8,
+                }}>
+                    <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+                    <span style={{ fontSize: 12, color: 'var(--t-3)', lineHeight: 1.6 }}>
+                        Các tín hiệu được tính toán hoàn toàn dựa trên dữ liệu giá do <strong style={{ color: 'var(--t-2)' }}>người dùng tự cập nhật</strong>, không kết nối trực tiếp với nguồn dữ liệu thị trường. Đây chỉ là công cụ tham khảo cá nhân, không phải tư vấn đầu tư. Mọi quyết định giao dịch hoàn toàn thuộc trách nhiệm của người dùng.
+                    </span>
+                </div>
             </div>
 
             {/* ── Summary strip ── */}
