@@ -1,23 +1,42 @@
 
-import { calculatePortfolio, PortfolioSummary } from './portfolio';
+import { calculatePortfolio, toDateStr, PortfolioSummary } from './portfolio';
 import type { Transaction, MarketPrice } from '../supabase';
 
 /**
  * Calculate portfolio performance over a period (Snapshot Logic)
  * Profit = (EndValue - StartValue) + (Selling - Buying)
+ *
+ * @param endDate Optional period end (inclusive). When provided, the "end
+ *   snapshot" is computed as of that date (holdings + prices ≤ endDate) —
+ *   e.g. a past-year view ends at Dec 31 of that year, not today.
+ *   Omit/null = period runs to now.
  */
 export function calculatePeriodPerformance(
     transactions: Transaction[],
     marketPrices: MarketPrice[],
-    startDate: Date | null
+    startDate: Date | null,
+    endDate?: Date | null
 ): PortfolioSummary {
+    // Clamp the universe to endDate: everything after it doesn't exist
+    // for this calculation. calculatePortfolio(endTxns, endPrices) then
+    // naturally yields the end-of-period snapshot.
+    if (endDate) {
+        const endStr = toDateStr(endDate);
+        transactions = transactions.filter(t => t.date.slice(0, 10) <= endStr);
+        marketPrices = marketPrices.filter(p => p.date.slice(0, 10) <= endStr);
+    }
+
     if (!startDate) {
         return calculatePortfolio(transactions, marketPrices);
     }
 
+    // Convert once to local YYYY-MM-DD — all comparisons below are string-based
+    // (timezone-proof: avoids UTC-midnight parsing of DB date strings)
+    const startStr = toDateStr(startDate);
+
     // 1. Calculate Start Snapshot
     const startPortfolio = new Map<string, { qty: number, value: number }>();
-    const historicalTxns = transactions.filter(t => new Date(t.date) < startDate);
+    const historicalTxns = transactions.filter(t => t.date.slice(0, 10) < startStr);
 
     // Calculate qty at start date
     historicalTxns.forEach(t => {
@@ -35,8 +54,8 @@ export function calculatePeriodPerformance(
         if (item.qty > 0) {
             // Find price closest to startDate (but before or equal)
             const prices = marketPrices
-                .filter(p => p.symbol === symbol && new Date(p.date) <= startDate)
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                .filter(p => p.symbol === symbol && p.date.slice(0, 10) <= startStr)
+                .sort((a, b) => b.date.slice(0, 10).localeCompare(a.date.slice(0, 10)));
 
             let price = prices.length > 0 ? prices[0].price : 0;
 
@@ -73,7 +92,7 @@ export function calculatePeriodPerformance(
     });
 
     // 2. Calculate Flows in Period
-    const periodTxns = transactions.filter(t => new Date(t.date) >= startDate);
+    const periodTxns = transactions.filter(t => t.date.slice(0, 10) >= startStr);
     let totalBuying = 0;
     let totalSelling = 0;
     const categoryFlows = new Map<string, { buying: number, selling: number }>();

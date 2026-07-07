@@ -6,6 +6,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio, type PortfolioSummary } from '@/lib/api/portfolio'
 import { fetchMarketPrices } from '@/lib/api/market-prices'
+import { createClient } from '@/lib/supabase'
 
 const IconWallet = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -95,12 +96,17 @@ export default function AssetsPage() {
                 return
             }
 
-            // 3. Lưu lên server
+            // 3. Lưu lên server (auth qua Bearer token — server tự suy ra user)
+            const { data: { session } } = await createClient().auth.getSession()
+            if (!session) throw new Error('Phiên đăng nhập hết hạn — vui lòng đăng nhập lại')
+
             const res = await fetch('/api/save-prices', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
                 body: JSON.stringify({
-                    userId: user?.id,
                     prices: pricesToSave.map(r => ({ symbol: r.symbol, category: r.category, price: r.price })),
                 }),
             })

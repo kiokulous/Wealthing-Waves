@@ -50,21 +50,23 @@ Trade-off: đơn giản hơn nhưng initial load có thể chậm hơn SSR. Acce
 
 ---
 
-### 5. Auth Guard Pattern
+### 5. Auth Guard Pattern (updated 2026-07-07)
 
-Mỗi page tự guard bằng pattern:
+**Primary guard is now in `middleware.ts`** — unauthenticated requests to app pages are redirected to `/login` server-side; authenticated users hitting `/login` or `/` go to `/dashboard`. Public paths: `/login`, `/auth/*`, `/api/*` (API routes authenticate via Bearer token themselves).
+
+This works because `lib/supabase.ts` now uses `createBrowserClient` from `@supabase/ssr` → session lives in **cookies** (not localStorage), visible to middleware and server routes. Note: this switch logs out pre-existing localStorage sessions once.
+
+Pages still keep the client-side `useAuth()` guard as a secondary layer:
 ```typescript
 const { user, loading } = useAuth()
-const router = useRouter()
-
 useEffect(() => {
     if (!loading && !user) router.push('/login')
 }, [user, loading, router])
-
-if (loading || !user) return <LoadingSpinner />
 ```
 
-Không có middleware Next.js — guard ở client side.
+### 5b. API Route Auth (updated 2026-07-07)
+
+`/api/save-prices` requires `Authorization: Bearer <access_token>`; the user id is derived from the verified token, never from the request body. Writes use the anon key + RLS (no service role key anywhere — `SUPABASE_SERVICE_ROLE_KEY` can be removed from Vercel). `/api/refresh-prices` was deleted (dead code).
 
 ---
 
@@ -155,7 +157,21 @@ style={{
 
 ---
 
-### 13. Volume — Chỉ áp dụng cho Cổ phiếu
+### 13. Cổ tức CP — DB Constraint
+
+Bảng `transactions` có check constraint `transactions_type_check` giới hạn cột `type`. Khi thêm type mới phải update constraint trong Supabase:
+
+```sql
+ALTER TABLE transactions DROP CONSTRAINT transactions_type_check;
+ALTER TABLE transactions ADD CONSTRAINT transactions_type_check
+CHECK (type IN ('Mua', 'Chốt', 'Bán', 'Cổ tức CP'));
+```
+
+**Cổ tức CP** được xử lý nhất quán ở 5 file: `supabase.ts`, `portfolio.ts`, `calculate_period_performance.ts`, `signals/page.tsx`, `transaction/page.tsx` + `EditTransactionModal.tsx`. Logic chung: `quantity += t.quantity` nhưng KHÔNG tăng `totalCost`/`invested` → avgCost tự động giảm.
+
+---
+
+### 15. Volume — Chỉ áp dụng cho Cổ phiếu
 
 Cột `volume` trong bảng `market_prices` là nullable. Chỉ nhập và sử dụng với category `Cổ phiếu`. Các loại khác (Chứng chỉ quỹ, Vàng, Tiết kiệm) luôn để `null`.
 
@@ -163,7 +179,7 @@ Form Price Update trong `transaction/page.tsx` chỉ hiện field "Khối lượ
 
 ---
 
-### 14. Map Iteration — Dùng `Array.from()` thay vì `for...of` trực tiếp
+### 16. Map Iteration — Dùng `Array.from()` thay vì `for...of` trực tiếp
 
 TypeScript target của project không hỗ trợ iterate `Map` trực tiếp bằng `for...of`:
 
@@ -217,4 +233,4 @@ Prototype UI HTML gốc được giữ tại `docs/prototype-ui.html` làm tham 
 
 ---
 
-*Last updated: 2026-06-01*
+*Last updated: 2026-06-01 (thêm Cổ tức CP, volume, Map iteration)*

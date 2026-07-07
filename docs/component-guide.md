@@ -100,6 +100,8 @@ Mini line chart (Recharts `LineChart`). `positive` điều khiển màu stroke (
 
 Hiển thị danh sách giao dịch, sortable by date. Mỗi row có edit + delete button.
 
+Filter pills: **Tất cả · Mua · Chốt · Cổ tức CP**. Badge màu: Mua = xanh lá, Chốt/Bán = đỏ, Cổ tức CP = xanh dương. Cột Tổng tiền hiện "—" với Cổ tức CP (không có cash flow).
+
 ---
 
 ### MarketPriceHistory
@@ -134,7 +136,9 @@ Cột hiển thị: **Ngày · Mã · Phân loại · Giá · Volume · Thao tá
 />
 ```
 
-Form đầy đủ — date, type (Mua/Chốt toggle), category, symbol, quantity, giá khớp lệnh, tổng tiền giao dịch, phí & thuế (readonly — auto-calc: `total_money - qty × price`).
+Form đầy đủ — date, type toggle (3 buttons: **Mua / Chốt / Cổ tức CP**), category, symbol, quantity, giá khớp lệnh, tổng tiền giao dịch, phí & thuế (readonly — auto-calc: `total_money - qty × price`).
+
+Khi chọn **Cổ tức CP**: chỉ hiện field Số lượng, ẩn giá/tổng tiền/phí. Submit với `price=0`, `fee=0`, `total_money=0`.
 
 **Dark theme:** dùng CSS variables (`var(--surface-1)`, `.input-bento`, `.btn-primary`). Không dùng Tailwind `dark:` prefix. Mobile-responsive qua `.mob-form-row` + `.mob-form-footer`.
 
@@ -258,4 +262,4 @@ export default function YourComponent({ className }: Props) {
 
 ---
 
-*Last updated: 2026-06-01 (updated MarketPriceHistory volume column)*
+*Last updated: 2026-06-01 (thêm Cổ tức CP, volume column)*

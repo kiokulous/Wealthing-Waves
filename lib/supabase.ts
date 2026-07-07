@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 export type Transaction = {
     id: string
@@ -64,9 +64,15 @@ export type Database = {
     }
 }
 
-type SupabaseClient = ReturnType<typeof createSupabaseClient<Database>>
+type SupabaseClient = ReturnType<typeof createBrowserClient<Database>>
 let _instance: SupabaseClient | null = null
 
+/**
+ * Browser client from @supabase/ssr — stores the session in COOKIES
+ * (not localStorage) so middleware and server routes can see it.
+ * NOTE: switching from the old localStorage client logs existing
+ * sessions out once; users just sign in again.
+ */
 export const createClient = (): SupabaseClient => {
     if (_instance) return _instance
 
@@ -78,12 +84,7 @@ export const createClient = (): SupabaseClient => {
         throw new Error("Missing Supabase credentials in .env.local")
     }
 
-    _instance = createSupabaseClient<Database>(url, key, {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-        }
-    })
+    _instance = createBrowserClient<Database>(url, key)
     return _instance
 }
 

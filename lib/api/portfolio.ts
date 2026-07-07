@@ -1,6 +1,27 @@
 import type { Transaction, MarketPrice } from '../supabase'
 
 // ================================================
+// DATE HELPERS
+// ================================================
+// DB stores DATE as ISO 'YYYY-MM-DD'. Comparing these as strings is
+// timezone-proof (new Date('YYYY-MM-DD') parses as UTC midnight, which
+// shifts dates when compared against local-time Dates — off-by-one risk).
+
+/** Format a Date as local YYYY-MM-DD without UTC conversion */
+export function toDateStr(d: Date): string {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+}
+
+/** Normalize a DB date value to YYYY-MM-DD */
+const dstr = (s: string) => s.slice(0, 10)
+
+/** Sort comparator: newest date first (ISO string compare) */
+const byDateDesc = (a: { date: string }, b: { date: string }) => dstr(b.date).localeCompare(dstr(a.date))
+
+// ================================================
 // TYPES
 // ================================================
 
@@ -49,14 +70,14 @@ export function calculatePortfolio(
     marketPrices: MarketPrice[],
     filterYear?: number
 ): PortfolioSummary {
-    // Filter transactions by year if specified
+    // Filter transactions by year if specified (string compare — timezone-proof)
     let filteredTransactions = transactions
     if (filterYear) {
-        const startDate = new Date(filterYear, 0, 1)
-        const endDate = new Date(filterYear, 11, 31, 23, 59, 59)
+        const start = `${filterYear}-01-01`
+        const end = `${filterYear}-12-31`
         filteredTransactions = transactions.filter(t => {
-            const date = new Date(t.date)
-            return date >= startDate && date <= endDate
+            const d = dstr(t.date)
+            return d >= start && d <= end
         })
     }
 
@@ -127,7 +148,7 @@ export function calculatePortfolio(
         // Get latest price for symbol
         const symbolPrices = marketPrices
             .filter(p => p.symbol === item.symbol)
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .sort(byDateDesc)
 
         const currentPrice = symbolPrices.length > 0 ? symbolPrices[0].price : 0
         const currentValue = item.quantity * currentPrice
@@ -257,20 +278,18 @@ export function calculateSymbolDetail(
     // Filter transactions for this symbol
     let symbolTransactions = transactions.filter(t => t.symbol === symbol)
 
-    // Apply year filter if specified
+    // Apply year filter if specified (string compare — timezone-proof)
     if (filterYear) {
-        const startDate = new Date(filterYear, 0, 1)
-        const endDate = new Date(filterYear, 11, 31, 23, 59, 59)
+        const start = `${filterYear}-01-01`
+        const end = `${filterYear}-12-31`
         symbolTransactions = symbolTransactions.filter(t => {
-            const date = new Date(t.date)
-            return date >= startDate && date <= endDate
+            const d = dstr(t.date)
+            return d >= start && d <= end
         })
     }
 
     // Sort by date ascending for calculation
-    symbolTransactions.sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    )
+    symbolTransactions.sort((a, b) => dstr(a.date).localeCompare(dstr(b.date)))
 
     // Calculate holdings
     let quantity = 0
@@ -309,7 +328,7 @@ export function calculateSymbolDetail(
     // Get market prices for this symbol
     const symbolPrices = marketPrices
         .filter(p => p.symbol === symbol)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort(byDateDesc)
 
     const latestPrice = symbolPrices.length > 0 ? symbolPrices[0].price : 0
     const currentValue = quantity * latestPrice
@@ -373,20 +392,20 @@ export function calculatePortfolioHistory(
     months: number = 12
 ): { date: string; value: number }[] {
     const today = new Date()
+    const todayStr = toDateStr(today)
     const history: { date: string; value: number }[] = []
 
-    // Adjust today to end of day to be safe with comparisons
-    today.setHours(23, 59, 59, 999)
-
     for (let i = months - 1; i >= 0; i--) {
-        const date = new Date(today.getFullYear(), today.getMonth() - i + 1, 0) // End of month
-        // If the calculated date is in the future relative to "today" (e.g. current month end), use 'today'
-        const checkDate = date > today ? today : date
-        const checkDateStr = checkDate.toISOString().split('T')[0]
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() - i + 1, 0) // End of month (local)
+        // If month-end is in the future (current month), clamp to today.
+        // NOTE: use local-formatted date string, NOT toISOString() — in UTC+7
+        // toISOString() shifts local midnight back to the previous day.
+        const checkDate = toDateStr(monthEnd) > todayStr ? today : monthEnd
+        const checkDateStr = toDateStr(checkDate)
 
         // Calculate portfolio state at this date
-        // 1. Filter transactions up to this date
-        const relevantTxns = transactions.filter(t => new Date(t.date) <= checkDate)
+        // 1. Filter transactions up to this date (string compare)
+        const relevantTxns = transactions.filter(t => t.date.slice(0, 10) <= checkDateStr)
 
         // 2. Calculate holdings
         const holdings = new Map<string, number>() // symbol -> quantity
@@ -403,10 +422,10 @@ export function calculatePortfolioHistory(
         let totalValue = 0
         holdings.forEach((qty, symbol) => {
             if (qty > 0) {
-                // Find latest price for this symbol UP TO checkDate
+                // Find latest price for this symbol UP TO checkDate (string compare)
                 const priceObj = marketPrices
-                    .filter(p => p.symbol === symbol && new Date(p.date) <= checkDate)
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+                    .filter(p => p.symbol === symbol && p.date.slice(0, 10) <= checkDateStr)
+                    .sort(byDateDesc)[0]
 
                 const price = priceObj ? priceObj.price : 0
 

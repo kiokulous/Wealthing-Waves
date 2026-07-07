@@ -28,7 +28,33 @@ export async function middleware(request: NextRequest) {
 
     // Refresh session — bắt buộc để server client hoạt động đúng
     // KHÔNG dùng getSession() ở đây vì nó không verify token với server
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const path = request.nextUrl.pathname
+    const isPublicPath =
+        path === '/login' ||
+        path.startsWith('/auth') ||   // OAuth callback
+        path.startsWith('/api')       // API routes tự xử lý auth (Bearer token)
+
+    // Helper: redirect nhưng giữ lại cookies auth vừa được refresh
+    const redirectTo = (pathname: string) => {
+        const url = request.nextUrl.clone()
+        url.pathname = pathname
+        url.search = ''
+        const res = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach(cookie => res.cookies.set(cookie))
+        return res
+    }
+
+    // Chưa đăng nhập + vào trang cần bảo vệ → /login
+    if (!user && !isPublicPath) {
+        return redirectTo('/login')
+    }
+
+    // Đã đăng nhập mà vào /login hoặc / → /dashboard
+    if (user && (path === '/login' || path === '/')) {
+        return redirectTo('/dashboard')
+    }
 
     return supabaseResponse
 }

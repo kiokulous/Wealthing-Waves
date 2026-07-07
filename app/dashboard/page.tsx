@@ -5,8 +5,10 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio, calculatePortfolioHistory } from '@/lib/api/portfolio'
+import { calculatePeriodPerformance } from '@/lib/api/calculate_period_performance'
 import { fetchMarketPrices } from '@/lib/api/market-prices'
 import CategoryIcon from '@/components/CategoryIcon'
+import { createClient } from '@/lib/supabase'
 import type { Transaction, MarketPrice } from '@/lib/supabase'
 import type { PortfolioSummary } from '@/lib/api/portfolio'
 
@@ -104,8 +106,16 @@ export default function DashboardPage() {
     }
 
     const recalc = () => {
-        const yr = filterYear === 'all' ? undefined : filterYear
-        setPortfolio(calculatePortfolio(transactions, marketPrices, yr))
+        if (filterYear === 'all') {
+            setPortfolio(calculatePortfolio(transactions, marketPrices))
+        } else {
+            // Snapshot logic: P&L của năm = giá trị cuối kỳ − đầu kỳ + bán − mua trong năm.
+            // Năm quá khứ chốt tại 31/12; năm hiện tại chạy đến hôm nay.
+            const startDate = new Date(filterYear, 0, 1)
+            const isCurrentYear = filterYear === new Date().getFullYear()
+            const endDate = isCurrentYear ? null : new Date(filterYear, 11, 31)
+            setPortfolio(calculatePeriodPerformance(transactions, marketPrices, startDate, endDate))
+        }
         setChartData(calculatePortfolioHistory(transactions, marketPrices, 12))
     }
 
@@ -139,12 +149,17 @@ export default function DashboardPage() {
                 return
             }
 
-            // 3. Gửi lên server để lưu DB
+            // 3. Gửi lên server để lưu DB (auth qua Bearer token — server tự suy ra user)
+            const { data: { session } } = await createClient().auth.getSession()
+            if (!session) throw new Error('Phiên đăng nhập hết hạn — vui lòng đăng nhập lại')
+
             const res = await fetch('/api/save-prices', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
                 body: JSON.stringify({
-                    userId: user?.id,
                     prices: pricesToSave.map(r => ({ symbol: r.symbol, category: r.category, price: r.price })),
                 }),
             })
