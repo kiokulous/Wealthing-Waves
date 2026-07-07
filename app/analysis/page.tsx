@@ -5,6 +5,7 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePeriodPerformance } from '@/lib/api/calculate_period_performance'
+import LoadErrorBanner from '@/components/LoadErrorBanner'
 import type { PortfolioSummary } from '@/lib/api/portfolio'
 
 const FILTERS: [string, string][] = [
@@ -167,6 +168,7 @@ export default function AnalysisPage() {
     const [portfolio, setPortfolio]             = useState<PortfolioSummary | null>(null)
     const [loading, setLoading]                 = useState(true)
     const [filter, setFilter]                   = useState('all')
+    const [loadError, setLoadError]             = useState('')
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/login')
@@ -181,10 +183,14 @@ export default function AnalysisPage() {
     const loadData = async () => {
         try {
             setLoading(true)
+            setLoadError('')
             const [txns, prices] = await Promise.all([getAllTransactions(), getAllMarketPrices()])
             setAllTransactions(txns)
             setAllPrices(prices)
-        } catch (err) { console.error(err) }
+        } catch (err: any) {
+            console.error(err)
+            setLoadError(err?.message || '')
+        }
         finally { setLoading(false) }
     }
 
@@ -212,6 +218,8 @@ export default function AnalysisPage() {
             </div>
         )
     }
+
+    if (loadError) return <LoadErrorBanner message={loadError} onRetry={loadData} />
 
     if (!portfolio || !user) return null
 

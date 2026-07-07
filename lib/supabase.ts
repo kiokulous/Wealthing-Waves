@@ -11,6 +11,7 @@ export type Transaction = {
     price: number
     fee: number
     total_money: number
+    notes: string | null
     created_at: string
     updated_at: string
 }

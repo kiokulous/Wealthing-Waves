@@ -174,8 +174,11 @@ export default function TransactionHistory() {
                                             {fmtDate(tx.date)}
                                         </td>
                                         {/* Mã */}
-                                        <td style={{ padding: '11px 16px' }}>
-                                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t-1)', display: 'block', letterSpacing: '0.04em', fontFamily: 'monospace' }}>{tx.symbol}</span>
+                                        <td style={{ padding: '11px 16px' }} title={tx.notes || undefined}>
+                                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t-1)', display: 'block', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
+                                                {tx.symbol}
+                                                {tx.notes && <span style={{ marginLeft: 6, fontSize: 10 }} aria-label="Có ghi chú">📝</span>}
+                                            </span>
                                             <span style={{ fontSize: 11, color: 'var(--t-4)', display: 'block', marginTop: 1 }}>{tx.category}</span>
                                         </td>
                                         {/* Loại */}

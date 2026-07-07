@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { getAllTransactions, getAllMarketPrices } from '@/lib/api/database'
 import { calculatePortfolio, type PortfolioSummary } from '@/lib/api/portfolio'
-import { fetchMarketPrices } from '@/lib/api/market-prices'
-import { createClient } from '@/lib/supabase'
+import LoadErrorBanner from '@/components/LoadErrorBanner'
 
 const IconWallet = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -56,8 +55,7 @@ export default function AssetsPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterCat, setFilterCat]   = useState('all')
     const [loading, setLoading]       = useState(true)
-    const [refreshing, setRefreshing] = useState(false)
-    const [refreshMsg, setRefreshMsg] = useState<{ text: string; ok: boolean } | null>(null)
+    const [loadError, setLoadError]   = useState('')
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/login')
@@ -67,69 +65,15 @@ export default function AssetsPage() {
         if (user) loadData()
     }, [user])
 
-    const handleRefreshPrices = async () => {
-        setRefreshing(true)
-        setRefreshMsg(null)
-        try {
-            // 1. Lấy transactions để tính holdings
-            const txns = await getAllTransactions()
-            const holdingsMap = new Map<string, { symbol: string; category: string; quantity: number }>()
-            for (const txn of txns) {
-                const h = holdingsMap.get(txn.symbol) ?? { symbol: txn.symbol, category: txn.category, quantity: 0 }
-                if (txn.type === 'Mua') h.quantity += txn.quantity
-                else if (txn.type === 'Chốt' || txn.type === 'Bán') h.quantity -= txn.quantity
-                holdingsMap.set(txn.symbol, h)
-            }
-            const activeHoldings = Array.from(holdingsMap.values()).filter(h => h.quantity > 0)
-            if (activeHoldings.length === 0) {
-                setRefreshMsg({ text: 'Không có mã nào đang nắm giữ', ok: true })
-                return
-            }
-
-            // 2. Browser fetch giá từ VNDirect
-            const fetchResults = await fetchMarketPrices(activeHoldings)
-            const pricesToSave = fetchResults.filter(r => r.price != null)
-            const errCount = fetchResults.filter(r => r.price == null && r.category !== 'Tiết kiệm').length
-
-            if (pricesToSave.length === 0) {
-                setRefreshMsg({ text: 'Không lấy được giá — VNDirect có thể đang bảo trì', ok: false })
-                return
-            }
-
-            // 3. Lưu lên server (auth qua Bearer token — server tự suy ra user)
-            const { data: { session } } = await createClient().auth.getSession()
-            if (!session) throw new Error('Phiên đăng nhập hết hạn — vui lòng đăng nhập lại')
-
-            const res = await fetch('/api/save-prices', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    prices: pricesToSave.map(r => ({ symbol: r.symbol, category: r.category, price: r.price })),
-                }),
-            })
-            if (!res.ok) throw new Error('Lưu giá thất bại')
-
-            const errNote = errCount > 0 ? ` (${errCount} mã cần nhập tay)` : ''
-            setRefreshMsg({ text: `Đã cập nhật ${pricesToSave.length} mã${errNote}`, ok: true })
-            await loadData()
-        } catch (err: any) {
-            setRefreshMsg({ text: err.message || 'Cập nhật thất bại', ok: false })
-        } finally {
-            setRefreshing(false)
-            setTimeout(() => setRefreshMsg(null), 4000)
-        }
-    }
-
     const loadData = async () => {
         try {
             setLoading(true)
+            setLoadError('')
             const [txns, prices] = await Promise.all([getAllTransactions(), getAllMarketPrices()])
             setPortfolio(calculatePortfolio(txns, prices))
-        } catch (err) {
+        } catch (err: any) {
             console.error(err)
+            setLoadError(err?.message || '')
         } finally {
             setLoading(false)
         }
@@ -162,6 +106,8 @@ export default function AssetsPage() {
             </div>
         )
     }
+
+    if (loadError) return <LoadErrorBanner message={loadError} onRetry={loadData} />
 
     return (
         <div style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 60 }}>
@@ -207,55 +153,6 @@ export default function AssetsPage() {
                     <span className="badge muted">{activeCount} đang nắm</span>
                     {closedCount > 0 && <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--t-3)', border: '1px solid var(--line)' }}>{closedCount} tất toán</span>}
 
-                    {/* Refresh Prices Button */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {refreshMsg && (
-                            <span style={{
-                                fontSize: 12, fontWeight: 600,
-                                color: refreshMsg.ok ? 'var(--accent)' : 'var(--neg)',
-                                transition: 'opacity .3s',
-                            }}>
-                                {refreshMsg.text}
-                            </span>
-                        )}
-                        <button
-                            onClick={handleRefreshPrices}
-                            disabled={refreshing}
-                            title="Cập nhật giá thị trường từ TCBS"
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '6px 14px', borderRadius: 9, fontSize: 12.5, fontWeight: 600,
-                                background: refreshing ? 'var(--surface-3)' : 'var(--accent-12)',
-                                color: refreshing ? 'var(--t-3)' : 'var(--accent)',
-                                border: '1px solid',
-                                borderColor: refreshing ? 'var(--line)' : 'var(--accent-18)',
-                                cursor: refreshing ? 'not-allowed' : 'pointer',
-                                transition: 'background .15s, color .15s',
-                                whiteSpace: 'nowrap',
-                            }}
-                        >
-                            {refreshing ? (
-                                <>
-                                    <span style={{
-                                        width: 12, height: 12, border: '2px solid var(--accent-18)',
-                                        borderTopColor: 'var(--accent)', borderRadius: '50%',
-                                        display: 'inline-block', animation: 'spin .7s linear infinite', flexShrink: 0,
-                                    }} />
-                                    Đang cập nhật...
-                                </>
-                            ) : (
-                                <>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                        <path d="M21 3v5h-5"/>
-                                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                                        <path d="M8 16H3v5"/>
-                                    </svg>
-                                    Cập nhật giá
-                                </>
-                            )}
-                        </button>
-                    </div>
                 </div>
             </div>
 

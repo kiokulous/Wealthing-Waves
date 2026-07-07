@@ -21,6 +21,21 @@ const dstr = (s: string) => s.slice(0, 10)
 /** Sort comparator: newest date first (ISO string compare) */
 const byDateDesc = (a: { date: string }, b: { date: string }) => dstr(b.date).localeCompare(dstr(a.date))
 
+/**
+ * Group prices by symbol, each list sorted newest-first.
+ * Build once per calculation instead of filter+sort per symbol (O(S×P log P) → O(P log P)).
+ */
+export function indexPricesBySymbol(marketPrices: MarketPrice[]): Map<string, MarketPrice[]> {
+    const map = new Map<string, MarketPrice[]>()
+    for (const p of marketPrices) {
+        const arr = map.get(p.symbol)
+        if (arr) arr.push(p)
+        else map.set(p.symbol, [p])
+    }
+    map.forEach(arr => arr.sort(byDateDesc))
+    return map
+}
+
 // ================================================
 // TYPES
 // ================================================
@@ -143,12 +158,11 @@ export function calculatePortfolio(
     // Calculate current values
     const items: PortfolioItem[] = []
     let totalCurrentValue = 0
+    const priceIndex = indexPricesBySymbol(marketPrices)
 
     portfolio.forEach(item => {
         // Get latest price for symbol
-        const symbolPrices = marketPrices
-            .filter(p => p.symbol === item.symbol)
-            .sort(byDateDesc)
+        const symbolPrices = priceIndex.get(item.symbol) ?? []
 
         const currentPrice = symbolPrices.length > 0 ? symbolPrices[0].price : 0
         const currentValue = item.quantity * currentPrice
@@ -394,6 +408,7 @@ export function calculatePortfolioHistory(
     const today = new Date()
     const todayStr = toDateStr(today)
     const history: { date: string; value: number }[] = []
+    const priceIndex = indexPricesBySymbol(marketPrices)
 
     for (let i = months - 1; i >= 0; i--) {
         const monthEnd = new Date(today.getFullYear(), today.getMonth() - i + 1, 0) // End of month (local)
@@ -422,10 +437,9 @@ export function calculatePortfolioHistory(
         let totalValue = 0
         holdings.forEach((qty, symbol) => {
             if (qty > 0) {
-                // Find latest price for this symbol UP TO checkDate (string compare)
-                const priceObj = marketPrices
-                    .filter(p => p.symbol === symbol && p.date.slice(0, 10) <= checkDateStr)
-                    .sort(byDateDesc)[0]
+                // Latest price ≤ checkDate: index is sorted newest-first → first match wins
+                const priceObj = (priceIndex.get(symbol) ?? [])
+                    .find(p => p.date.slice(0, 10) <= checkDateStr)
 
                 const price = priceObj ? priceObj.price : 0
 

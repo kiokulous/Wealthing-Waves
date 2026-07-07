@@ -2,17 +2,44 @@ import { createClient } from '../supabase'
 import type { Transaction, MarketPrice, Watchlist } from '../supabase'
 
 // ================================================
+// MODULE-LEVEL CACHE (per-user, TTL)
+// ================================================
+// Every page used to refetch the FULL transactions + market_prices tables
+// on mount. This cache shares the two lists across page navigations.
+// Any write below invalidates it, so data is never stale after a mutation.
+
+const CACHE_TTL_MS = 60_000
+type Cached<T> = { userId: string; ts: number; data: T }
+
+let _txnCache: Cached<Transaction[]> | null = null
+let _priceCache: Cached<MarketPrice[]> | null = null
+
+function readCache<T>(c: Cached<T> | null, userId: string): T | null {
+    if (c && c.userId === userId && Date.now() - c.ts < CACHE_TTL_MS) return c.data
+    return null
+}
+
+/** Clear cached lists — called automatically after any write */
+export function invalidateDataCache() {
+    _txnCache = null
+    _priceCache = null
+}
+
+// ================================================
 // TRANSACTIONS API
 // ================================================
 
 /**
- * Fetch all transactions for the current user
+ * Fetch all transactions for the current user (cached across pages, TTL 60s)
  */
 export async function getAllTransactions(): Promise<Transaction[]> {
     const supabase = createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
+
+    const cached = readCache(_txnCache, user.id)
+    if (cached) return cached
 
     const { data, error } = await supabase
         .from('transactions')
@@ -25,6 +52,7 @@ export async function getAllTransactions(): Promise<Transaction[]> {
         throw new Error(error.message)
     }
 
+    _txnCache = { userId: user.id, ts: Date.now(), data: data || [] }
     return data || []
 }
 
@@ -92,6 +120,7 @@ export async function addTransaction(transaction: {
     price: number
     fee?: number
     total_money: number
+    notes?: string | null
 }): Promise<Transaction> {
     const supabase = createClient()
 
@@ -113,6 +142,7 @@ export async function addTransaction(transaction: {
             price: transaction.price,
             fee: transaction.fee || 0,
             total_money: transaction.total_money,
+            notes: transaction.notes?.trim() || null,
         })
         .select()
         .single()
@@ -122,6 +152,7 @@ export async function addTransaction(transaction: {
         throw new Error(error.message)
     }
 
+    invalidateDataCache()
     return data
 }
 
@@ -146,6 +177,7 @@ export async function updateTransaction(
         throw new Error(error.message)
     }
 
+    invalidateDataCache()
     return data
 }
 
@@ -164,6 +196,8 @@ export async function deleteTransaction(id: string): Promise<void> {
         console.error('Error deleting transaction:', error)
         throw new Error(error.message)
     }
+
+    invalidateDataCache()
 }
 
 /**
@@ -186,6 +220,7 @@ export async function deleteAllMyTransactions(): Promise<number> {
         throw new Error(error.message)
     }
 
+    invalidateDataCache()
     return count ?? 0
 }
 
@@ -194,13 +229,16 @@ export async function deleteAllMyTransactions(): Promise<number> {
 // ================================================
 
 /**
- * Fetch all market prices for the current user
+ * Fetch all market prices for the current user (cached across pages, TTL 60s)
  */
 export async function getAllMarketPrices(): Promise<MarketPrice[]> {
     const supabase = createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
+
+    const cached = readCache(_priceCache, user.id)
+    if (cached) return cached
 
     const { data, error } = await supabase
         .from('market_prices')
@@ -213,6 +251,7 @@ export async function getAllMarketPrices(): Promise<MarketPrice[]> {
         throw new Error(error.message)
     }
 
+    _priceCache = { userId: user.id, ts: Date.now(), data: data || [] }
     return data || []
 }
 
@@ -322,6 +361,7 @@ export async function addMarketPrice(marketPrice: {
             throw new Error(error.message)
         }
 
+        invalidateDataCache()
         return data
     } else {
         // Insert new record
@@ -343,6 +383,7 @@ export async function addMarketPrice(marketPrice: {
             throw new Error(error.message)
         }
 
+        invalidateDataCache()
         return data
     }
 }
@@ -362,6 +403,8 @@ export async function deleteMarketPrice(id: string): Promise<void> {
         console.error('Error deleting market price:', error)
         throw new Error(error.message)
     }
+
+    invalidateDataCache()
 }
 
 // ================================================

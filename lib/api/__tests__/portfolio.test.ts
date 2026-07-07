@@ -15,6 +15,7 @@ function txn(partial: Partial<Transaction> & { date: string; type: Transaction['
         symbol: 'AAA',
         price: 0,
         fee: 0,
+        notes: null,
         created_at: '',
         updated_at: '',
         ...partial,

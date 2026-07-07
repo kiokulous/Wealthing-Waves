@@ -83,3 +83,27 @@ Docs updated: `dev-notes.md` §5 (middleware guard) + new §5b (API route auth).
 - **Step 7:** Shared data layer (avoid per-page full refetch — SWR/TanStack Query or context) + `market_prices` fetch optimization (latest-per-symbol + last N days instead of full table).
 - **Step 8:** Refactors & UX polish — extract `fmtMoney` helpers to `lib/format.ts`, dedupe `computeHoldings`, split 900-line pages, error toasts instead of silent `console.error`, skeleton loading, CSV import, cash dividend type, notes field.
 - Deploy reminders: remove `SUPABASE_SERVICE_ROLE_KEY` from Vercel; users re-login once.
+
+---
+
+# PROJECT_SYNC — Session 2026-07-07 (part 2)
+
+## Work Accomplished
+
+1. **Deploy verified:** production works after part-1 changes (cookie login OK, manual price entry writes to DB — a "data not saved" report turned out to be Supabase Table Editor's default row ordering hiding new rows). `SUPABASE_SERVICE_ROLE_KEY` removed from Vercel + redeployed. Advised deleting old Vercel deployments (they contain pre-patch code with the key baked in).
+2. **Dead feature removed:** VNDirect "Cập nhật giá thị trường" (API blocked; user updates prices manually / via tcbs-price-sync). Deleted: refresh buttons + handlers + error panels on Dashboard & Assets, `lib/api/market-prices.ts`, `/api/save-prices`. `app/api/` is now empty — no server routes needed.
+3. **Step 7 — data layer:** module-level cache in `database.ts` for `getAllTransactions` / `getAllMarketPrices` (per-user, TTL 60s, auto-invalidated by every write via `invalidateDataCache()`). New `indexPricesBySymbol()` in `portfolio.ts` — prices grouped+sorted once per calculation instead of filter+sort per symbol (used in calculatePortfolio, calculatePortfolioHistory, calculate_period_performance).
+4. **Step 8 (partial) — polish:**
+   - **Notes field:** `notes` added to `Transaction` type (column already existed in DB), input in transaction form + EditTransactionModal, 📝 icon + hover tooltip in TransactionHistory.
+   - **Error banners:** new `components/LoadErrorBanner.tsx` with retry button; Dashboard/Assets/Analysis now show it when loadData fails instead of silently rendering nothing.
+
+## Current State
+
+- All green: `tsc --noEmit` ✅, 16/16 tests ✅, lint ✅ (1 pre-existing warning).
+- Changes NOT yet deployed (local repo only — push to GitHub → Vercel when ready).
+
+## Next Steps
+
+- Deploy & smoke-test: transaction form with notes, error banner (e.g. offline), year filter.
+- Remaining Step 8 items: CSV import (with dry-run preview), cash dividend type (`Cổ tức tiền`), split 900-line pages, extract `fmt*` helpers to `lib/format.ts`, skeleton loading.
+- Optional cleanup: `/api` whitelist in middleware no longer needed (no API routes left); `docs/README.md` still documents deleted routes — refresh docs when convenient.

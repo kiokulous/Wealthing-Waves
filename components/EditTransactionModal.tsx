@@ -27,7 +27,8 @@ export default function EditTransactionModal({
         quantity: '',
         fee: '',
         total_money: '',
-        price: ''
+        price: '',
+        notes: ''
     })
 
     // Pre-fill form when transaction changes
@@ -41,7 +42,8 @@ export default function EditTransactionModal({
                 quantity: transaction.quantity.toString(),
                 fee: transaction.fee.toString(),
                 total_money: transaction.total_money.toString(),
-                price: transaction.price.toString()
+                price: transaction.price.toString(),
+                notes: transaction.notes ?? ''
             })
         }
     }, [transaction])
@@ -89,7 +91,8 @@ export default function EditTransactionModal({
                 quantity: parseFloat(formData.quantity),
                 price: isDividend ? 0 : parseFloat(formData.price) || 0,
                 fee: isDividend ? 0 : parseFloat(formData.fee) || 0,
-                total_money: isDividend ? 0 : parseFloat(formData.total_money)
+                total_money: isDividend ? 0 : parseFloat(formData.total_money),
+                notes: formData.notes.trim() || null
             })
 
             onCancel()
@@ -286,6 +289,17 @@ export default function EditTransactionModal({
                                 <input type="number" step="1" name="fee" value={formData.fee} readOnly className="input-bento num" style={{ color: 'var(--t-3)', cursor: 'default' }} />
                             </div>
                         </>)}
+
+                        {/* Ghi chú */}
+                        <div>
+                            <div className="label-cap" style={{ marginBottom: 6 }}>Ghi chú <span style={{ color: 'var(--t-4)', fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(tuỳ chọn)</span></div>
+                            <input
+                                type="text" name="notes" maxLength={200}
+                                value={formData.notes} onChange={handleChange}
+                                placeholder="Lý do giao dịch..."
+                                className="input-bento"
+                            />
+                        </div>
 
                     </div>
 

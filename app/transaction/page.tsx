@@ -27,6 +27,7 @@ export default function TransactionPage() {
         price: '',
         total_money: '',
         fee: '',
+        notes: '',
         // price-update extras
         session: 'EOD',
         source: 'Nhập tay',
@@ -107,6 +108,7 @@ export default function TransactionPage() {
                     price: isDividendType ? 0 : parseFloat(formData.price) || 0,
                     fee: isDividendType ? 0 : parseFloat(formData.fee) || 0,
                     total_money: isDividendType ? 0 : parseFloat(formData.total_money),
+                    notes: formData.notes,
                 })
                 setSuccess('Giao dịch đã được lưu vào hệ thống!')
             } else {
@@ -125,7 +127,7 @@ export default function TransactionPage() {
                 setSuccess('Giá thị trường đã được cập nhật!')
             }
 
-            setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '' }))
+            setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '', notes: '' }))
         } catch (err: any) {
             setError(err.message || 'Có lỗi xảy ra trong quá trình xử lý')
         } finally {
@@ -349,6 +351,20 @@ export default function TransactionPage() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Ghi chú (tuỳ chọn) */}
+                            <div className="field" style={{ marginBottom: 24 }}>
+                                <label>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                    Ghi chú (tuỳ chọn)
+                                </label>
+                                <input
+                                    type="text" name="notes" value={formData.notes} onChange={handleChange}
+                                    placeholder="VD: mua theo tín hiệu MA20, chốt vì đạt mục tiêu..."
+                                    maxLength={200}
+                                />
+                                <span className="hint">Lý do giao dịch — để sau này nhìn lại còn nhớ mình nghĩ gì</span>
+                            </div>
                         </>
                     )}
 
@@ -400,7 +416,7 @@ export default function TransactionPage() {
                             </span>
                         </div>
                         <div className="row" style={{ gap: 8 }}>
-                            <button type="button" className="btn btn-ghost" onClick={() => setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '' }))}>
+                            <button type="button" className="btn btn-ghost" onClick={() => setFormData(prev => ({ ...prev, symbol: '', qty: '', price: '', total_money: '', fee: '', notes: '' }))}>
                                 Hủy
                             </button>
                             <button type="submit" className="btn btn-primary" disabled={loading} style={{ minWidth: 160 }}>

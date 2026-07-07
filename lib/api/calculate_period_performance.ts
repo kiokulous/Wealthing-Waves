@@ -1,5 +1,5 @@
 
-import { calculatePortfolio, toDateStr, PortfolioSummary } from './portfolio';
+import { calculatePortfolio, toDateStr, indexPricesBySymbol, PortfolioSummary } from './portfolio';
 import type { Transaction, MarketPrice } from '../supabase';
 
 /**
@@ -50,14 +50,14 @@ export function calculatePeriodPerformance(
 
     // Calculate value at start date using price closest to startDate
     let totalStartValue = 0;
+    const priceIndex = indexPricesBySymbol(marketPrices);
     startPortfolio.forEach((item, symbol) => {
         if (item.qty > 0) {
-            // Find price closest to startDate (but before or equal)
-            const prices = marketPrices
-                .filter(p => p.symbol === symbol && p.date.slice(0, 10) <= startStr)
-                .sort((a, b) => b.date.slice(0, 10).localeCompare(a.date.slice(0, 10)));
+            // Price closest to startDate (≤): index sorted newest-first → first match
+            const priceObj = (priceIndex.get(symbol) ?? [])
+                .find(p => p.date.slice(0, 10) <= startStr);
 
-            let price = prices.length > 0 ? prices[0].price : 0;
+            let price = priceObj ? priceObj.price : 0;
 
             // Fallback for Savings or Assets without Market Price
             if (price === 0) {
