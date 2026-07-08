@@ -43,18 +43,21 @@ export default function TransactionPage() {
         setError('')
     }, [mode])
 
-    // Auto-calc fee = total_money - (qty × price)
+    // Auto-calc fee theo chiều giao dịch:
+    // - Mua: trả tổng = giá trị + phí  → phí = total − qty×price
+    // - Bán/Chốt: nhận tổng = giá trị − phí → phí = qty×price − total
     useEffect(() => {
         const qty   = parseFloat(formData.qty)        || 0
         const price = parseFloat(formData.price)      || 0
         const total = parseFloat(formData.total_money)|| 0
         if (qty > 0 && price > 0 && total > 0) {
-            const derived = total - qty * price
+            const isSellType = formData.type === 'Chốt' || formData.type === 'Bán'
+            const derived = isSellType ? qty * price - total : total - qty * price
             setFormData(prev => ({ ...prev, fee: Math.round(derived).toString() }))
         } else {
             setFormData(prev => ({ ...prev, fee: '' }))
         }
-    }, [formData.total_money, formData.qty, formData.price])
+    }, [formData.total_money, formData.qty, formData.price, formData.type])
 
     const handleExportCSV = async () => {
         try {

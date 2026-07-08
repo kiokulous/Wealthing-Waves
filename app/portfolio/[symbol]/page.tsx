@@ -229,25 +229,46 @@ export default function PortfolioDetailPage() {
                     </div>
                 ) : (
                     <div style={{ overflowX: 'auto' }}>
-                        <table className="table" style={{ width: '100%' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr>
-                                    <th>Ngày</th>
-                                    <th>Loại</th>
-                                    <th style={{ textAlign: 'right' }}>Số lượng</th>
-                                    <th style={{ textAlign: 'right' }}>Đơn giá</th>
-                                    <th style={{ textAlign: 'right' }}>Phí</th>
-                                    <th style={{ textAlign: 'right' }}>Tổng tiền</th>
+                                <tr style={{ borderBottom: '1px solid var(--line)' }}>
+                                    {['Ngày', 'Loại', 'Ghi chú', 'Số lượng', 'Đơn giá', 'Phí', 'Tổng tiền'].map((col, i) => (
+                                        <th key={col} style={{
+                                            padding: '10px 16px', fontSize: 10.5, fontWeight: 700,
+                                            letterSpacing: '0.12em', textTransform: 'uppercase',
+                                            color: 'var(--t-3)', textAlign: i >= 3 ? 'right' : 'left',
+                                            whiteSpace: 'nowrap', background: 'var(--surface-2)',
+                                        }}>
+                                            {col}
+                                        </th>
+                                    ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {detail.transactions.map((t: Transaction) => {
+                                {detail.transactions.map((t: Transaction, idx: number) => {
                                     const isBuy = t.type === 'Mua'
+                                    const isDividend = t.type === 'Cổ tức CP'
                                     return (
-                                        <tr key={t.id}>
-                                            <td className="num-cell" style={{ color: 'var(--t-2)' }}>{fmtDate(t.date)}</td>
-                                            <td>
-                                                {isBuy
+                                        <tr
+                                            key={t.id}
+                                            style={{
+                                                borderBottom: '1px solid var(--line)',
+                                                background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)',
+                                                transition: 'background .12s',
+                                            }}
+                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'}
+                                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)'}
+                                        >
+                                            <td style={{ padding: '11px 16px', fontSize: 13, color: 'var(--t-2)', whiteSpace: 'nowrap' }}>
+                                                {fmtDate(t.date)}
+                                            </td>
+                                            <td style={{ padding: '11px 16px' }}>
+                                                {isDividend
+                                                    ? <span className="badge blue">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                                                        Cổ tức CP
+                                                      </span>
+                                                    : isBuy
                                                     ? <span className="badge green">
                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
                                                         Mua
@@ -258,17 +279,26 @@ export default function PortfolioDetailPage() {
                                                       </span>
                                                 }
                                             </td>
-                                            <td className="num-cell" style={{ textAlign: 'right' }}>
+                                            <td style={{ padding: '11px 16px', maxWidth: 260 }}>
+                                                {t.notes
+                                                    ? <span title={t.notes} style={{
+                                                        display: 'block', fontSize: 12, fontStyle: 'italic', color: 'var(--t-2)',
+                                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                      }}>{t.notes}</span>
+                                                    : <span style={{ color: 'var(--t-4)', fontSize: 12 }}>—</span>
+                                                }
+                                            </td>
+                                            <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: 13, fontFamily: 'monospace', color: 'var(--t-1)' }}>
                                                 {t.quantity.toLocaleString('vi-VN')}
                                             </td>
-                                            <td className="num-cell" style={{ textAlign: 'right', color: 'var(--t-2)' }}>
+                                            <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: 13, fontFamily: 'monospace', color: 'var(--t-2)' }}>
                                                 {fmtFull(t.price)}
                                             </td>
-                                            <td className="num-cell" style={{ textAlign: 'right', color: t.fee ? 'var(--t-2)' : 'var(--t-4)' }}>
+                                            <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: 13, fontFamily: 'monospace', color: t.fee ? 'var(--t-2)' : 'var(--t-4)' }}>
                                                 {t.fee ? fmtFull(t.fee) : '—'}
                                             </td>
-                                            <td className="num-cell" style={{ textAlign: 'right', fontWeight: 700, color: isBuy ? 'var(--accent)' : 'var(--neg)' }}>
-                                                {fmtFull(t.total_money)} đ
+                                            <td style={{ padding: '11px 16px', textAlign: 'right', fontSize: 13, fontFamily: 'monospace', fontWeight: 700, color: isDividend ? 'var(--t-3)' : isBuy ? 'var(--accent)' : 'var(--neg)' }}>
+                                                {isDividend ? '—' : fmtFull(t.total_money) + ' đ'}
                                             </td>
                                         </tr>
                                     )

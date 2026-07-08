@@ -174,12 +174,18 @@ export default function TransactionHistory() {
                                             {fmtDate(tx.date)}
                                         </td>
                                         {/* Mã */}
-                                        <td style={{ padding: '11px 16px' }} title={tx.notes || undefined}>
-                                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t-1)', display: 'block', letterSpacing: '0.04em', fontFamily: 'monospace' }}>
-                                                {tx.symbol}
-                                                {tx.notes && <span style={{ marginLeft: 6, fontSize: 10 }} aria-label="Có ghi chú">📝</span>}
-                                            </span>
+                                        <td style={{ padding: '11px 16px' }}>
+                                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--t-1)', display: 'block', letterSpacing: '0.04em', fontFamily: 'monospace' }}>{tx.symbol}</span>
                                             <span style={{ fontSize: 11, color: 'var(--t-4)', display: 'block', marginTop: 1 }}>{tx.category}</span>
+                                            {tx.notes && (
+                                                <span title={tx.notes} style={{
+                                                    display: 'block', marginTop: 3, fontSize: 11, fontStyle: 'italic',
+                                                    color: 'var(--t-3)', maxWidth: 240,
+                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                }}>
+                                                    📝 {tx.notes}
+                                                </span>
+                                            )}
                                         </td>
                                         {/* Loại */}
                                         <td style={{ padding: '11px 16px' }}>

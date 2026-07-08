@@ -48,21 +48,24 @@ export default function EditTransactionModal({
         }
     }, [transaction])
 
-    // Auto-calculate fee = total_money - (qty × price)
+    // Auto-calc fee theo chiều giao dịch:
+    // - Mua: phí = total − qty×price · Bán/Chốt: phí = qty×price − total
     useEffect(() => {
         const qty = parseFloat(formData.quantity) || 0
         const price = parseFloat(formData.price) || 0
         const total = parseFloat(formData.total_money) || 0
 
         if (qty > 0 && price > 0 && total > 0) {
+            const isSellType = formData.type === 'Chốt' || formData.type === 'Bán'
+            const derived = isSellType ? qty * price - total : total - qty * price
             setFormData(prev => ({
                 ...prev,
-                fee: Math.round(total - qty * price).toString()
+                fee: Math.round(derived).toString()
             }))
         } else {
             setFormData(prev => ({ ...prev, fee: '' }))
         }
-    }, [formData.total_money, formData.quantity, formData.price])
+    }, [formData.total_money, formData.quantity, formData.price, formData.type])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target

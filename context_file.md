@@ -104,6 +104,8 @@ Docs updated: `dev-notes.md` §5 (middleware guard) + new §5b (API route auth).
 
 ## Next Steps
 
+- **⚠️ BEFORE deploying:** run `supabase/add_notes_column.sql` in Supabase SQL Editor — production DB lacks the `notes` column (setup.sql has it, but prod was created from an older script). Deploying the new form without it breaks transaction saving (error 42703). ✅ User confirmed column added 2026-07-08.
+- **Also run `supabase/fix_negative_sell_fees.sql`** — flips sign of negative fees on Bán/Chốt rows saved with the old one-directional fee formula. Fee formula is now direction-aware (see dev-notes §11). Notes are now visible inline in both history tables; symbol-page table restyled to match design system (was using non-existent `.table` class) + fixed Cổ tức CP badge showing as "Bán".
 - Deploy & smoke-test: transaction form with notes, error banner (e.g. offline), year filter.
 - Remaining Step 8 items: CSV import (with dry-run preview), cash dividend type (`Cổ tức tiền`), split 900-line pages, extract `fmt*` helpers to `lib/format.ts`, skeleton loading.
 - Optional cleanup: `/api` whitelist in middleware no longer needed (no API routes left); `docs/README.md` still documents deleted routes — refresh docs when convenient.

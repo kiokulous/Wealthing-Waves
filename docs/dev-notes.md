@@ -128,16 +128,18 @@ Không thêm `@typescript-eslint/no-unused-vars` hay bất kỳ `@typescript-esl
 
 ---
 
-### 11. Fee Calculation — Chiều ngược lại với ban đầu
+### 11. Fee Calculation — Direction-aware (updated 2026-07-07)
 
-**Logic hiện tại (đúng):** User nhập `qty`, `price`, `total_money` → `fee` được tính tự động và **readonly**:
+User nhập `qty`, `price`, `total_money` → `fee` tự tính và **readonly**, theo chiều giao dịch:
+
 ```
-fee = total_money - (qty × price)
+Mua:       fee = total_money − (qty × price)   // trả tổng = giá trị + phí
+Bán/Chốt:  fee = (qty × price) − total_money   // nhận tổng = giá trị − phí
 ```
 
-**Logic cũ (sai):** App từng tự tính `price` từ `total_money + fee + qty`. Đã đổi ngược lại.
+Lịch sử: công thức cũ `total − qty×price` áp cho cả hai chiều → lệnh Bán ra phí ÂM. Data cũ được sửa bằng `supabase/fix_negative_sell_fees.sql`. Lưu ý: `fee` chỉ mang tính hiển thị — engine P&L dùng `total_money` (cash flow thật) nên phí âm không làm sai số liệu lãi/lỗ.
 
-Áp dụng trong cả `transaction/page.tsx` (form thêm mới) và `EditTransactionModal.tsx` (form chỉnh sửa).
+Áp dụng trong cả `transaction/page.tsx` (form thêm mới) và `EditTransactionModal.tsx` (form chỉnh sửa) — cả hai useEffect đều phải có `formData.type` trong dependency array.
 
 ---
 
